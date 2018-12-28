@@ -16,9 +16,10 @@ namespace Mixel {
     public:
         MXWindow();
         ~MXWindow();
-        void create(const std::string title, const int width, const int height);
+        void create(const std::string title, const MXRect rect, const unsigned int flag = 0);
+        void create(const std::string title, const int width, const int height, const unsigned int flag = 0);
         void destory();
-        const SDL_Window* getWindow();
+        SDL_Window* getWindow();
         const std::string getTitle();
         const MXRect getWindowRect();
 

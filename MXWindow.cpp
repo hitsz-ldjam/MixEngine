@@ -6,22 +6,22 @@ namespace Mixel {
     }
 
     MXWindow::~MXWindow() {
-        if(window) {
-            SDL_DestroyWindow(window);
-            window = nullptr;
-        }
+        MXWindow::destory();
     }
 
-    void MXWindow::create(const std::string title, const int width, const int height) {
-        // Edit flag in demo -> SDL_WINDOW_VULKAN
+    void MXWindow::create(const std::string title, const MXRect rect, const unsigned int flag) {
         window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                  width, height, SDL_WINDOW_SHOWN);
+                                  rect.width, rect.height, flag | SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN);
         this->title = title;
-        rect = {width, height};
+        this->rect = rect;
 
         if(!window) {
             throw std::runtime_error("Error: Failed to create window");
         }
+    }
+
+    void MXWindow::create(const std::string title, const int width, const int height, const unsigned int flag) {
+        MXWindow::create(title, {width, height}, flag);
     }
 
     void MXWindow::destory() {
@@ -31,7 +31,7 @@ namespace Mixel {
         }
     }
 
-    const SDL_Window* MXWindow::getWindow() {
+    SDL_Window* MXWindow::getWindow() {
         return window;
     }
 
@@ -42,5 +42,4 @@ namespace Mixel {
     const MXRect MXWindow::getWindowRect() {
         return rect;
     }
-
 }
