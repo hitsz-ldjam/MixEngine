@@ -1,17 +1,19 @@
-#include "MXWindow.h"
+#include "MxWindow.h"
 
 namespace Mixel {
-    MXWindow::MXWindow() {
+    MxWindow::MxWindow() {
         window = nullptr;
     }
 
-    MXWindow::~MXWindow() {
-        MXWindow::destory();
+    MxWindow::~MxWindow() {
+        MxWindow::destory();
     }
 
-    void MXWindow::create(const std::string title, const MXRect rect, const unsigned int flag) {
+    void MxWindow::create(const std::string title, const MxRect rect, const unsigned int flag) {
+        //window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        //                          rect.width, rect.height, flag | SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN);
         window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                  rect.width, rect.height, flag | SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN);
+                                  rect.width, rect.height, flag | SDL_WINDOW_SHOWN);
         this->title = title;
         this->rect = rect;
 
@@ -20,26 +22,26 @@ namespace Mixel {
         }
     }
 
-    void MXWindow::create(const std::string title, const int width, const int height, const unsigned int flag) {
-        MXWindow::create(title, {width, height}, flag);
+    void MxWindow::create(const std::string title, const int width, const int height, const unsigned int flag) {
+        MxWindow::create(title, {width, height}, flag);
     }
 
-    void MXWindow::destory() {
+    void MxWindow::destory() {
         if(window) {
             SDL_DestroyWindow(window);
             window = nullptr;
         }
     }
 
-    SDL_Window* MXWindow::getWindow() {
+    SDL_Window* MxWindow::getWindow() {
         return window;
     }
 
-    const std::string MXWindow::getTitle() {
+    const std::string MxWindow::getTitle() {
         return title;
     }
 
-    const MXRect MXWindow::getWindowRect() {
+    const MxRect MxWindow::getWindowRect() {
         return rect;
     }
 }

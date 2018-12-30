@@ -1,7 +1,7 @@
-#include "MXAudio.h"
+#include "MxAudio.h"
 
 namespace Mixel {
-    MXAudio::MXAudio(const MXAudio::AudioType type) {
+    MxAudio::MxAudio(const MxAudio::MxAudioType type) {
         switch(type) {
             case MX_AUDIO_TYPE_MUSIC:
                 music = nullptr;
@@ -16,7 +16,7 @@ namespace Mixel {
         this->type = type;
     }
 
-    MXAudio::~MXAudio() {
+    MxAudio::~MxAudio() {
         switch(type) {
             case MX_AUDIO_TYPE_MUSIC:
                 if(music) {
@@ -33,7 +33,7 @@ namespace Mixel {
         }
     }
 
-    void MXAudio::load(const std::string filename) {
+    void MxAudio::load(const std::string filename) {
         switch(type) {
             case MX_AUDIO_TYPE_MUSIC:
                 music = Mix_LoadMUS(filename.c_str());
@@ -50,7 +50,7 @@ namespace Mixel {
         }
     }
 
-    void MXAudio::play(const int playTimes) {
+    void MxAudio::play(const int playTimes) {
         if(playTimes == 0) return;
         switch(type) {
             case MX_AUDIO_TYPE_MUSIC:
@@ -68,7 +68,7 @@ namespace Mixel {
         }
     }
 
-    void MXAudio::pause() {
+    void MxAudio::pause() {
         switch(type) {
             case MX_AUDIO_TYPE_MUSIC:
                 if(!music) {
@@ -85,7 +85,7 @@ namespace Mixel {
         }
     }
 
-    void MXAudio::resume() {
+    void MxAudio::resume() {
         switch(type) {
             case MX_AUDIO_TYPE_MUSIC:
                 if(!music) {
