@@ -5,6 +5,14 @@ namespace Mixel {
         window = nullptr;
     }
 
+    MxWindow::MxWindow(const std::string title, const MxRect rect, const unsigned int flag) {
+        MxWindow::create(title, rect, flag);
+    }
+
+    MxWindow::MxWindow(const std::string title, const int width, const int height, const unsigned int flag) {
+        MxWindow::create(title, width, height, flag);
+    }
+
     MxWindow::~MxWindow() {
         MxWindow::destory();
     }
@@ -33,7 +41,7 @@ namespace Mixel {
         }
     }
 
-    SDL_Window* MxWindow::getWindow() {
+    SDL_Window* MxWindow::getWindowPtr() {
         return window;
     }
 
