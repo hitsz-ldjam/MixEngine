@@ -1,6 +1,6 @@
 #include "MxWindow.h"
 
-namespace Mixel {
+namespace Mix {
     MxWindow::MxWindow() {
         window = nullptr;
     }

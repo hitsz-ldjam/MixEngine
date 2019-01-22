@@ -8,7 +8,7 @@
 
 #include <SDL.h>
 
-namespace Mixel {
+namespace Mix {
     struct MxRect { int width, height; };
 
     class MxWindow {

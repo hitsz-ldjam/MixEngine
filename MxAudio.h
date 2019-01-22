@@ -8,7 +8,7 @@
 
 #include <SDL_mixer.h>
 
-namespace Mixel {
+namespace Mix {
     class MxAudio {
     public:
         enum MxAudioType { MX_AUDIO_TYPE_MUSIC, MX_AUDIO_TYPE_SOUNDFX };

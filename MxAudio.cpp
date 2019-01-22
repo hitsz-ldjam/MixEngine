@@ -1,6 +1,6 @@
 #include "MxAudio.h"
 
-namespace Mixel {
+namespace Mix {
     MxAudio::MxAudio(const MxAudio::MxAudioType type) {
         switch(type) {
             case MX_AUDIO_TYPE_MUSIC:
