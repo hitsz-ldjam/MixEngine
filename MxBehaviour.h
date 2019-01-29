@@ -9,7 +9,7 @@ namespace Mix {
     class MxBehaviour : public MxEvent {
     public:
         MxBehaviour() {};
-        ~MxBehaviour() {};
+        virtual ~MxBehaviour() {};
         virtual void init() {};
         virtual void update() {};
     };
