@@ -1,3 +1,5 @@
+// OBSOLETE
+
 #include "MxAudio.h"
 
 namespace Mix {
