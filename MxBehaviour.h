@@ -6,10 +6,10 @@
 #include "MxEvent.h"
 
 namespace Mix {
-    class MxBehaviour : public MxEvent {
+    class Behaviour : public Event {
     public:
-        MxBehaviour() {};
-        virtual ~MxBehaviour() {};
+        Behaviour() {};
+        virtual ~Behaviour() {};
         virtual void init() {};
         virtual void update() {};
     };

@@ -8,16 +8,17 @@
 
 #include <SDL_video.h>
 
-#include "MxImage.h"
+#include "MxSurface.h"
 
 namespace Mix {
-    class MxWindow {
+    class Window {
     public:
-        MxWindow();
-        MxWindow(const std::string title, const int width, const int height, const unsigned int flags = 0);
-        ~MxWindow();
-        void create(const std::string title, const int width, const int height, const unsigned int flags = 0);
-        void setIcon(const std::string filename);
+        Window();
+        Window(SDL_Window* window);
+        Window(const std::string& title, const int width, const int height, const Uint32 flags = 0);
+        ~Window();
+        void create(const std::string& title, const int width, const int height, const Uint32 flags = 0);
+        void setIcon(Surface icon);
         void destory();
         SDL_Window* getWindowPtr();
     private:

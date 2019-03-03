@@ -9,16 +9,16 @@
 #include <SDL_image.h>
 
 namespace Mix {
-    class MxImage {
+    class Surface {
     public:
-        MxImage();
-        MxImage(std::string filename);
-        ~MxImage();
-        void load(std::string filename);
+        Surface();
+        Surface(const std::string& filename);
+        ~Surface();
+        void loadFromFile(const std::string& filename);
         void free();
         SDL_Surface* getSurfacePtr();
     private:
-        SDL_Surface* image;
+        SDL_Surface* surface;
     };
 }
 

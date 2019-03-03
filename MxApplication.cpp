@@ -1,27 +1,31 @@
 #include "MxApplication.h"
 
 namespace Mix {
-    MxApplication::MxApplication(int argc, char** argv) {
-        // behaviours.reserve(__size);
-        quit = false;
+    Application::Application(int argc, char** argv) {
+        _quit = false;
     }
 
-    MxApplication::~MxApplication() {
-        onCleanUp();
+    Application::~Application() {
+        cleanup();
     }
 
-    int MxApplication::execute() {
+    int Application::exec() {
         try {
-            onInitialize();
-            while(!quit) {
+            init();
+
+            // todo: delete testcode
+            Window window("SDL test", 600, 480);
+
+            while(!_quit) {
+                preProcess();
                 SDL_Event _event;
                 while(SDL_PollEvent(&_event)) {
-                    onEvent(_event);
+                    process(_event);
                 }
-                onUpdate();
-                onRender();
+                update();
+                render();
             }
-            onCleanUp();
+            cleanup();
         }
         catch(const std::exception& e) {
             std::cerr << e.what() << std::endl;
@@ -30,105 +34,74 @@ namespace Mix {
         return 0;
     }
 
-    void MxApplication::onInitialize() {
-        // Initialize SDL2
-        if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) != 0)
+    void Application::init() {
+        if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
             throw std::runtime_error("Error: Failed to initialize SDL2");
 
         if(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) == 0)
             throw std::runtime_error("Error: Failed to initialize SDL_image");
 
-        if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096) != 0)
-            throw std::runtime_error("Error: Failed to initialize SDL_Mixer");
-
-        for(const auto& behaviour : behaviours)
-            behaviour->init();
+        // todo: initialize Vulkan and other stuff
+        
+        _quit = false;
+        Input::initState(SDL_GetKeyboardState(nullptr));
     }
 
-    void MxApplication::onUpdate() {
-        for(const auto& behaviour : behaviours)
-            behaviour->update();
+    void Application::preProcess() {
+        Input::resetKeyEvent();
     }
 
-    void MxApplication::onRender() {
-        return;
+    void Application::process(SDL_Event& _event) {
+        // todo: handel and distribute events
+        switch(_event.type) {
+            case SDL_KEYDOWN:
+            {
+                SDL_Scancode code = _event.key.keysym.scancode;
+                Input::anyKey = true;
+                Input::keyEvent[code] |= Input::KeyPressedMask;
+                if(!_event.key.repeat) {
+                    Input::anyKeyDown = true;
+                    Input::keyEvent[code] |= Input::KeyFirstPressedMask;
+                }
+                break;
+            }
+            case SDL_KEYUP:
+            {
+                SDL_Scancode code = _event.key.keysym.scancode;
+                Input::keyEvent[code] |= Input::KeyReleasedMask;
+                break;
+            }
+            // todo: add other cases
+            case SDL_QUIT:
+            {
+                quit();
+                break;
+            }
+            default:
+                break;
+        }
     }
 
-    void MxApplication::onCleanUp() {
-        behaviours.clear();
-        Mix_Quit();
+    void Application::update() {
+        // todo: handling behaviors
+        // add test codes here
+        bool i = Input::GetKeyDown(SDLK_f); // Input::GetAxisRaw(SDL_SCANCODE_F)
+        if(i)
+            std::cout << i << std::endl;
+    }
+
+    void Application::render() {
+        // todo: call vulkan
+    }
+
+    void Application::quit() {
+        // todo: handling behaviors
+        _quit = true;
+    }
+
+    void Application::cleanup() {
+        // todo: handling behaviors
         IMG_Quit();
         SDL_Quit();
-    }
-
-    void MxApplication::onKeyboardFocusGained(unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onKeyboardFocusGained(timestamp, windowID);
-    }
-
-    void MxApplication::onKeyboardFocusLost(unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onKeyboardFocusLost(timestamp, windowID);
-    }
-
-    void MxApplication::onKeyDown(std::string scancode, std::string keycode, bool isRepeat, unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onKeyDown(scancode, keycode, isRepeat, timestamp, windowID);
-    }
-
-    void MxApplication::onKeyUp(std::string scancode, std::string keycode, unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onKeyUp(scancode, keycode, timestamp, windowID);
-    }
-
-    void MxApplication::onMouseFocusGained(unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onMouseFocusGained(timestamp, windowID);
-    }
-
-    void MxApplication::onMouseFocusLost(unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onMouseFocusLost(timestamp, windowID);
-    }
-
-    void MxApplication::onMouseMotion(int x, int y, int btnBitmask, unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onMouseMotion(x, y, btnBitmask, timestamp, windowID);
-    }
-
-    void MxApplication::onMouseBtnDown(int x, int y, int btnIndex, unsigned char clicks, unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onMouseBtnDown(x, y, btnIndex, clicks, timestamp, windowID);
-    }
-
-    void MxApplication::onMouseBtnUp(int x, int y, int btnIndex, unsigned char clicks, unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onMouseBtnUp(x, y, btnIndex, clicks, timestamp, windowID);
-    }
-
-    void MxApplication::onMouseWheel(int x, int y, unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onMouseWheel(x, y, timestamp, windowID);
-    }
-
-    void MxApplication::onQuit(unsigned int timestamp) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onQuit(timestamp);
-        quit = true;
-    }
-
-    void MxApplication::onUserEvent() {
-        for(const auto& behaviour : behaviours)
-            behaviour->onUserEvent();
-    }
-
-    void MxApplication::onWindowClose(unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onWindowClose(timestamp, windowID);
-    }
-
-    void MxApplication::onWindowExposed(unsigned int timestamp, unsigned int windowID) {
-        for(const auto& behaviour : behaviours)
-            behaviour->onWindowExposed(timestamp, windowID);
     }
 }
