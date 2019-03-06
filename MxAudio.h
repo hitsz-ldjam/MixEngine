@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <SDL_mixer.h>
+#include <SDL2/SDL_mixer.h>
 
 namespace Mix {
     class MxAudio {

@@ -18,9 +18,9 @@ namespace Mix {
 
             while(!_quit) {
                 preProcess();
-                SDL_Event _event;
-                while(SDL_PollEvent(&_event)) {
-                    process(_event);
+                SDL_Event event;
+                while(SDL_PollEvent(&event)) {
+                    process(event);
                 }
                 update();
                 render();
@@ -41,37 +41,61 @@ namespace Mix {
         if(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) == 0)
             throw std::runtime_error("Error: Failed to initialize SDL_image");
 
-        // todo: initialize Vulkan and other stuff
+        // todo: initialize vulkan and other stuff
         
         _quit = false;
-        Input::initState(SDL_GetKeyboardState(nullptr));
+        Input::initKeyboardState(SDL_GetKeyboardState(nullptr));
+
+        // todo: delete test code
+        SDL_SetRelativeMouseMode(SDL_FALSE);
     }
 
     void Application::preProcess() {
-        Input::resetKeyEvent();
+        Input::reset();
     }
 
-    void Application::process(SDL_Event& _event) {
-        // todo: handel and distribute events
-        switch(_event.type) {
+    void Application::process(SDL_Event& event) {
+        // todo: handle and distribute events
+        switch(event.type) {
             case SDL_KEYDOWN:
             {
-                SDL_Scancode code = _event.key.keysym.scancode;
+                SDL_Scancode code = event.key.keysym.scancode;
                 Input::anyKey = true;
-                Input::keyEvent[code] |= Input::KeyPressedMask;
-                if(!_event.key.repeat) {
+                Input::keyEvent[code] |= Input::PressedMask;
+                if(!event.key.repeat) {
                     Input::anyKeyDown = true;
-                    Input::keyEvent[code] |= Input::KeyFirstPressedMask;
+                    Input::keyEvent[code] |= Input::FirstPressedMask;
                 }
                 break;
             }
             case SDL_KEYUP:
             {
-                SDL_Scancode code = _event.key.keysym.scancode;
-                Input::keyEvent[code] |= Input::KeyReleasedMask;
+                Input::keyEvent[event.key.keysym.scancode] |= Input::ReleasedMask;
                 break;
             }
-            // todo: add other cases
+            case SDL_MOUSEBUTTONDOWN:
+            {
+                // if(event.button.clicks == 1)
+                Input::mouseButtonEvent[event.button.button - 1] |= Input::FirstPressedMask;
+                break;
+            }
+            case SDL_MOUSEBUTTONUP:
+            {
+                Input::mouseButtonEvent[event.button.button - 1] |= Input::ReleasedMask;
+                break;
+            }
+            case SDL_MOUSEMOTION:
+            {
+                // Use SDL_GetMouseState instead?
+                break;
+            }
+            case SDL_MOUSEWHEEL:
+            {
+                int deltaY = event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1;
+                deltaY *= event.wheel.y;
+                Input::mouseScrollDelta += glm::ivec2(event.wheel.x, deltaY);
+                break;
+            }
             case SDL_QUIT:
             {
                 quit();
@@ -83,11 +107,16 @@ namespace Mix {
     }
 
     void Application::update() {
-        // todo: handling behaviors
-        // add test codes here
-        bool i = Input::GetKeyDown(SDLK_f); // Input::GetAxisRaw(SDL_SCANCODE_F)
+        // todo: handle behaviors
+        // todo: add test codes here
+
+        bool i = Input::GetMouseButtonDown(SDL_BUTTON_LEFT); // Input::GetKeyDown(SDLK_f); // Input::GetAxisRaw(SDL_SCANCODE_F)
         if(i)
             std::cout << i << std::endl;
+        
+        glm::ivec2 d = Input::MousePositionDelta();
+        if(d.y || d.x)
+            std::cout << d.x << ", " << d.y << std::endl;
     }
 
     void Application::render() {
@@ -95,12 +124,12 @@ namespace Mix {
     }
 
     void Application::quit() {
-        // todo: handling behaviors
+        // todo: handle behaviors
         _quit = true;
     }
 
     void Application::cleanup() {
-        // todo: handling behaviors
+        // todo: handle behaviors
         IMG_Quit();
         SDL_Quit();
     }

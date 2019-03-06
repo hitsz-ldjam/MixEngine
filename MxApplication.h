@@ -6,8 +6,8 @@
 #include <iostream>
 
 #define SDL_MAIN_HANDLED
-#include <SDL.h>
-#include <SDL_image.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "MxInput.h"
 
@@ -25,7 +25,7 @@ namespace Mix {
         bool _quit;
         void init();
         void preProcess();
-        void process(SDL_Event& _event);
+        void process(SDL_Event& event);
         void update();
         void render();
         void quit();

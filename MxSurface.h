@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <SDL_image.h>
+#include <SDL2/SDL_image.h>
 
 namespace Mix {
     class Surface {

@@ -4,9 +4,9 @@
 #define _MIX_ENGINE_H_
 
 #define SDL_MAIN_HANDLED
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_mixer.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 
 // #define TEST_WITH_VULKAN
 #ifdef TEST_WITH_VULKAN
