@@ -1,8 +1,11 @@
-#include <iostream>
+#include "MixEngine.h"
 
-#include "MxApplication.h"
+#include "Demo.h"
 
 int main() {
+    // todo
+    const uint32_t behaviourNum = 1;
     Mix::Application app;
+    app.behaviours.push_back(new Demo);
     return app.exec();
 }

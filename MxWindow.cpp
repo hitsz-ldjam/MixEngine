@@ -28,8 +28,12 @@ namespace Mix {
             throw std::runtime_error("Error: Failed to create window");
     }
 
-    void Window::setIcon(Surface icon) {
-        SDL_SetWindowIcon(window, icon.getSurfacePtr());
+    void Window::setIcon(const std::string& filename) {
+        SDL_Surface* icon = IMG_Load(filename.c_str());
+        if(!icon)
+            throw std::runtime_error("Error: Cannot load surface " + filename);
+        SDL_SetWindowIcon(window, icon);
+        SDL_FreeSurface(icon);
     }
 
     void Window::destory() {

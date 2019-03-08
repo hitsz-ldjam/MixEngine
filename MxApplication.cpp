@@ -2,7 +2,8 @@
 
 namespace Mix {
     Application::Application(int argc, char** argv) {
-        _quit = false;
+        // behaviours.reserve(capacity);
+        quit = false;
     }
 
     Application::~Application() {
@@ -12,17 +13,14 @@ namespace Mix {
     int Application::exec() {
         try {
             init();
-
-            // todo: delete testcode
-            Window window("SDL test", 600, 480);
-
-            while(!_quit) {
-                preProcess();
+            while(!quit) {
+                Input::reset();
                 SDL_Event event;
                 while(SDL_PollEvent(&event)) {
                     process(event);
                 }
                 update();
+                lateUpdate();
                 render();
             }
             cleanup();
@@ -31,7 +29,14 @@ namespace Mix {
             std::cerr << e.what() << std::endl;
             return EXIT_FAILURE;
         }
-        return 0;
+        return EXIT_SUCCESS;
+    }
+
+    void Application::cleanup() {
+        for(auto be : behaviours) be->onDestroy();
+        behaviours.clear();
+        IMG_Quit();
+        SDL_Quit();
     }
 
     void Application::init() {
@@ -42,20 +47,17 @@ namespace Mix {
             throw std::runtime_error("Error: Failed to initialize SDL_image");
 
         // todo: initialize vulkan and other stuff
-        
-        _quit = false;
+
+        quit = false;
         Input::initKeyboardState(SDL_GetKeyboardState(nullptr));
 
-        // todo: delete test code
-        SDL_SetRelativeMouseMode(SDL_FALSE);
-    }
-
-    void Application::preProcess() {
-        Input::reset();
+        for(auto be : behaviours) be->init();
     }
 
     void Application::process(SDL_Event& event) {
+
         // todo: handle and distribute events
+
         switch(event.type) {
             case SDL_KEYDOWN:
             {
@@ -86,7 +88,7 @@ namespace Mix {
             }
             case SDL_MOUSEMOTION:
             {
-                // Use SDL_GetMouseState instead?
+                // Use SDL_GetMouseState instead (?)
                 break;
             }
             case SDL_MOUSEWHEEL:
@@ -98,7 +100,10 @@ namespace Mix {
             }
             case SDL_QUIT:
             {
-                quit();
+                quit = true;
+                for(auto be : behaviours)
+                    if(!be->onApplicationQuit())
+                        quit = false;
                 break;
             }
             default:
@@ -106,31 +111,11 @@ namespace Mix {
         }
     }
 
-    void Application::update() {
-        // todo: handle behaviors
-        // todo: add test codes here
-
-        bool i = Input::GetMouseButtonDown(SDL_BUTTON_LEFT); // Input::GetKeyDown(SDLK_f); // Input::GetAxisRaw(SDL_SCANCODE_F)
-        if(i)
-            std::cout << i << std::endl;
-        
-        glm::ivec2 d = Input::MousePositionDelta();
-        if(d.y || d.x)
-            std::cout << d.x << ", " << d.y << std::endl;
-    }
-
     void Application::render() {
+        for(auto be : behaviours) be->onPreRender();
+
         // todo: call vulkan
-    }
 
-    void Application::quit() {
-        // todo: handle behaviors
-        _quit = true;
-    }
-
-    void Application::cleanup() {
-        // todo: handle behaviors
-        IMG_Quit();
-        SDL_Quit();
+        for(auto be : behaviours) be->onPostRender();
     }
 }

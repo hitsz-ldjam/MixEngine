@@ -7,8 +7,7 @@
 #include <string>
 
 #include <SDL2/SDL_video.h>
-
-#include "MxSurface.h"
+#include <SDL2/SDL_image.h>
 
 namespace Mix {
     class Window {
@@ -18,7 +17,7 @@ namespace Mix {
         Window(const std::string& title, const int width, const int height, const Uint32 flags = 0);
         ~Window();
         void create(const std::string& title, const int width, const int height, const Uint32 flags = 0);
-        void setIcon(Surface icon);
+        void setIcon(const std::string& filename);
         void destory();
         SDL_Window* getWindowPtr();
     private:

@@ -36,6 +36,8 @@ namespace Mix {
             return GetAxisRaw(SDL_GetScancodeFromName(name.c_str()));
         }
 
+        // On an AZERTY keyboard, pressing 'A' will emit a 'Q' scancode (representing the physical location) and an 'A' keycode.
+
         static bool GetButton(const SDL_Scancode scancode) {
             return keyEvent[scancode] & PressedMask;
         }
