@@ -55,13 +55,13 @@ namespace Mix {
             commandBuffer.end();
             sTempBufferSubmitInfo.pCommandBuffers = &commandBuffer;
             sTempBufferSubmitInfo.commandBufferCount = 1;
-            mQueue.submit(sTempBufferSubmitInfo, VK_NULL_HANDLE);
+            mQueue.submit(sTempBufferSubmitInfo, nullptr);
             mQueue.waitIdle();
         }
 
         void CommandMgr::destroy() {
             mCore->device().destroyCommandPool(mCommandPool);
-            mCommandPool = VK_NULL_HANDLE;
+            mCommandPool = nullptr;
             mCommandBuffers.clear();
             mCore = nullptr;
         }

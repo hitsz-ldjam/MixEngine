@@ -116,7 +116,7 @@ namespace Mix {
 
         public:
             Pipeline& createPipeline(const std::string& name,
-                                     const vk::RenderPass renderPass = 0,
+                                     const vk::RenderPass renderPass = nullptr,
                                      const uint32_t subpassIndex = 0);
 
             const Pipeline& getPipeline(const std::string& name);

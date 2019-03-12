@@ -22,10 +22,10 @@ namespace Mix {
 
             pipeline.mCore = nullptr;
             pipeline.mPipelineStates = nullptr;
-            pipeline.mPipeline = VK_NULL_HANDLE;
-            pipeline.mPipelineLayout = VK_NULL_HANDLE;
-            pipeline.mRenderPass = VK_NULL_HANDLE;
-            pipeline.mSubpassIndex = VK_NULL_HANDLE;
+            pipeline.mPipeline = nullptr;
+            pipeline.mPipelineLayout = nullptr;
+            pipeline.mRenderPass = nullptr;
+            pipeline.mSubpassIndex = 0;
             return *this;
         }
 
@@ -52,9 +52,9 @@ namespace Mix {
 
         void Pipeline::setVertexInput(const std::vector<vk::VertexInputBindingDescription>& bindingDescri, const std::vector<vk::VertexInputAttributeDescription>& attriDescri) {
             mPipelineStates->vertexInput.pVertexBindingDescriptions = bindingDescri.data();
-            mPipelineStates->vertexInput.vertexBindingDescriptionCount = bindingDescri.size();
+            mPipelineStates->vertexInput.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescri.size());
             mPipelineStates->vertexInput.pVertexAttributeDescriptions = attriDescri.data();
-            mPipelineStates->vertexInput.vertexAttributeDescriptionCount = attriDescri.size();
+            mPipelineStates->vertexInput.vertexAttributeDescriptionCount = static_cast<uint32_t>(attriDescri.size());
         }
 
         void Pipeline::setInputAssembly(const vk::PrimitiveTopology topology, const bool primitiveRestart) {
@@ -156,7 +156,7 @@ namespace Mix {
             mPipelineStates->colorBlend.logicOpEnable = logicalOpEnable;
             mPipelineStates->colorBlend.logicOp = logicOp;
             mPipelineStates->colorBlend.pAttachments = mPipelineStates->colorBlendAttachments.data();
-            mPipelineStates->colorBlend.attachmentCount = mPipelineStates->colorBlendAttachments.size();
+            mPipelineStates->colorBlend.attachmentCount = static_cast<uint32_t>(mPipelineStates->colorBlendAttachments.size());
             mPipelineStates->colorBlend.blendConstants[0] = constantR;
             mPipelineStates->colorBlend.blendConstants[1] = constantG;
             mPipelineStates->colorBlend.blendConstants[2] = constantB;
@@ -199,28 +199,28 @@ namespace Mix {
             // create pipeline layout
             vk::PipelineLayoutCreateInfo layoutCreateInfo = {};
             layoutCreateInfo.pSetLayouts = mPipelineStates->descriptorSetLayouts.data();
-            layoutCreateInfo.setLayoutCount = mPipelineStates->descriptorSetLayouts.size();
+            layoutCreateInfo.setLayoutCount = static_cast<uint32_t>(mPipelineStates->descriptorSetLayouts.size());
             layoutCreateInfo.pPushConstantRanges = mPipelineStates->pushConstantRanges.data();
-            layoutCreateInfo.pushConstantRangeCount = mPipelineStates->pushConstantRanges.size();
+            layoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(mPipelineStates->pushConstantRanges.size());
 
             mPipelineLayout = mCore->device().createPipelineLayout(layoutCreateInfo);
 
             vk::PipelineViewportStateCreateInfo viewportState = {};
             viewportState.pViewports = mPipelineStates->viewports.data();
-            viewportState.viewportCount = mPipelineStates->viewports.size();
+            viewportState.viewportCount = static_cast<uint32_t>(mPipelineStates->viewports.size());
             viewportState.pScissors = mPipelineStates->scissors.data();
-            viewportState.scissorCount = mPipelineStates->scissors.size();
+            viewportState.scissorCount = static_cast<uint32_t>(mPipelineStates->scissors.size());
 
             mPipelineStates->colorBlend.pAttachments = mPipelineStates->colorBlendAttachments.data();
-            mPipelineStates->colorBlend.attachmentCount = mPipelineStates->colorBlendAttachments.size();
+            mPipelineStates->colorBlend.attachmentCount = static_cast<uint32_t>(mPipelineStates->colorBlendAttachments.size());
 
             vk::PipelineDynamicStateCreateInfo dynamicState = {};
             dynamicState.pDynamicStates = mPipelineStates->dynamicStates.data();
-            dynamicState.dynamicStateCount = mPipelineStates->dynamicStates.size();
+            dynamicState.dynamicStateCount = static_cast<uint32_t>(mPipelineStates->dynamicStates.size());
 
             vk::GraphicsPipelineCreateInfo pipelineCreateInfo = {};
             pipelineCreateInfo.pStages = mPipelineStates->shaders.data();
-            pipelineCreateInfo.stageCount = mPipelineStates->shaders.size();
+            pipelineCreateInfo.stageCount = static_cast<uint32_t>(mPipelineStates->shaders.size());
             pipelineCreateInfo.pVertexInputState = &mPipelineStates->vertexInput;
             pipelineCreateInfo.pInputAssemblyState = &mPipelineStates->inputAssembly;
             pipelineCreateInfo.pViewportState = &viewportState;
@@ -237,7 +237,7 @@ namespace Mix {
             pipelineCreateInfo.layout = mPipelineLayout;
             pipelineCreateInfo.renderPass = mRenderPass;
             pipelineCreateInfo.subpass = mSubpassIndex;
-            pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;	//基础管线（vulkan允许在已经存在的管线上派生新的管线）
+            pipelineCreateInfo.basePipelineHandle = nullptr;	//基础管线（vulkan允许在已经存在的管线上派生新的管线）
             pipelineCreateInfo.basePipelineIndex = -1;
 
             mPipeline = mCore->device().createGraphicsPipeline(nullptr, pipelineCreateInfo);
@@ -253,8 +253,8 @@ namespace Mix {
             mCore->device().destroyPipeline(mPipeline);
             mCore->device().destroyPipelineLayout(mPipelineLayout);
             mCore = nullptr;
-            mPipeline = VK_NULL_HANDLE;
-            mPipelineLayout = VK_NULL_HANDLE;
+            mPipeline = nullptr;
+            mPipelineLayout = nullptr;
         }
 
         MX_IMPLEMENT_RTTI_NoCreateFunc(PipelineMgr, GraphicsComponent);

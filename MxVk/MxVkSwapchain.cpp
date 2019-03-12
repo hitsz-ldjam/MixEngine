@@ -79,7 +79,7 @@ namespace Mix {
             createInfo.preTransform = mSupportDetails.capabilities.currentTransform;
             createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
             createInfo.clipped = true;
-            createInfo.oldSwapchain = VK_NULL_HANDLE;
+            createInfo.oldSwapchain = nullptr;
 
             // create swapchain
             mSwapchain = mCore->device().createSwapchainKHR(createInfo, nullptr, mCore->dynamicLoader());
@@ -154,7 +154,7 @@ namespace Mix {
             auto acquireResult = mCore->device().acquireNextImageKHR(mSwapchain,
                                                                      std::numeric_limits<uint64_t>::max(),
                                                                      mImageAvlSph[mCurrFrame].get(),
-                                                                     VK_NULL_HANDLE);
+                                                                     nullptr);
 
             if (acquireResult.result == vk::Result::eErrorOutOfDateKHR ||
                 acquireResult.result == vk::Result::eSuboptimalKHR) {

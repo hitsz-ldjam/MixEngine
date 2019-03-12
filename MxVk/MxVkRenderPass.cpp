@@ -1,6 +1,6 @@
 #include "MxVkRenderPass.h"
 
-
+#include "vulkan/vulkan.h"
 namespace Mix {
     namespace Graphics {
         MX_IMPLEMENT_RTTI_NoCreateFunc(RenderPass, GraphicsComponent);
@@ -51,7 +51,7 @@ namespace Mix {
 
         ArrayIndex RenderPass::addColorAttachRef(ArrayIndex index, vk::ImageLayout layout) {
             vk::AttachmentReference ref;
-            ref.attachment = index;
+            ref.attachment = static_cast<uint32_t>(index);
             ref.layout = layout;
             mAttachRefs->push_back(std::move(ref));
 
@@ -60,7 +60,7 @@ namespace Mix {
 
         ArrayIndex RenderPass::addDepthStencilAttachRef(ArrayIndex index, vk::ImageLayout layout) {
             vk::AttachmentReference ref;
-            ref.attachment = index;
+            ref.attachment = static_cast<uint32_t>(index);
             ref.layout = layout;
             mAttachRefs->push_back(std::move(ref));
             return mAttachRefs->size() - 1;
@@ -120,8 +120,8 @@ namespace Mix {
                 return ~0U;
 
             vk::SubpassDependency dependency;
-            dependency.srcSubpass = srcSubpass;
-            dependency.dstSubpass = dstSubpass;
+            dependency.srcSubpass = static_cast<uint32_t>(srcSubpass);
+            dependency.dstSubpass = static_cast<uint32_t>(dstSubpass);
             dependency.srcStageMask = srcStage;
             dependency.dstStageMask = dstStage;
             dependency.srcAccessMask = srcAccess;
@@ -137,17 +137,17 @@ namespace Mix {
 
                 if ((*mSubpasses)[i].colorRef.size() > 0) {
                     subpasses[i].pColorAttachments = (*mSubpasses)[i].colorRef.data();
-                    subpasses[i].colorAttachmentCount = (*mSubpasses)[i].colorRef.size();
+                    subpasses[i].colorAttachmentCount = static_cast<uint32_t>((*mSubpasses)[i].colorRef.size());
                 }
 
                 if ((*mSubpasses)[i].inputRef.size() > 0) {
                     subpasses[i].pInputAttachments = (*mSubpasses)[i].inputRef.data();
-                    subpasses[i].inputAttachmentCount = (*mSubpasses)[i].inputRef.size();
+                    subpasses[i].inputAttachmentCount = static_cast<uint32_t>((*mSubpasses)[i].inputRef.size());
                 }
 
                 if ((*mSubpasses)[i].preserveRef.size() > 0) {
                     subpasses[i].pResolveAttachments = (*mSubpasses)[i].preserveRef.data();
-                    subpasses[i].preserveAttachmentCount = (*mSubpasses)[i].preserveRef.size();
+                    subpasses[i].preserveAttachmentCount = static_cast<uint32_t>((*mSubpasses)[i].preserveRef.size());
                 }
 
                 if ((*mSubpasses)[i].hasDepthStencilRef) {
@@ -161,11 +161,11 @@ namespace Mix {
 
             vk::RenderPassCreateInfo createInfo;
             createInfo.pAttachments = mAttachments->data();
-            createInfo.attachmentCount = mAttachments->size();
+            createInfo.attachmentCount = static_cast<uint32_t>(mAttachments->size());
             createInfo.pSubpasses = subpasses.data();
-            createInfo.subpassCount = subpasses.size();
+            createInfo.subpassCount = static_cast<uint32_t>(subpasses.size());
             createInfo.pDependencies = mDependencies->data();
-            createInfo.dependencyCount = mDependencies->size();
+            createInfo.dependencyCount = static_cast<uint32_t>(mDependencies->size());
 
             mRenderPass = mCore->device().createRenderPass(createInfo);
             clear();
@@ -176,7 +176,7 @@ namespace Mix {
             beginInfo.renderPass = mRenderPass;
             beginInfo.framebuffer = frameBuffer;
             beginInfo.pClearValues = clearValues.data();
-            beginInfo.clearValueCount = clearValues.size();
+            beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
             beginInfo.renderArea.offset = offset;
             beginInfo.renderArea.extent = extent;
 

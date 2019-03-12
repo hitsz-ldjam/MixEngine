@@ -17,7 +17,7 @@ namespace Mix {
             vk::FramebufferCreateInfo createInfo;
             createInfo.renderPass = mRenderPass;
             createInfo.pAttachments = mAttachments.data();
-            createInfo.attachmentCount = mAttachments.size();
+            createInfo.attachmentCount = static_cast<uint32_t>(mAttachments.size());
             createInfo.width = mExtent.width;
             createInfo.height = mExtent.height;
             createInfo.layers = mLayers;
@@ -32,8 +32,8 @@ namespace Mix {
             mCore->device().destroyFramebuffer(mFramebuffer);
             mCore = nullptr;
             mAttachments.clear();
-            mRenderPass = VK_NULL_HANDLE;
-            mFramebuffer = VK_NULL_HANDLE;
+            mRenderPass = nullptr;
+            mFramebuffer = nullptr;
             mExtent = {  };
             mLayers = 0;
         }

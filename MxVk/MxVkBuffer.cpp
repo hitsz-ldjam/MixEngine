@@ -114,11 +114,11 @@ namespace Mix {
         void Buffer::destory() {
             if (buffer) {
                 mCore->device().destroyBuffer(buffer);
-                buffer = VK_NULL_HANDLE;
+                buffer = nullptr;
             }
             if (memory) {
                 mCore->device().freeMemory(memory);
-                memory = VK_NULL_HANDLE;
+                memory = nullptr;
             }
         }
     }

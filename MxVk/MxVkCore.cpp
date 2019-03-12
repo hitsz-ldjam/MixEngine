@@ -151,8 +151,8 @@ namespace Mix {
             mLogicalDevice.destroy();
             mInstance.destroy(mSurface);
             mInstance.destroy();
-            mLogicalDevice = VK_NULL_HANDLE;
-            mInstance = VK_NULL_HANDLE;
+            mLogicalDevice = nullptr;
+            mInstance = nullptr;
         }
 
         void Core::setDebugMode(const bool on) {

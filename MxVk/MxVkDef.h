@@ -13,7 +13,7 @@
 namespace Mix {
     namespace Graphics {
 
-        typedef uint32_t ArrayIndex;
+        typedef size_t ArrayIndex;
         typedef uint32_t QueueIndex;
         typedef uint32_t QueueFamilyIndex;
 

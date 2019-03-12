@@ -18,7 +18,7 @@ namespace Mix {
         void DescriptorSetLayout::create() {
             vk::DescriptorSetLayoutCreateInfo createInfo = {};
             createInfo.pBindings = mBindings.data();
-            createInfo.bindingCount = mBindings.size();
+            createInfo.bindingCount = static_cast<uint32_t>(mBindings.size());
 
             mLayout = mCore->device().createDescriptorSetLayout(createInfo);
         }
@@ -49,7 +49,7 @@ namespace Mix {
 
             vk::DescriptorPoolCreateInfo createInfo;
             createInfo.pPoolSizes = poolSizes.data();
-            createInfo.poolSizeCount = poolSizes.size();
+            createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
             createInfo.maxSets = maxSets;
 
             mDescriptorPool = mCore->device().createDescriptorPool(createInfo);
@@ -60,7 +60,7 @@ namespace Mix {
             vk::DescriptorSetAllocateInfo allocInfo;
             allocInfo.descriptorPool = mDescriptorPool;
             allocInfo.pSetLayouts = layouts.data();
-            allocInfo.descriptorSetCount = layouts.size();
+            allocInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
 
             return mCore->device().allocateDescriptorSets(allocInfo);
         }
@@ -97,7 +97,7 @@ namespace Mix {
 
         void DescriptorPool::destroy() {
             mCore->device().destroyDescriptorPool(mDescriptorPool);
-            mDescriptorPool = VK_NULL_HANDLE;
+            mDescriptorPool = nullptr;
             mCore = nullptr;
         }
     }

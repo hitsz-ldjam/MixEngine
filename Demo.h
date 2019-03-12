@@ -9,8 +9,6 @@
 
 #include "MxVk/MxVkGraphics.h"
 
-#include <tinyxml/tinyxml2.h>
-
 class Demo : public Mix::Behaviour {
 public:
     virtual ~Demo() {
