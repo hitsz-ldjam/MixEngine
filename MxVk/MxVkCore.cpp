@@ -2,6 +2,10 @@
 
 namespace Mix {
     namespace Graphics {
+        MX_IMPLEMENT_RTTI_NoCreateFunc(GraphicsBase, Object);
+
+        MX_IMPLEMENT_RTTI_NoCreateFunc(GraphicsComponent, GraphicsBase);
+
         MX_IMPLEMENT_RTTI_NoCreateFunc(Core, GraphicsBase);
         MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Core);
 
@@ -15,7 +19,8 @@ namespace Mix {
             vk::ApplicationInfo appInfo(mAppName.c_str(),
                                         mAppVersion,
                                         EngineInfo::engineName.c_str(),
-                                        EngineInfo::engineVersion);
+                                        EngineInfo::engineVersion,
+                                        VK_API_VERSION_1_1);
 
             // setup instance create info
             vk::InstanceCreateInfo createInfo;
@@ -36,8 +41,8 @@ namespace Mix {
             mInstance = vk::createInstance(createInfo);
 
             VkSurfaceKHR surface;
-            SDL_Vulkan_CreateSurface(mWindow->getWindowPtr(), VkInstance(mInstance), &surface);
-            mSurface = vk::SurfaceKHR(surface);
+            SDL_Vulkan_CreateSurface(mWindow->getWindowPtr(), static_cast<VkInstance>(mInstance), &surface);
+            mSurface = static_cast<vk::SurfaceKHR>(surface);
 
             mSupportedExtensions = getSupportedExtensions();
             mSupportedLayers = getSupportedLayers();
@@ -132,16 +137,22 @@ namespace Mix {
                 mQueueSet.compute = mLogicalDevice.getQueue(physicalDeviceInfo->familyIndexSet.compute.value(), 0);
             if (mInitInfo->queueFlags & vk::QueueFlagBits::eTransfer)
                 mQueueSet.transfer = mLogicalDevice.getQueue(physicalDeviceInfo->familyIndexSet.transfer.value(), 0);
+        }
 
+        void Core::endInit() {
             //clear mInitInfo, it won't be used anymore
             MX_FREE_POINTER(mInitInfo);
             mInitInfo = nullptr;
+
+            mDynamicLoader.init(mInstance, mLogicalDevice);
         }
 
         void Core::destroy() {
             mLogicalDevice.destroy();
             mInstance.destroy(mSurface);
             mInstance.destroy();
+            mLogicalDevice = VK_NULL_HANDLE;
+            mInstance = VK_NULL_HANDLE;
         }
 
         void Core::setDebugMode(const bool on) {
@@ -181,7 +192,7 @@ namespace Mix {
             {
                 // when meet one required extension, ++score
                 bool found = false;
-                for (auto& rqExtension : mInitInfo->instanceExtensions) {
+                for (auto& rqExtension : mInitInfo->deviceExtensions) {
                     found = false;
                     for (const auto& avaliable : info.extensions) {
                         if (strcmp(rqExtension, avaliable.extensionName) == 0) {
@@ -220,7 +231,7 @@ namespace Mix {
 
         QueueFamilyIndexSet Core::getQueueFamilyIndexSet(const PhysicalDeviceInfo& info) {
             QueueFamilyIndexSet indexSet;
-            for (size_t i = 0; i < info.queueFamilies.size(); ++i) {
+            for (QueueFamilyIndex i = 0; i < info.queueFamilies.size(); ++i) {
                 if (info.queueFamilies[i].queueCount == 0) {
                     return indexSet;
                 }

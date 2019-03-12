@@ -2,15 +2,18 @@
 #ifndef _MX_VK_DEF_H_
 #define _MX_VK_DEF_H_
 
-#include"..\Mx\MxDef.h"
-#include"..\Mx\MxObject.h"
+#include"../Mx/MxDef.h"
+#include"../Mx/MxObject.h"
 #include"vulkan/vulkan.hpp"
 #include <optional>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 
 namespace Mix {
     namespace Graphics {
 
+        typedef uint32_t ArrayIndex;
         typedef uint32_t QueueIndex;
         typedef uint32_t QueueFamilyIndex;
 
@@ -39,6 +42,39 @@ namespace Mix {
             std::vector<vk::ExtensionProperties> extensions;
             std::vector<vk::QueueFamilyProperties> queueFamilies;
             QueueFamilyIndexSet familyIndexSet;
+        };
+
+        struct SwapchainSupportDetails {
+            vk::SurfaceCapabilitiesKHR capabilities;
+            std::vector<vk::SurfaceFormatKHR> formats;
+            std::vector<vk::PresentModeKHR> presentModes;
+        };
+
+        struct Vertex {
+            glm::vec3 pos;
+            glm::vec3 normal;
+            glm::vec2 texCoord;
+
+            //get vertex input description
+            static std::vector<vk::VertexInputBindingDescription>& getBindingDescrip() {
+                static std::vector<vk::VertexInputBindingDescription> bindingDescription = {
+                vk::VertexInputBindingDescription(0,sizeof(Vertex),vk::VertexInputRate::eVertex) };
+
+                return bindingDescription;
+            }
+
+
+
+            //get vertex input attributi description
+            static std::vector<vk::VertexInputAttributeDescription>& getAttributeDescrip() {
+                static std::vector<vk::VertexInputAttributeDescription> attributeDescription = {
+                    vk::VertexInputAttributeDescription(0,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, pos)),
+                    vk::VertexInputAttributeDescription(1,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, normal)),
+                    vk::VertexInputAttributeDescription(2,0,vk::Format::eR32G32Sfloat,offsetof(Vertex, texCoord))
+                };
+
+                return attributeDescription;
+            }
         };
 
     }

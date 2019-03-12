@@ -7,11 +7,13 @@
 
 #include "MixEngine.h"
 
-#include "MxVk\MxVkCore.h"
+#include "MxVk/MxVkGraphics.h"
+
+#include <tinyxml/tinyxml2.h>
 
 class Demo : public Mix::Behaviour {
 public:
-    ~Demo() {
+    virtual ~Demo() {
         puts("Demo deleted");
     }
 
@@ -22,24 +24,9 @@ public:
         SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 128, 225));
         SDL_UpdateWindowSurface(window.getWindowPtr());
 
-        Mix::Graphics::Core core;
-
-        auto marker = [](const Mix::Graphics::PhysicalDeviceInfo& info)->uint32_t {
-            if (info.properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu)
-                return 100;
-            else
-                return 0;
-        };
-
-        core.setAppInfo("Demo", Mix::Version::makeVersion(0, 0, 1));
-        core.setDebugMode(false);
-        core.setTargetWindow(&window);
-
-        core.createInstance();
-        core.pickPhysicalDevice(marker);
-        auto& devices = core.getAllPhysicalDeviceInfo();
-        std::cout << "[Device name]: " << core.getPhysicalDeviceProperties().deviceName << std::endl;
-        std::cout << std::boolalpha << core.getQueueFamilyIndices().present.has_value() << std::endl;
+        graphics.init();
+        graphics.setTargetWindow(&window);
+        graphics.build();
 
         SDL_SetRelativeMouseMode(SDL_FALSE);
     }
@@ -54,10 +41,14 @@ public:
         glm::ivec2 d = Mix::Input::MousePositionDelta();
         if (d.y || d.x)
             std::cout << d.x << ", " << d.y << std::endl;
+
+        graphics.update(0.1f);
     }
 
 private:
     Mix::Window window;
+
+    Mix::Graphics::Graphics graphics;
 };
 
 #endif

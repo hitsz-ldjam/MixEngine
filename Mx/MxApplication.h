@@ -5,7 +5,6 @@
 
 #include <iostream>
 
-#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
@@ -22,6 +21,7 @@ namespace Mix {
 
     private:
         bool quit;
+        bool cleaned;
 
         void cleanup();
         // todo: where to insert?

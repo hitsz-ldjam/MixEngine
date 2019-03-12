@@ -17,24 +17,36 @@
 
 namespace Mix {
     namespace Graphics {
+        class Core;
+
+        class GraphicsBase :public Object {
+            MX_DECLARE_RTTI;
+            MX_DECLARE_NO_CLASS_FACTORY;
+        public:
+            virtual ~GraphicsBase() = 0 {};
+        };
+
+
         class Core :public GraphicsBase {
             MX_DECLARE_RTTI;
             MX_DECLARE_CLASS_FACTORY;
         public:
             Core();
-            ~Core() {
+            virtual ~Core() {
                 destroy();
             }
 
             void createInstance();
             void pickPhysicalDevice(const std::function<uint32_t(const PhysicalDeviceInfo&)>& marker = nullptr);
             void createLogicalDevice();
+            void endInit();
             void destroy();
 
             const vk::Instance& instance() const { return mInstance; }
             const vk::PhysicalDevice& physicalDevice() const { return mPhysicalDeviceInfo.physicalDevice; }
             const vk::Device& device() const { return mLogicalDevice; }
             const vk::SurfaceKHR& surface() const { return mSurface; }
+            Window* window() { return mWindow; }
 
             void setAppInfo(const std::string& appName, const VersionInt appVer) {
                 mAppName = appName;
@@ -55,7 +67,7 @@ namespace Mix {
                 mInitInfo->deviceExtensions = extensions;
             }
 
-            void setQueueFlags(const vk::QueueFlags& flags) {
+            void setQueueFlags(const vk::QueueFlags& flags = vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eTransfer) {
                 mInitInfo->queueFlags = flags;
             }
 
@@ -87,6 +99,14 @@ namespace Mix {
 
             const uint32_t getMemoryTypeIndex(const uint32_t type, const vk::MemoryPropertyFlags& properties) const;
 
+            const vk::DispatchLoaderDynamic& dynamicLoader() const {
+                return mDynamicLoader;
+            }
+
+            const vk::DispatchLoaderStatic& staticLoader() const {
+                return mStaticLoader;
+            }
+
             static std::vector<vk::ExtensionProperties> getSupportedExtensions() {
                 return vk::enumerateInstanceExtensionProperties();
             }
@@ -115,6 +135,8 @@ namespace Mix {
             vk::Device mLogicalDevice;
             QueueSet mQueueSet;
             vk::SurfaceKHR mSurface;
+            vk::DispatchLoaderDynamic mDynamicLoader;
+            vk::DispatchLoaderStatic mStaticLoader;
 
 
             std::vector<vk::ExtensionProperties> mSupportedExtensions;
@@ -124,6 +146,18 @@ namespace Mix {
         private:
             uint32_t evaluatePhysicalDevice(const PhysicalDeviceInfo& info);
             QueueFamilyIndexSet getQueueFamilyIndexSet(const PhysicalDeviceInfo& info);
+        };
+
+
+        class GraphicsComponent :public GraphicsBase {
+            MX_DECLARE_RTTI;
+            MX_DECLARE_NO_CLASS_FACTORY;
+        public:
+            virtual ~GraphicsComponent() = 0 {};
+            GraphicsComponent() { mCore = nullptr; }
+            virtual void init(const Core* core) { mCore = core; }
+        protected:
+            const Core* mCore = nullptr;
         };
     }
 }

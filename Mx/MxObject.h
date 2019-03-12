@@ -70,13 +70,6 @@ namespace Mix {
 
         const std::string& getTypeName() const { return getType().getName(); };
     };
-
-    class GraphicsBase :public Object {
-        MX_DECLARE_RTTI;
-        MX_DECLARE_NO_CLASS_FACTORY;
-    public:
-        virtual ~GraphicsBase() = 0 {};
-    };
 }
 
 #endif // !_MX_OBJECT_H_

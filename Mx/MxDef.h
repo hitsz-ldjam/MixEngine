@@ -12,8 +12,10 @@
 
 
 #define MX_FREE_POINTER(p)											\
-	if((p)!=nullptr)												\
-		delete (p);
+	if((p)!=nullptr){												\
+		delete (p);\
+        (p)=nullptr;\
+}
 
 
 namespace Mix {

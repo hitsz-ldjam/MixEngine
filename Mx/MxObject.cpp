@@ -21,7 +21,4 @@ namespace Mix {
 
         return true;
     }
-
-    MX_IMPLEMENT_RTTI_NoCreateFunc(GraphicsBase, Object);
-
 }

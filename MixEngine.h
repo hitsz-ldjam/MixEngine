@@ -5,12 +5,11 @@
 
 #include <glm/glm.hpp>
 
-#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 
-
+// todo
 #include "Mx/MxDef.h"
 
 #include "Mx/MxApplication.h"
