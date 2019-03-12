@@ -5,23 +5,20 @@
 
 #include <glm/glm.hpp>
 
-#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 
-// #define TEST_WITH_VULKAN
-#ifdef TEST_WITH_VULKAN
-// todo: include vulkan and other stuffs
-#endif
+// todo
+#include "Mx/MxDef.h"
 
-#include "MxApplication.h"
-#include "MxAudio.h"
-#include "MxBehaviour.h"
-#include "MxComponent.h"
-#include "MxGameObject.h"
-#include "MxInput.h"
-#include "MxObject.h"
-#include "MxWindow.h"
+#include "Mx/MxApplication.h"
+#include "Mx/MxAudio.h"
+#include "Mx/MxBehaviour.h"
+#include "Mx/MxComponent.h"
+#include "Mx/MxGameObject.h"
+#include "Mx/MxInput.h"
+#include "Mx/MxObject.h"
+#include "Mx/MxWindow.h"
 
 #endif
