@@ -49,8 +49,9 @@ namespace Mix {
                                      vk::PipelineStageFlags dstStageMask = vk::PipelineStageFlagBits::eAllCommands);
 
             Image createDepthStencil(const Core& core,
-                                      const vk::Format format,
+
                                       const vk::Extent2D& extent,
+
                                       const vk::SampleCountFlagBits sampleCount);
         }
 

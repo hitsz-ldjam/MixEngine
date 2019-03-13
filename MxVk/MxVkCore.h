@@ -97,7 +97,9 @@ namespace Mix {
                 return mPhysicalDeviceInfo.features;
             }
 
-            const uint32_t getMemoryTypeIndex(const uint32_t type, const vk::MemoryPropertyFlags& properties) const;
+            uint32_t getMemoryTypeIndex(const uint32_t type, const vk::MemoryPropertyFlags& properties) const;
+
+            bool checkFormatFeatureSupport(const vk::Format format, const vk::ImageTiling tiling, const vk::FormatFeatureFlags features) const;
 
             const vk::DispatchLoaderDynamic& dynamicLoader() const {
                 return mDynamicLoader;

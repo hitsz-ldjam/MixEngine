@@ -155,7 +155,22 @@ namespace Mix {
                                           imageMemoryBarrier);
             }
 
-            Image createDepthStencil(const Core & core, const vk::Format format, const vk::Extent2D & extent, const vk::SampleCountFlagBits sampleCount) {
+            Image createDepthStencil(const Core & core, const vk::Extent2D & extent, const vk::SampleCountFlagBits sampleCount) {
+                static vk::Format candidates[] = {
+                    vk::Format::eD32SfloatS8Uint,
+                    vk::Format::eD24UnormS8Uint,
+                    vk::Format::eD16UnormS8Uint
+                };
+
+                vk::Format format;
+                vk::FormatProperties prop;
+                for (auto candidate : candidates) {
+                    if (core.checkFormatFeatureSupport(candidate,
+                        vk::ImageTiling::eOptimal,
+                        vk::FormatFeatureFlagBits::eDepthStencilAttachment))
+                        format = candidate;
+                }
+
                 Image image;
                 image.image = createImage2D(core,
                                             extent,

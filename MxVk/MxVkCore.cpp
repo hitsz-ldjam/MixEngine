@@ -144,7 +144,10 @@ namespace Mix {
             MX_FREE_POINTER(mInitInfo);
             mInitInfo = nullptr;
 
-            mDynamicLoader.init(mInstance, mLogicalDevice);
+            mDynamicLoader.init(static_cast<VkInstance>(mInstance),
+                                vkGetInstanceProcAddr,
+                                static_cast<VkDevice>(mLogicalDevice),
+                                vkGetDeviceProcAddr);
         }
 
         void Core::destroy() {
@@ -172,12 +175,23 @@ namespace Mix {
             mInitInfo->instanceExtensions.insert(mInitInfo->instanceExtensions.end(), extensions.begin(), extensions.end());
         }
 
-        const uint32_t Core::getMemoryTypeIndex(const uint32_t type, const vk::MemoryPropertyFlags & properties) const {
+        uint32_t Core::getMemoryTypeIndex(const uint32_t type, const vk::MemoryPropertyFlags & properties) const {
             for (uint32_t i = 0; i < mPhysicalDeviceInfo.memoryProperties.memoryTypeCount; ++i) {
                 if (type  & (1 << i) && mPhysicalDeviceInfo.memoryProperties.memoryTypes[i].propertyFlags & properties)
                     return i;
             }
             return ~0U;
+        }
+
+        bool Core::checkFormatFeatureSupport(const vk::Format format, const vk::ImageTiling tiling, const vk::FormatFeatureFlags features) const {
+            auto prop = mPhysicalDeviceInfo.physicalDevice.getFormatProperties(format);
+
+            if (tiling == vk::ImageTiling::eLinear && (prop.linearTilingFeatures & features) == features)
+                return true;
+            else if (tiling == vk::ImageTiling::eOptimal && (prop.optimalTilingFeatures & features) == features)
+                return true;
+            else
+                return false;
         }
 
         uint32_t Core::evaluatePhysicalDevice(const PhysicalDeviceInfo & info) {

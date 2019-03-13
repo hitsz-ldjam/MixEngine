@@ -99,7 +99,6 @@ namespace Mix {
             mCore->setQueueFlags();
             mCore->createInstance();
             mCore->pickPhysicalDevice();
-            mCore->pickPhysicalDevice();
             mCore->createLogicalDevice();
             mCore->endInit();
         }
@@ -120,7 +119,6 @@ namespace Mix {
 
         void Graphics::buildDepthStencil() {
             mDepthStencil = Tools::createDepthStencil(*mCore,
-                                                      vk::Format::eD24UnormS8Uint,
                                                       mSwapchain->extent(),
                                                       mSettings.sampleCount);
 
