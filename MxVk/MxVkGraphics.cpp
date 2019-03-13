@@ -111,9 +111,10 @@ namespace Mix {
         void Graphics::buildSwapchain() {
             // todo
             mSwapchain->init(mCore);
-            mSwapchain->initSyncObj(*mSyncObjMgr);
-            mSwapchain->create(mSwapchain->supportedFormat(),
-                               vk::PresentModeKHR::eFifo,
+            mSwapchain->setImageCount(2);
+            mSwapchain->create(*mSyncObjMgr,
+                               mSwapchain->supportedFormat(),
+                               { vk::PresentModeKHR::eFifo },
                                vk::Extent2D(640, 480));
         }
 

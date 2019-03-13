@@ -166,9 +166,12 @@ namespace Mix {
                 vk::FormatProperties prop;
                 for (auto candidate : candidates) {
                     if (core.checkFormatFeatureSupport(candidate,
-                        vk::ImageTiling::eOptimal,
-                        vk::FormatFeatureFlagBits::eDepthStencilAttachment))
+                                                       vk::ImageTiling::eOptimal,
+                                                       vk::FormatFeatureFlagBits::eDepthStencilAttachment)) {
+
                         format = candidate;
+                        break;
+                    }
                 }
 
                 Image image;

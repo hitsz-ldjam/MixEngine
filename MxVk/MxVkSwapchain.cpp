@@ -15,13 +15,15 @@ namespace Mix {
 
             mSupportDetails.presentModes =
                 mCore->physicalDevice().getSurfacePresentModesKHR(mCore->surface());
-
-            mImageCount = mSupportDetails.capabilities.minImageCount;
-            if (mImageCount > 0 && mImageCount > mSupportDetails.capabilities.maxImageCount)
-                mImageCount = mSupportDetails.capabilities.maxImageCount;
         }
 
-        void Swapchain::initSyncObj(SyncObjectMgr & syncMgr) {
+        void Swapchain::destroy() {
+            for (auto& view : mImageViews)
+                mCore->device().destroyImageView(view);
+            mCore->device().destroySwapchainKHR(mSwapchain);
+        }
+
+        void  Swapchain::create(SyncObjectMgr& syncMgr, const std::vector<vk::SurfaceFormatKHR>& rqFormats, const std::vector<vk::PresentModeKHR>& rqPresentMode, const vk::Extent2D& rqExtent) {
             mImageAvlSph.resize(mImageCount);
             mRenderFinishedSph.resize(mImageCount);
             mInFlightFences.resize(mImageCount);
@@ -31,15 +33,7 @@ namespace Mix {
                 mRenderFinishedSph[i] = syncMgr.createSemaphore();
                 mInFlightFences[i] = syncMgr.createFence();
             }
-        }
 
-        void Swapchain::destroy() {
-            for (auto& view : mImageViews)
-                mCore->device().destroyImageView(view);
-            mCore->device().destroySwapchainKHR(mSwapchain);
-        }
-
-        void  Swapchain::create(const std::vector<vk::SurfaceFormatKHR> & rqFormats, const vk::PresentModeKHR rqPresentMode, const vk::Extent2D & rqExtent) {
             vk::SurfaceFormatKHR format;
             if (!chooseFormat(rqFormats, format))
                 throw SurfaceFormatUnsupported();
@@ -58,7 +52,7 @@ namespace Mix {
             createInfo.imageColorSpace = format.colorSpace;
             createInfo.imageExtent = extent;
             createInfo.imageArrayLayers = 1;
-            createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment; //imageµÄÓÃÍ¾
+            createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
 
             uint32_t queueFamilyIndices[2] = {
                 mCore->getQueueFamilyIndices().graphics.value(),
@@ -105,12 +99,13 @@ namespace Mix {
             }
         }
 
-        bool  Swapchain::choosePresentMode(const vk::PresentModeKHR rqPresentMode, vk::PresentModeKHR & presentMode) {
-            for (const auto& support : mSupportDetails.presentModes) {
-                if (rqPresentMode == support) {
-                    presentMode = support;
-                    return true;
-                }
+        bool  Swapchain::choosePresentMode(const std::vector<vk::PresentModeKHR>& rqPresentModes, vk::PresentModeKHR & presentMode) {
+            for (auto rqPresentMode : rqPresentModes) {
+                for (auto support : mSupportDetails.presentModes)
+                    if (rqPresentMode == support) {
+                        presentMode = rqPresentMode;
+                        return true;
+                    }
             }
             return false;
         }
@@ -196,6 +191,9 @@ namespace Mix {
                 return;
             } else if (acquireResult.result != vk::Result::eSuccess)
                 throw SwapchainSwapFailed();
+
+            std::cout << "image index " << acquireResult.value << std::endl
+                << "current frame " << mCurrFrame << std::endl;
 
             mCurrFrame = (mCurrFrame + 1) % mImageCount;
         }

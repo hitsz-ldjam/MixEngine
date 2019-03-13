@@ -34,7 +34,7 @@ namespace Mix {
 
         void DescriptorPool::addPoolSize(vk::DescriptorType type, uint32_t count) {
             if (mPoolSizes.count(type) == 0)
-                mPoolSizes[type] = 1;
+                mPoolSizes[type] = count;
             else
                 mPoolSizes[type] += count;
         }
