@@ -35,6 +35,13 @@ namespace Mix {
         SDL_FreeSurface(icon);
     }
 
+    glm::ivec2 Window::getSize() {
+        glm::ivec2 size = {0, 0};
+        if(window)
+            SDL_GetWindowSize(window, &size.x, &size.y);
+        return size;
+    }
+
     void Window::destory() {
         if(window)
             SDL_DestroyWindow(window);

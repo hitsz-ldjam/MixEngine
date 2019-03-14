@@ -7,18 +7,19 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <SDL2/SDL_mixer.h>
 
 // todo
 #include "Mx/MxDef.h"
 
 #include "Mx/MxApplication.h"
-#include "Mx/MxAudio.h"
+#include "Mx/MxAudioClip.h"
+#include "Mx/MxAudioManager.h"
 #include "Mx/MxBehaviour.h"
 #include "Mx/MxComponent.h"
 #include "Mx/MxGameObject.h"
 #include "Mx/MxInput.h"
 #include "Mx/MxObject.h"
+#include "Mx/MxTime.h"
 #include "Mx/MxWindow.h"
 
 #endif

@@ -192,8 +192,8 @@ namespace Mix {
             } else if (acquireResult.result != vk::Result::eSuccess)
                 throw SwapchainSwapFailed();
 
-            std::cout << "image index " << acquireResult.value << std::endl
-                << "current frame " << mCurrFrame << std::endl;
+            /*std::cout << "image index " << acquireResult.value << std::endl
+                << "current frame " << mCurrFrame << std::endl;*/
 
             mCurrFrame = (mCurrFrame + 1) % mImageCount;
         }

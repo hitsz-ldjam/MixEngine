@@ -11,40 +11,52 @@
 
 class Demo : public Mix::Behaviour {
 public:
-    virtual ~Demo() {
+    ~Demo() {
+        delete clip;
         puts("Demo deleted");
     }
 
-    void init() {
+    void init() override {
         window.create("Mix Engine Demo", 640, 480);
 
         SDL_Surface* surface = SDL_GetWindowSurface(window.getWindowPtr());
-        SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 128, 225));
+        SDL_FillRect(surface, nullptr, SDL_MapRGB(surface->format, 0, 128, 225));
         SDL_UpdateWindowSurface(window.getWindowPtr());
+
+        SDL_SetRelativeMouseMode(SDL_FALSE);
+
+        clip = Mix::AudioClip::open("", // Pass audio path here
+                                    Mix::AudioClipLoadType::DecompressOnLoad
+                                    | Mix::AudioClipLoadType::ThreeD
+                                    | Mix::AudioClipLoadType::Loop);
+        clip->init(false);
+        clip->set3DAttributes(&pos, &vel);
+        clip->play();
+        lastPos = pos;
 
         graphics.init();
         graphics.setTargetWindow(&window);
         graphics.build();
-
-        SDL_SetRelativeMouseMode(SDL_FALSE);
     }
 
-    void update() {
-        bool i = Mix::Input::GetKeyDown(SDLK_f);
-        // Mix::Input::GetMouseButtonDown(SDL_BUTTON_LEFT);
-        // Mix::Input::GetAxisRaw(SDL_SCANCODE_F);
-        if (i)
-            std::cout << i << std::endl;
-
+    void update() override {
         glm::ivec2 d = Mix::Input::MousePositionDelta();
-        if (d.y || d.x)
+        if(d.y || d.x)
             std::cout << d.x << ", " << d.y << std::endl;
 
-        graphics.update(0.1f);
+        pos.x = sin(Mix::Time::getTime() * 0.5) * 10;
+        vel.x = (pos.x - lastPos.x) / Mix::Time::getDeltaTime();
+        lastPos = pos;
+        clip->set3DAttributes(&pos, &vel);
+        
+        graphics.update(10 * Mix::Time::getDeltaTime());
     }
 
 private:
     Mix::Window window;
+
+    Mix::AudioClip* clip = nullptr;
+    glm::vec3 pos = {-10., 0., 3.}, lastPos = {0., 0., 0.}, vel = {0., 0., 0.};
 
     Mix::Graphics::Graphics graphics;
 };
