@@ -96,6 +96,9 @@ namespace Mix {
         }
 
         void DescriptorPool::destroy() {
+            if (!mCore)
+                return;
+
             mCore->device().destroyDescriptorPool(mDescriptorPool);
             mDescriptorPool = nullptr;
             mCore = nullptr;

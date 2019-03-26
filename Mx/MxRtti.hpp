@@ -16,7 +16,7 @@ namespace Mix {
         const Rtti* mpBase;
 
     public:
-        /** @param COF is unused */
+        /** @param COF Unused. */
         Rtti(const std::string& rttiName, const Rtti* pBase, createObjectFunc COF)
             :mRttiName(rttiName),
             mpBase(pBase) {

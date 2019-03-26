@@ -2,7 +2,7 @@
 
 #include "Demo.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char** argv) {
     // todo
     const uint32_t behaviourNum = 1;
     Mix::Application app(argc, argv);

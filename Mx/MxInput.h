@@ -11,11 +11,9 @@
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_mouse.h>
 
-#include "MxApplication.h"
-
 namespace Mix {
 
-    /** @note This class considers several events in a loop as one.*/
+    /** @note This class considers several events in a loop as one. */
     class Input {
         friend class Application;
 
@@ -36,10 +34,11 @@ namespace Mix {
             return GetAxisRaw(SDL_GetScancodeFromName(name.c_str()));
         }
 
-        // On an AZERTY keyboard, pressing 'A' will emit a 'Q' scancode (representing the physical location) and an 'A' keycode.
+        // On an AZERTY keyboard, pressing 'A' will emit
+        // a 'Q' scancode (representing the physical location) and an 'A' keycode.
 
         static bool GetButton(const SDL_Scancode scancode) {
-            return keyEvent[scancode] & PressedMask;
+            return keyEvent[scancode] & PRESSED_MASK;
         }
 
         static bool GetButton(const std::string& name) {
@@ -47,7 +46,7 @@ namespace Mix {
         }
 
         static bool GetButtonDown(const SDL_Scancode scancode) {
-            return keyEvent[scancode] & FirstPressedMask;
+            return keyEvent[scancode] & FIRST_PRESSED_MASK;
         }
 
         static bool GetButtonDown(const std::string& name) {
@@ -55,7 +54,7 @@ namespace Mix {
         }
 
         static bool GetButtonUp(const SDL_Scancode scancode) {
-            return keyEvent[scancode] & ReleasedMask;
+            return keyEvent[scancode] & RELEASED_MASK;
         }
 
         static bool GetButtonUp(const std::string& name) {
@@ -112,25 +111,25 @@ namespace Mix {
             return delta;
         }
 
-        /** @note positive (up) or negative (down) */
+        /** @return Positive for upwards, negative for downwards. */
         static glm::ivec2 MouseScrollDelta() {
             return mouseScrollDelta;
         }
 
-        /** @param button May be one of the SDL_BUTTON macros */
+        /** @param button May be one of the SDL_BUTTON macros. */
         static bool GetMouseButtonDown(const Uint8 button) {
-            return mouseButtonEvent[button - 1] & FirstPressedMask;
+            return mouseButtonEvent[button - 1] & FIRST_PRESSED_MASK;
         }
 
-        /** @param button May be one of the SDL_BUTTON macros */
+        /** @param button May be one of the SDL_BUTTON macros. */
         static bool GetMouseButtonUp(const Uint8 button) {
-            return mouseButtonEvent[button - 1] & ReleasedMask;
+            return mouseButtonEvent[button - 1] & RELEASED_MASK;
         }
 
     private:
-        static const Uint8 FirstPressedMask = (1 << 2);
-        static const Uint8 PressedMask = (1 << 1);
-        static const Uint8 ReleasedMask = (1);
+        static const Uint8 FIRST_PRESSED_MASK = (1 << 2);
+        static const Uint8 PRESSED_MASK = (1 << 1);
+        static const Uint8 RELEASED_MASK = (1);
 
         static const Uint8* keyboardState;
         // first pressed | pressed | released
@@ -140,10 +139,6 @@ namespace Mix {
 
         static glm::ivec2 mouseScrollDelta;
         static Uint8 mouseButtonEvent[SDL_BUTTON_X2];
-        
-        static void initKeyboardState(const Uint8* keyboardState) {
-            Input::keyboardState = keyboardState;
-        }
 
         static void reset() {
             memset(keyEvent, 0, SDL_NUM_SCANCODES * sizeof(*keyEvent));

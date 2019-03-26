@@ -29,7 +29,7 @@ namespace Mix {
             return *this;
         }
 
-        void Pipeline::init(const Core * core) {
+        void Pipeline::init(std::shared_ptr<Core> & core) {
             mCore = core;
             mPipelineStates = new PipelineStates;
         }

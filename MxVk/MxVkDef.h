@@ -4,10 +4,11 @@
 
 #include"../Mx/MxDef.h"
 #include"../Mx/MxObject.h"
-#include"vulkan/vulkan.hpp"
+#include <vulkan/vulkan.hpp>
 #include <optional>
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
+#include <memory>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 
 namespace Mix {
@@ -75,6 +76,13 @@ namespace Mix {
 
                 return attributeDescription;
             }
+        };
+
+        class GraphicsBase :public Object {
+            MX_DECLARE_RTTI;
+            MX_DECLARE_NO_CLASS_FACTORY;
+        public:
+            virtual ~GraphicsBase() = 0 {};
         };
 
     }

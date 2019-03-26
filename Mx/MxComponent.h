@@ -1,20 +1,34 @@
 #pragma once
-
 #ifndef _MX_COMPONENT_H_
 #define _MX_COMPONENT_H_
 
-#include <string>
 
 #include "MxObject.h"
-#include "MxGameObject.h"
+#include <string>
+
 
 namespace Mix {
-    // todo: finish this class
+    class GameObject;
+
     class Component : public Object {
-    private:
-        // GameObject* gameObject;
-        // std::string tag;
-        // transform
+        MX_DECLARE_RTTI;
+        MX_DECLARE_NO_CLASS_FACTORY;
+    public:
+        Component() :mGameObj(nullptr) {};
+        virtual ~Component() = 0 {};
+
+        void setGameObj(GameObject* gameObj) {
+            mGameObj = gameObj;
+        }
+
+        GameObject* getGameObj() {
+            return mGameObj;
+        }
+
+        virtual Component* copy() const = 0;
+
+    protected:
+        GameObject* mGameObj;
     };
 
 }

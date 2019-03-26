@@ -19,7 +19,7 @@ namespace Mix {
                 destroy();
             }
 
-            virtual void init(const Core* core) override;
+            virtual void init(std::shared_ptr<Core>& core) override;
 
             void setImageCount(const uint32_t count) {
                 mImageCount = mSupportDetails.capabilities.minImageCount < count ? count : mSupportDetails.capabilities.minImageCount;
@@ -28,9 +28,10 @@ namespace Mix {
 
             void destroy();
 
-            void create(SyncObjectMgr& syncMgr,
-                        const std::vector<vk::SurfaceFormatKHR>& rqFormats,
-                        const std::vector<vk::PresentModeKHR>& rqPresentMode, const vk::Extent2D& rqExtent);
+            void create(const std::vector<vk::SurfaceFormatKHR>& rqFormats,
+
+                        const std::vector<vk::PresentModeKHR>& rqPresentMode,
+                        const vk::Extent2D& rqExtent);
 
             const std::vector<vk::SurfaceFormatKHR>& supportedFormat() const {
                 return mSupportDetails.formats;

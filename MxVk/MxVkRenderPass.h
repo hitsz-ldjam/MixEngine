@@ -15,7 +15,7 @@ namespace Mix {
             RenderPass() { mCore = nullptr; }
             virtual ~RenderPass() { destroy(); }
 
-            void init(const Core* core) override;
+            void init(std::shared_ptr<Core>& core) override;
 
             void create();
 
@@ -84,10 +84,10 @@ namespace Mix {
                 vk::AttachmentReference resolveRef;
             };
 
-            std::vector<vk::AttachmentDescription>* mAttachments;
-            std::vector<vk::AttachmentReference>* mAttachRefs;
-            std::vector<vk::SubpassDependency>* mDependencies;
-            std::vector<SubpassContent>* mSubpasses;
+            std::shared_ptr<std::vector<vk::AttachmentDescription>> mAttachments;
+            std::shared_ptr<std::vector<vk::AttachmentReference>> mAttachRefs;
+            std::shared_ptr<std::vector<vk::SubpassDependency>> mDependencies;
+            std::shared_ptr<std::vector<SubpassContent>> mSubpasses;
 
             void clear();
 

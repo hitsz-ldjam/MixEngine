@@ -27,6 +27,9 @@ namespace Mix {
         }
 
         void Debug::destroy() {
+            if (!mCore)
+                return;
+
             for (const auto& messenger : mMessengers)
                 mCore->instance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->dynamicLoader());
 

@@ -148,9 +148,12 @@ namespace Mix {
                                 vkGetInstanceProcAddr,
                                 static_cast<VkDevice>(mLogicalDevice),
                                 vkGetDeviceProcAddr);
+
+            mSyncObjMgr.init(mLogicalDevice);
         }
 
         void Core::destroy() {
+            mSyncObjMgr.destroy();
             mLogicalDevice.destroy();
             mInstance.destroy(mSurface);
             mInstance.destroy();

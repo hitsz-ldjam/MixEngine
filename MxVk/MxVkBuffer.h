@@ -34,14 +34,14 @@ namespace Mix {
             void invalidate(const vk::DeviceSize size = VK_WHOLE_SIZE, const vk::DeviceSize offset = 0);
             void destory();
 
-            static Buffer* createBuffer(const Core* core, const vk::BufferUsageFlags usage,
+            static Buffer* createBuffer(std::shared_ptr<Core>& core, const vk::BufferUsageFlags usage,
                                         const vk::MemoryPropertyFlags memoryProperty,
                                         const vk::DeviceSize size,
                                         const vk::SharingMode sharingMode = vk::SharingMode::eExclusive, 
                                         const void * data = nullptr);
 
-            static void copyToDeviceBuffer(const Core* core,
-                                           CommandMgr* commandPool, 
+            static void copyToDeviceBuffer(std::shared_ptr<Core>& core,
+                                           std::shared_ptr<CommandMgr>& commandPool,
                                            const Buffer* dstBuffer, 
                                            const void* data);
         };

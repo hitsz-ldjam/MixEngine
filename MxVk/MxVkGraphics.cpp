@@ -6,34 +6,38 @@ namespace Mix {
         MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Graphics);
 
         void Graphics::init() {
-            mCore = new Core();
-            mDebug = new Debug();
-            mSwapchain = new Swapchain();
+            mCore = std::make_shared<Core>();
+            mDebug = std::make_shared<Debug>();
+            mSwapchain = std::make_shared<Swapchain>();
 
-            mShaderMgr = new ShaderMgr();
-            mPipelineMgr = new PipelineMgr();
-            mSyncObjMgr = new SyncObjectMgr();
+            mShaderMgr = std::make_shared<ShaderMgr>();
+            mPipelineMgr = std::make_shared<PipelineMgr>();
 
-            mRenderPass = new RenderPass();
-            mDescriptorPool = new DescriptorPool();
-            mDescriptorSetLayout = new DescriptorSetLayout();
-            mCommandMgr = new CommandMgr();
+            mRenderPass = std::make_shared<RenderPass>();
+            mDescriptorPool = std::make_shared<DescriptorPool>();
+            mDescriptorSetLayout = std::make_shared<DescriptorSetLayout>();
+            mCommandMgr = std::make_shared<CommandMgr>();
+
+            mImageMgr = std::make_shared<ImageMgr>();
+            mMeshMgr = std::make_shared<MeshMgr>();
         }
 
         void Graphics::build() {
             buildCore();
-            mSyncObjMgr->init(mCore);
-            mDescriptorPool->init(mCore);
-            mDescriptorSetLayout->init(mCore);
             buildDebugUtils();
+            buildCommandMgr();
+            mDescriptorPool->init(mCore);
+            mpAllocator = std::make_shared<DeviceAllocator>();
+            mpAllocator->init(mCore);
             buildSwapchain();
             buildDepthStencil();
             buildRenderPass();
             buildDescriptorSetLayout();
             buildShaders();
             buildPipeline();
-            buildCommandMgr();
             buildFrameBuffers();
+
+            loadResource();
 
             buildVertexBuffers();
             buildUniformBuffers();
@@ -43,7 +47,7 @@ namespace Mix {
 
         void Graphics::update(float deltaTime) {
             Uniform ubo = {};
-            ubo.view = glm::lookAt(glm::vec3(1.0f, 1.0f, 1.0f),
+            ubo.view = glm::lookAt(glm::vec3(5.0f, 5.0f, 2.0f),
                                    glm::vec3(0.0f, 0.0f, 0.0f),
                                    glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -53,7 +57,12 @@ namespace Mix {
             ubo.proj[1][1] *= -1.0f;
 
             static float angle = 0.0f;
-            ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians((angle += deltaTime * 10.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
+            ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(angle += (deltaTime * 90.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
+            std::cout << angle << deltaTime << std::endl;
+
+            static float total = 0.0f;
+            total += deltaTime * 6;
+            ubo.index = static_cast<uint32_t>(std::floor(total)) % 6;
 
             uniforms[mSwapchain->currentFrame()]->map();
             uniforms[mSwapchain->currentFrame()]->copyTo(&ubo, sizeof(ubo));
@@ -65,11 +74,12 @@ namespace Mix {
         void Graphics::destroy() {
             mCore->device().waitIdle();
 
-            delete mCommandMgr;
-
             mCore->device().destroyImageView(mDepthStencilView);
             mCore->device().destroyImage(mDepthStencil.image);
             mCore->device().freeMemory(mDepthStencil.memory);
+
+            mCore->device().destroyImageView(texImageView);
+            mCore->device().destroySampler(sampler);
 
             for (auto& buffer : uniforms) {
                 delete buffer;
@@ -79,17 +89,6 @@ namespace Mix {
 
             for (auto& framebuffer : mFramebuffers)
                 delete framebuffer;
-
-            delete mShaderMgr;
-            delete mSwapchain;
-            delete mDescriptorSetLayout;
-            delete mDescriptorPool;
-            delete mPipelineMgr;
-            delete mRenderPass;
-
-            delete mSyncObjMgr;
-            delete mDebug;
-            delete mCore;
         }
 
         void Graphics::buildCore() {
@@ -112,8 +111,7 @@ namespace Mix {
             // todo
             mSwapchain->init(mCore);
             mSwapchain->setImageCount(2);
-            mSwapchain->create(*mSyncObjMgr,
-                               mSwapchain->supportedFormat(),
+            mSwapchain->create(mSwapchain->supportedFormat(),
                                { vk::PresentModeKHR::eFifo },
                                vk::Extent2D(640, 480));
         }
@@ -160,7 +158,9 @@ namespace Mix {
         }
 
         void Graphics::buildDescriptorSetLayout() {
+            mDescriptorSetLayout->init(mCore);
             mDescriptorSetLayout->addBindings(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
+            mDescriptorSetLayout->addBindings(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment);
             mDescriptorSetLayout->create();
         }
 
@@ -276,8 +276,9 @@ namespace Mix {
         }
 
         void Graphics::Graphics::buildCommandBuffers() {
-            mCommandBuffers = mCommandMgr->allocCommandBuffers(vk::CommandBufferLevel::ePrimary,
-                                                               mSwapchain->imageCount());
+            mCommandBuffers = mCommandMgr->allocCommandBuffers(mSwapchain->imageCount(),
+
+                                                               vk::CommandBufferLevel::ePrimary);
 
             for (size_t i = 0; i < mCommandBuffers.size(); ++i) {
                 vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
@@ -285,7 +286,7 @@ namespace Mix {
                 mCommandBuffers[i].begin(beginInfo);
 
                 std::vector<vk::ClearValue> clearValues(2);
-                clearValues[0].color = std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f};
+                clearValues[0].color = std::array<float, 4>{0.0f, 0.75f, 1.0f, 1.0f};
                 clearValues[1].depthStencil = { 1.0f,0 };
 
                 //begin render pass
@@ -300,14 +301,25 @@ namespace Mix {
                                                       { mDescriptorSets[i] },
                                                       nullptr);
 
-                mCommandBuffers[i].bindVertexBuffers(0,
+                /*mCommandBuffers[i].bindVertexBuffers(0,
                                                      box->buffer,
                                                      { 0 });
 
                 mCommandBuffers[i].draw(static_cast<uint32_t>(vertices.size()),
                                         1,
                                         0,
-                                        0);
+                                        0);*/
+                auto& mesh=mMeshMgr->getMesh("what");
+                mCommandBuffers[i].bindVertexBuffers(0,
+                                                     mesh.buffer,
+                                                     { 0 });
+
+                for (uint32_t index = 0; index < mesh.firstVertex.size(); ++index) {
+                    mCommandBuffers[i].draw(mesh.vertexCount[index],
+                                            1,
+                                            mesh.firstVertex[index],
+                                            0);
+                }
 
                 //end render pass
                 mRenderPass->endRenderPass(mCommandBuffers[i]);
@@ -320,16 +332,20 @@ namespace Mix {
         void Graphics::Graphics::buildDescriptorSets() {
             //create descriptor pool
             mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBuffer, mSwapchain->imageCount());
+            mDescriptorPool->addPoolSize(vk::DescriptorType::eCombinedImageSampler, mSwapchain->imageCount());
             mDescriptorPool->create(mSwapchain->imageCount());
 
             //allocate descriptor sets
             mDescriptorSets = mDescriptorPool->allocDescriptorSet(*mDescriptorSetLayout, mSwapchain->imageCount());
 
-
+            vk::DescriptorImageInfo imageInfo;
+            imageInfo.imageView = texImageView;
+            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            imageInfo.sampler = sampler;
 
             //update descriptor sets
             for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
-                std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {};
+                std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {};
                 descriptorWrites[0].dstSet = mDescriptorSets[i]; //descriptor which will be write in
                 descriptorWrites[0].dstBinding = 0; //destination binding
                 descriptorWrites[0].dstArrayElement = 0;
@@ -339,7 +355,67 @@ namespace Mix {
                 descriptorWrites[0].pImageInfo = nullptr;
                 descriptorWrites[0].pTexelBufferView = nullptr;
 
+                descriptorWrites[1].dstSet = mDescriptorSets[i];
+                descriptorWrites[1].dstBinding = 1;
+                descriptorWrites[1].dstArrayElement = 0;
+                descriptorWrites[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+                descriptorWrites[1].descriptorCount = 1;
+                descriptorWrites[1].pBufferInfo = nullptr;
+                descriptorWrites[1].pImageInfo = &imageInfo;
+                descriptorWrites[1].pTexelBufferView = nullptr;
+
                 mCore->device().updateDescriptorSets(descriptorWrites, nullptr);
+            }
+        }
+
+        void Graphics::Graphics::loadResource() {
+            mImageMgr->init(mCore, mpAllocator);
+            mMeshMgr->init(mCore, mpAllocator);
+
+            const gli::texture2d texture(gli::load("Texture/1.DDS"));
+            auto cmd = mCommandMgr->allocCommandBuffer();
+            mImageMgr->beginLoad(cmd);
+            mImageMgr->loadTexture("front", texture);
+            mImageMgr->endLoad();
+            mCommandMgr->freeCommandBuffers(cmd);
+
+            vk::ImageViewCreateInfo viewInfo;
+            viewInfo.viewType = vk::ImageViewType::e2D;
+            viewInfo.format = mImageMgr->getImage("front").format;
+            viewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = 0;
+            viewInfo.subresourceRange.layerCount = 1;
+            viewInfo.image = mImageMgr->getImage("front").image;
+
+            texImageView = mCore->device().createImageView(viewInfo);
+
+            vk::SamplerCreateInfo samplerInfo;
+            samplerInfo.magFilter = vk::Filter::eLinear;
+            samplerInfo.minFilter = vk::Filter::eLinear;
+            samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+            samplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+            samplerInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
+            samplerInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
+
+            sampler = mCore->device().createSampler(samplerInfo);
+
+            {
+                auto manager = fbxsdk::FbxManager::Create();
+                fbxsdk::FbxIOSettings* iosettings = fbxsdk::FbxIOSettings::Create(manager, "");
+                manager->SetIOSettings(iosettings);
+                fbxsdk::FbxImporter* importer = fbxsdk::FbxImporter::Create(manager, "");
+                importer->Initialize("Model/twoCube.fbx", -1, manager->GetIOSettings());
+                fbxsdk::FbxScene* scene = fbxsdk::FbxScene::Create(manager,"scene");
+                importer->Import(scene);
+
+                auto cmd = mCommandMgr->allocCommandBuffer();
+                mMeshMgr->init(mCore, mpAllocator);
+                mMeshMgr->beginLoad(cmd);
+                mMeshMgr->loadModel("what", scene);
+                mMeshMgr->endLoad();
+                mCommandMgr->freeCommandBuffers(cmd);
             }
         }
     }

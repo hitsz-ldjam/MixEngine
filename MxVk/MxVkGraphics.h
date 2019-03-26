@@ -7,6 +7,8 @@
 #include "MxVkExcept.hpp"
 #include "MxVkCore.h"
 #include "MxVkDebug.h"
+#include "MxVkAllocator.h"
+#include "MxVkMesh.h"
 #include "MxVkShader.h"
 #include "MxVkBuffer.h"
 #include "MxVkSwapchain.h"
@@ -110,21 +112,27 @@ namespace Mix {
             void buildCommandBuffers();
             void buildDescriptorSets();
 
+            // test
+            void loadResource();
+
         private:
             Window*                 mWindow = nullptr;
 
-            Core*                   mCore = nullptr;
-            Debug*                  mDebug = nullptr;
-            Swapchain*              mSwapchain = nullptr;
+            std::shared_ptr<Core>                   mCore;
+            std::shared_ptr<Debug>                  mDebug;
+            std::shared_ptr<DeviceAllocator>        mpAllocator;
+            std::shared_ptr<Swapchain>              mSwapchain;
 
-            ShaderMgr*              mShaderMgr = nullptr;
-            PipelineMgr*            mPipelineMgr = nullptr;
-            SyncObjectMgr*          mSyncObjMgr = nullptr;
+            std::shared_ptr<ShaderMgr>              mShaderMgr;
+            std::shared_ptr<PipelineMgr>            mPipelineMgr;
 
-            RenderPass*             mRenderPass = nullptr;
-            DescriptorPool*         mDescriptorPool = nullptr;
-            DescriptorSetLayout*    mDescriptorSetLayout = nullptr;
-            CommandMgr*             mCommandMgr = nullptr;
+            std::shared_ptr<RenderPass>             mRenderPass;
+            std::shared_ptr<DescriptorPool>         mDescriptorPool;
+            std::shared_ptr<DescriptorSetLayout>    mDescriptorSetLayout;
+            std::shared_ptr<CommandMgr>             mCommandMgr;
+
+            std::shared_ptr<ImageMgr>               mImageMgr;
+            std::shared_ptr<MeshMgr>                mMeshMgr;
 
             std::vector<Framebuffer*>       mFramebuffers;
             Image                           mDepthStencil;
@@ -134,10 +142,14 @@ namespace Mix {
 
             // todo
             Buffer* box;
+            vk::ImageView texImageView;
+            vk::Sampler sampler;
+
             struct Uniform {
                 glm::mat4 model;
                 glm::mat4 view;
                 glm::mat4 proj;
+                int index;
             };
             std::vector<Buffer*> uniforms;
 

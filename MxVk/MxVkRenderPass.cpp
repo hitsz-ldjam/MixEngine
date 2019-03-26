@@ -7,18 +7,15 @@ namespace Mix {
         MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(RenderPass);
 
         void RenderPass::clear() {
-            MX_FREE_POINTER(mAttachments);
-            MX_FREE_POINTER(mAttachRefs);
-            MX_FREE_POINTER(mDependencies);
-            MX_FREE_POINTER(mSubpasses);
+            
         }
 
-        void RenderPass::init(const Core * core) {
+        void RenderPass::init(std::shared_ptr<Core>& core) {
             mCore = core;
-            mAttachments = new std::vector<vk::AttachmentDescription>;
-            mAttachRefs = new  std::vector<vk::AttachmentReference>;
-            mDependencies = new std::vector<vk::SubpassDependency>;
-            mSubpasses = new std::vector<SubpassContent>;
+            mAttachments = std::make_shared<std::vector<vk::AttachmentDescription>>();
+            mAttachRefs = std::make_shared<std::vector<vk::AttachmentReference>>();
+            mDependencies = std::make_shared<std::vector<vk::SubpassDependency>>();
+            mSubpasses = std::make_shared<std::vector<SubpassContent>>();
         }
 
         ArrayIndex RenderPass::addColorAttach(vk::Format format, vk::SampleCountFlagBits sampleCount, vk::AttachmentLoadOp loadOp, vk::AttachmentStoreOp storeOp, vk::ImageLayout initLayout, vk::ImageLayout finalLayout) {
@@ -188,6 +185,9 @@ namespace Mix {
         }
 
         void RenderPass::destroy() {
+            if (!mCore)
+                return;
+
             mCore->device().destroyRenderPass(mRenderPass);
             mCore = nullptr;
             clear();

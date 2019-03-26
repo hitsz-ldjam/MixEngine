@@ -16,8 +16,7 @@ namespace Mix {
         virtual void lateUpdate() {}
         virtual void update() {}
 
-        virtual void onDestroy() {}
-        /** @return If false, the application will NOT exit */
+        /** @return If false, the application will NOT exit. */
         virtual bool onApplicationQuit() { return true; }
         virtual void onPostRender() {}
         virtual void onPreRender() {}

@@ -5,7 +5,7 @@ namespace Mix {
         MX_IMPLEMENT_RTTI_NoCreateFunc(Buffer, GraphicsComponent);
         MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Buffer);
 
-        Buffer * Buffer::createBuffer(const Core* core, const vk::BufferUsageFlags usage,
+        Buffer * Buffer::createBuffer(std::shared_ptr<Core> & core, const vk::BufferUsageFlags usage,
                                       const vk::MemoryPropertyFlags memoryProperty,
                                       const vk::DeviceSize size,
                                       const vk::SharingMode sharingMode, const void * data) {
@@ -46,7 +46,7 @@ namespace Mix {
             return buffer;
         }
 
-        void Buffer::copyToDeviceBuffer(const Core * core, CommandMgr* commandPool, const Buffer* dstBuffer, const void * data) {
+        void Buffer::copyToDeviceBuffer(std::shared_ptr<Core>& core, std::shared_ptr<CommandMgr>& commandPool, const Buffer* dstBuffer, const void * data) {
             if (!data)
                 throw std::runtime_error("Error : Pointer [ data ] is NULL");
 
@@ -112,6 +112,9 @@ namespace Mix {
         }
 
         void Buffer::destory() {
+            if (!mCore)
+                return;
+
             if (buffer) {
                 mCore->device().destroyBuffer(buffer);
                 buffer = nullptr;
@@ -120,6 +123,8 @@ namespace Mix {
                 mCore->device().freeMemory(memory);
                 memory = nullptr;
             }
+
+            mCore = nullptr;
         }
     }
 }
