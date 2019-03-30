@@ -39,56 +39,18 @@ namespace Mix {
         GameObject& operator=(GameObject&& obj);
 
         template<typename T>
-        T* addComponent() {
-            T* t = new T();
-            Component* comp = dynamic_cast<Component*>(t);
-
-            // if type T isn't derived from Component
-            if (!comp)
-                throw ComponentCastError();
-
-            mComponents.insert(comp);
-            return t;
-        }
+        T* addComponent();
 
         template<typename T>
-        T* getComponent() {
-            T* result;
-
-            for (auto comp : mComponents) {
-                if (result = dynamic_cast<T*>(comp))
-                    return result;
-            }
-
-            return nullptr;
-        }
+        T* getComponent();
 
         template<typename T>
-        std::vector<T*> getComponents() {
-            std::vector<T*> results;
-            T* result;
-
-            for (auto comp : mComponents) {
-                if (result = dynamic_cast<T*>(comp))
-                    results.push_back(result);
-            }
-
-            return results;
-        }
+        std::vector<T*> getComponents();
 
         template<typename T>
-        T* getComponentInChildren() {
-            T* ptr;
+        T* getComponentInChildren();
 
-            ptr = getComponent(T)();
-
-            if (!ptr) {
-                for (auto child : mChildren) {
-                    if (ptr = child->getComponentInChildren<T>())
-                        return ptr;
-                }
-            }
-        }
+        void removeComponent(Component* comp);
 
         void addChild(GameObject* obj) {
             if (obj->mParent == this)
@@ -109,11 +71,100 @@ namespace Mix {
             mChildren.erase(std::find(mChildren.begin(), mChildren.end(), obj));
         }
 
-    private:
+        void setActive(bool active) {
+            mActive = active;
+        }
+
+        bool isActive() const {
+            return mActive;
+        }
+
+        LayerIndex getLayer() const {
+            return mLayer;
+        }
+
+        void setLayer(LayerIndex index) {
+            // todo complete this when we have scene manager
+            mLayer = index;
+        }
+
+        void setTag(const Tag& tag) {
+            mTag = tag;
+        }
+
+        const Tag& getTag() const {
+            return mTag;
+        }
+
+        const std::string& getName() const {
+            return mName;
+        }
+
+    protected:
         GameObject* mParent;
         std::set<GameObject*> mChildren;
         std::set<Component*> mComponents;
+
+        bool mActive = true;
+        LayerIndex mLayer = 0;
+
+        std::string mName;
+        Tag mTag;
     };
+
+
+    template<typename T>
+    inline T * GameObject::addComponent() {
+        T* t = new T();
+        Component* comp = dynamic_cast<Component*>(t);
+
+        // if type T isn't derived from Component
+        if (!comp)
+            throw ComponentCastError();
+
+        mComponents.insert(comp);
+        return t;
+    }
+
+    template<typename T>
+    inline T * GameObject::getComponent() {
+        T* result;
+
+        for (auto comp : mComponents) {
+            if (result = dynamic_cast<T*>(comp))
+                return result;
+        }
+
+        return nullptr;
+    }
+
+    template<typename T>
+    inline std::vector<T*> GameObject::getComponents() {
+        std::vector<T*> results;
+        T* result;
+
+        for (auto comp : mComponents) {
+            if (result = dynamic_cast<T*>(comp))
+                results.push_back(result);
+        }
+
+        return results;
+    }
+
+    template<typename T>
+    inline T * GameObject::getComponentInChildren() {
+
+        T* ptr;
+
+        ptr = getComponent(T)();
+
+        if (!ptr) {
+            for (auto child : mChildren) {
+                if (ptr = child->getComponentInChildren<T>())
+                    return ptr;
+            }
+        }
+    }
 
 
 }

@@ -132,7 +132,7 @@ namespace Mix {
             std::shared_ptr<CommandMgr>             mCommandMgr;
 
             std::shared_ptr<ImageMgr>               mImageMgr;
-            std::shared_ptr<MeshMgr>                mMeshMgr;
+            std::shared_ptr<fbx::MeshMgr>           mMeshMgr;
 
             std::vector<Framebuffer*>       mFramebuffers;
             Image                           mDepthStencil;

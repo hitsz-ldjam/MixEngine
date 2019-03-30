@@ -38,6 +38,8 @@
 namespace Mix {
 
     typedef uint32_t VersionInt;
+    typedef uint32_t LayerIndex;
+    typedef std::string Tag;
 
     namespace Version {
         static VersionInt makeVersion(uint32_t major, uint32_t minor, uint32_t patch) {

@@ -14,6 +14,9 @@ namespace Mix {
 
     GameObject & GameObject::operator=(const GameObject & obj) {
         mParent = nullptr;
+        mActive = obj.mActive;
+        mName = obj.mName;
+        mLayer = obj.mLayer;
 
         for (auto child : obj.mChildren) {
             mChildren.insert(new GameObject(*child));
@@ -32,6 +35,9 @@ namespace Mix {
         mParent = obj.mParent;
         mChildren = std::move(obj.mChildren);
         mComponents = std::move(obj.mComponents);
+        mActive = obj.mActive;
+        mName = obj.mName;
+        mLayer = obj.mLayer;
 
         for (auto child : mChildren) {
             this->addChild(child);
@@ -43,6 +49,13 @@ namespace Mix {
 
         obj.mParent = nullptr;
         return *this;
+    }
+
+    void GameObject::removeComponent(Component * comp) {
+        auto it = std::find(mComponents.begin(), mComponents.end(), comp);
+        if (it != mComponents.end()) {
+            mComponents.erase(it);
+        }
     }
 
 }

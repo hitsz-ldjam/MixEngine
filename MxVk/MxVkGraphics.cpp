@@ -19,7 +19,7 @@ namespace Mix {
             mCommandMgr = std::make_shared<CommandMgr>();
 
             mImageMgr = std::make_shared<ImageMgr>();
-            mMeshMgr = std::make_shared<MeshMgr>();
+            mMeshMgr = std::make_shared<fbx::MeshMgr>();
         }
 
         void Graphics::build() {
@@ -47,7 +47,7 @@ namespace Mix {
 
         void Graphics::update(float deltaTime) {
             Uniform ubo = {};
-            ubo.view = glm::lookAt(glm::vec3(5.0f, 5.0f, 2.0f),
+            ubo.view = glm::lookAt(glm::vec3(7.0f, 7.0f, 2.0f),
                                    glm::vec3(0.0f, 0.0f, 0.0f),
                                    glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -58,7 +58,6 @@ namespace Mix {
 
             static float angle = 0.0f;
             ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(angle += (deltaTime * 90.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
-            std::cout << angle << deltaTime << std::endl;
 
             static float total = 0.0f;
             total += deltaTime * 6;
@@ -166,7 +165,7 @@ namespace Mix {
 
         void Graphics::buildShaders() {
             mShaderMgr->init(mCore);
-            std::ifstream inFile("Shaders/vShader.spv", std::ios_base::ate | std::ios_base::binary);
+            std::ifstream inFile("Shaders/vShader.vert.spv", std::ios_base::ate | std::ios_base::binary);
             size_t fileSize = static_cast<uint32_t>(inFile.tellg());
             std::vector<char> shaderCode(fileSize);
             inFile.seekg(std::ios_base::beg);
@@ -174,7 +173,7 @@ namespace Mix {
             inFile.close();
             mShaderMgr->createShader("vShader", shaderCode.data(), shaderCode.size(), vk::ShaderStageFlagBits::eVertex);
 
-            inFile.open("Shaders/fShader.spv", std::ios_base::ate | std::ios_base::binary);;
+            inFile.open("Shaders/fShader.frag.spv", std::ios_base::ate | std::ios_base::binary);;
             fileSize = static_cast<uint32_t>(inFile.tellg());
             shaderCode.resize(fileSize);
             inFile.seekg(std::ios_base::beg);
@@ -301,27 +300,31 @@ namespace Mix {
                                                       { mDescriptorSets[i] },
                                                       nullptr);
 
-                /*mCommandBuffers[i].bindVertexBuffers(0,
-                                                     box->buffer,
-                                                     { 0 });
-
-                mCommandBuffers[i].draw(static_cast<uint32_t>(vertices.size()),
-                                        1,
-                                        0,
-                                        0);*/
-                auto& mesh=mMeshMgr->getMesh("what");
+                /*auto& mesh = mMeshMgr->getMesh("what.Layer20");
                 mCommandBuffers[i].bindVertexBuffers(0,
                                                      mesh.buffer,
                                                      { 0 });
 
-                for (uint32_t index = 0; index < mesh.firstVertex.size(); ++index) {
-                    mCommandBuffers[i].draw(mesh.vertexCount[index],
+                mCommandBuffers[i].draw(mesh.vertexCount,
+                                        1,
+                                        mesh.firstVertex,
+                                        0);*/
+
+
+                auto& model = mMeshMgr->getModel("what");
+
+                mCommandBuffers[i].bindVertexBuffers(0,
+                                                     model.buffer,
+                                                     { 0 });
+
+                for (size_t index = 0; index < model.meshs.size(); ++index) {
+                    mCommandBuffers[i].draw(model.meshs[index].vertexCount,
                                             1,
-                                            mesh.firstVertex[index],
+                                            model.meshs[index].firstVertex,
                                             0);
                 }
 
-                //end render pass
+            //end render pass
                 mRenderPass->endRenderPass(mCommandBuffers[i]);
 
                     //end command buffer
@@ -407,7 +410,7 @@ namespace Mix {
                 manager->SetIOSettings(iosettings);
                 fbxsdk::FbxImporter* importer = fbxsdk::FbxImporter::Create(manager, "");
                 importer->Initialize("Model/twoCube.fbx", -1, manager->GetIOSettings());
-                fbxsdk::FbxScene* scene = fbxsdk::FbxScene::Create(manager,"scene");
+                fbxsdk::FbxScene* scene = fbxsdk::FbxScene::Create(manager, "scene");
                 importer->Import(scene);
 
                 auto cmd = mCommandMgr->allocCommandBuffer();

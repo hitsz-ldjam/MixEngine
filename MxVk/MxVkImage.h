@@ -92,6 +92,9 @@ namespace Mix {
             void endLoad();
 
             const ImageInfo& getImage(const std::string& name) {
+                if(mImageInfos.count(name)==0)
+                    throw std::runtime_error("Error : No image named [ " + name + " ]");
+
                 return mImageInfos[name].first;
             }
 
@@ -144,6 +147,17 @@ namespace Mix {
             void loadTexutreCube(const std::string& name, const gli::texture& texture);
             */
         };
+
+        /*struct Texture {
+            ImageInfo imageInfo;
+            vk::ImageLayout imageLayout;
+            MemoryBlock memBlock;
+            vk::ImageView view;
+            uint32_t mipLevels;
+            uint32_t layerCount;
+            vk::DescriptorImageInfo descriptor;
+            vk::Sampler sampler;
+        };*/
     }
 }
 
