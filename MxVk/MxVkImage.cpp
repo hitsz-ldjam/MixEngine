@@ -189,9 +189,6 @@ namespace Mix {
             }
         }
 
-        MX_IMPLEMENT_RTTI_NoCreateFunc(ImageMgr, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(ImageMgr);
-
 #pragma region MyRegion
 
         void ImageMgr::init(std::shared_ptr<Core> & core, std::shared_ptr<DeviceAllocator>& allocator) {
@@ -241,9 +238,9 @@ namespace Mix {
             return result;
         }
 
-        void ImageMgr::loadTexture2D(const std::string & name, const gli::texture& texture) {
+        void ImageMgr::loadImage2D(const std::string & name, const gli::texture& texture) {
             // check if current size exceeds limits
-            if ((mCurrSize + align(texture.size(), mMemReq.alignment)) >= mMemReq.size)
+            if ((mCurrSize + Utils::align(texture.size(), mMemReq.alignment)) >= mMemReq.size)
                 flush();
 
             ImageInfo info;
@@ -269,7 +266,7 @@ namespace Mix {
             info.image = mCore->device().createImage(createInfo);
             mDatas.emplace_back(name, info, static_cast<const char*>(texture.data()));
 
-            mCurrSize += align(info.size, mMemReq.alignment);
+            mCurrSize += Utils::align(info.size, mMemReq.alignment);
         }
 
         void ImageMgr::loadTexture(const std::string & name, const gli::texture & texture) {
@@ -286,7 +283,7 @@ namespace Mix {
             case gli::target::TARGET_1D_ARRAY:
                 break;*/
             case gli::target::TARGET_2D:
-                loadTexture2D(name, texture);
+                loadImage2D(name, texture);
                 break;
             /*case gli::target::TARGET_2D_ARRAY:
                 break;
@@ -332,7 +329,7 @@ namespace Mix {
                 memcpy(static_cast<char*>(mMemBlock.ptr) + offset,
                        data.ptr,
                        static_cast<size_t>(data.imageInfo.size));
-                offset += align(data.imageInfo.size, mMemReq.alignment);
+                offset += Utils::align(data.imageInfo.size, mMemReq.alignment);
             }
 
             // allocate memory on video memory for images
@@ -349,7 +346,7 @@ namespace Mix {
                 bufferCopyRegion.imageExtent = imageInfo.extent;
                 bufferCopyRegion.bufferOffset = offset;
 
-                offset += align(imageInfo.size, mMemReq.alignment);
+                offset += Utils::align(imageInfo.size, mMemReq.alignment);
 
                 vk::ImageSubresourceRange subresourceRange;
                 subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;

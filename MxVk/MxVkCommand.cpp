@@ -2,14 +2,11 @@
 
 namespace Mix {
     namespace Graphics {
-        MX_IMPLEMENT_RTTI_NoCreateFunc(CommandMgr, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(CommandMgr);
-
         vk::CommandBufferAllocateInfo CommandMgr::sTempBufferAllocInfo(vk::CommandPool(), vk::CommandBufferLevel::ePrimary, 1);
         vk::CommandBufferBeginInfo CommandMgr::sTempBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
         vk::SubmitInfo CommandMgr::sTempBufferSubmitInfo;
 
-        void CommandMgr::create(const vk::QueueFlagBits queueType) {
+        void CommandMgr::create(const vk::QueueFlagBits queueType, const vk::CommandPoolCreateFlags& flags) {
             vk::CommandPoolCreateInfo createInfo = {};
 
             if (queueType == vk::QueueFlagBits::eGraphics) {
@@ -20,6 +17,7 @@ namespace Mix {
                 createInfo.queueFamilyIndex = mCore->getQueueFamilyIndices().compute.value();
                 mQueue = mCore->getQueues().compute.value();
             }
+            createInfo.flags = flags;
 
             mCommandPool = mCore->device().createCommandPool(createInfo);
         }

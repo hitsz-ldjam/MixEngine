@@ -9,8 +9,6 @@
 namespace Mix {
     namespace Graphics {
         class DescriptorSetLayout :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
         public:
             virtual ~DescriptorSetLayout() { destroy(); }
 
@@ -22,7 +20,7 @@ namespace Mix {
                              vk::ShaderStageFlags stage,
                              const vk::Sampler* immutableSamplers = nullptr);
 
-            vk::DescriptorSetLayout get() const { return mLayout; };
+            const vk::DescriptorSetLayout& get() const { return mLayout; };
 
             void destroy();
 
@@ -34,8 +32,6 @@ namespace Mix {
         };
 
         class DescriptorPool :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
         public:
             virtual ~DescriptorPool() { destroy(); }
 

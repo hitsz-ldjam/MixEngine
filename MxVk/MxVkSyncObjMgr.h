@@ -12,9 +12,7 @@ namespace Mix {
         class Fence;
         class Semaphore;
 
-        class SyncObjectMgr :public GraphicsBase {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
+        class SyncObjectMgr{
         public:
             void init(const vk::Device& device) {
                 mDevice = device;
@@ -41,9 +39,7 @@ namespace Mix {
 
         // todo
 
-        class Semaphore :GraphicsBase {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
+        class Semaphore {
         public:
             Semaphore() :mMgr(nullptr), mSemaphore(nullptr) {};
 
@@ -93,9 +89,7 @@ namespace Mix {
             vk::Semaphore mSemaphore;
         };
 
-        class Fence :GraphicsBase {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
+        class Fence {
         public:
             Fence() :mMgr(nullptr), mFence(nullptr) {};
 

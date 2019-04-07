@@ -2,9 +2,6 @@
 
 namespace Mix {
     namespace Graphics {
-        MX_IMPLEMENT_RTTI_NoCreateFunc(Framebuffer, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Framebuffer);
-
         void Framebuffer::clear() {
             mAttachments.clear();
         }

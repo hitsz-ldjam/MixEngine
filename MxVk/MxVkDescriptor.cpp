@@ -2,9 +2,6 @@
 
 namespace Mix {
     namespace Graphics {
-        MX_IMPLEMENT_RTTI_NoCreateFunc(DescriptorSetLayout, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(DescriptorSetLayout);
-
         void DescriptorSetLayout::addBindings(uint32_t binding, vk::DescriptorType type, uint32_t count, vk::ShaderStageFlags stage, const vk::Sampler * immutableSamplers) {
             vk::DescriptorSetLayoutBinding layoutBinding = {};
             layoutBinding.binding = binding;
@@ -29,9 +26,6 @@ namespace Mix {
             mCore = nullptr;
         }
 
-        MX_IMPLEMENT_RTTI_NoCreateFunc(DescriptorPool, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(DescriptorPool);
-
         void DescriptorPool::addPoolSize(vk::DescriptorType type, uint32_t count) {
             if (mPoolSizes.count(type) == 0)
                 mPoolSizes[type] = count;
@@ -53,7 +47,6 @@ namespace Mix {
             createInfo.maxSets = maxSets;
 
             mDescriptorPool = mCore->device().createDescriptorPool(createInfo);
-            mPoolSizes.clear();
         }
 
         std::vector<vk::DescriptorSet> DescriptorPool::allocDescriptorSet(const std::vector<vk::DescriptorSetLayout>& layouts) {

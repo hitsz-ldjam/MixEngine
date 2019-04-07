@@ -9,8 +9,6 @@
 namespace Mix {
     namespace Graphics {
         class RenderPass :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
         public:
             RenderPass() { mCore = nullptr; }
             virtual ~RenderPass() { destroy(); }

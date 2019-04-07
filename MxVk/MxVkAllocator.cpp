@@ -4,7 +4,7 @@ namespace Mix {
     namespace Graphics {
         uint32_t Chunk::MaxOperationCount = 10;
 
-        Chunk::Chunk(std::shared_ptr<Core>& core, vk::DeviceSize size, uint32_t memoryTypeIndex) :
+        Chunk::Chunk(std::shared_ptr<Core> core, vk::DeviceSize size, uint32_t memoryTypeIndex) :
             mCore(core),
             mSize(size),
             mMemTypeIndex(memoryTypeIndex) {
@@ -110,24 +110,9 @@ namespace Mix {
         }
 
         std::unique_ptr<Chunk> ChunkFactory::getChunk(vk::DeviceSize size, uint32_t memTypeIndex) {
-            size = (mMinChunkSize < size) ? nextPowerOf2(size) : mMinChunkSize;
+            size = (mMinChunkSize < size) ? Utils::nextPowerOf2(size) : mMinChunkSize;
 
             return std::make_unique<Chunk>(mCore, size, memTypeIndex);
-        }
-
-        vk::DeviceSize nextPowerOf2(vk::DeviceSize size) {
-            vk::DeviceSize power = static_cast<vk::DeviceSize>(std::log2l(static_cast<long double>(size))) + 1;
-            return static_cast<vk::DeviceSize>(1) << power;
-        }
-
-        bool isPowerOf2(vk::DeviceSize size) {
-            vk::DeviceSize mask = 0;
-            uint32_t power = static_cast<uint32_t>(std::log2l(static_cast<long double>(size)));
-
-            for (uint32_t i = 0; i < power; ++i)
-                mask += static_cast<vk::DeviceSize>(1) << i;
-
-            return !(size & mask);
         }
 
         void DeviceAllocator::init(std::shared_ptr<Core> & core) {
@@ -149,17 +134,29 @@ namespace Mix {
             return block;
         }
 
-        MemoryBlock DeviceAllocator::allocate(const vk::Image & image, const vk::MemoryPropertyFlags & properties) {
-            auto memReq = mCore->device().getImageMemoryRequirements(image);
-            MemoryBlock block = allocate(memReq.size, memReq.alignment, mCore->getMemoryTypeIndex(memReq.memoryTypeBits, properties));
+        MemoryBlock DeviceAllocator::allocate(const vk::Image & image,
+                                              const vk::MemoryPropertyFlags & properties,
+                                              vk::MemoryRequirements* memReq) {
+            auto memoryReq = mCore->device().getImageMemoryRequirements(image);
+            MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment, mCore->getMemoryTypeIndex(memoryReq.memoryTypeBits, properties));
             mCore->device().bindImageMemory(image, block.memory, block.offset);
+
+            if (memReq)
+                *memReq = memoryReq;
+
             return block;
         }
 
-        MemoryBlock DeviceAllocator::allocate(const vk::Buffer & buffer, const vk::MemoryPropertyFlags & properties) {
-            auto memReq = mCore->device().getBufferMemoryRequirements(buffer);
-            MemoryBlock block = allocate(memReq.size, memReq.alignment, mCore->getMemoryTypeIndex(memReq.memoryTypeBits, properties));
+        MemoryBlock DeviceAllocator::allocate(const vk::Buffer & buffer,
+                                              const vk::MemoryPropertyFlags & properties,
+                                              vk::MemoryRequirements* memReq) {
+            auto memoryReq = mCore->device().getBufferMemoryRequirements(buffer);
+            MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment, mCore->getMemoryTypeIndex(memoryReq.memoryTypeBits, properties));
             mCore->device().bindBufferMemory(buffer, block.memory, block.offset);
+
+            if (memReq)
+                *memReq = memoryReq;
+
             return block;
         }
 

@@ -7,8 +7,6 @@
 #include <vulkan/vulkan.hpp>
 #include <optional>
 #include <memory>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 
 namespace Mix {
@@ -54,7 +52,7 @@ namespace Mix {
         struct Vertex {
             glm::vec3 pos;
             glm::vec3 normal;
-            glm::vec2 texCoord;
+            glm::vec2 uv;
 
             //get vertex input description
             static std::vector<vk::VertexInputBindingDescription>& getBindingDescrip() {
@@ -71,18 +69,11 @@ namespace Mix {
                 static std::vector<vk::VertexInputAttributeDescription> attributeDescription = {
                     vk::VertexInputAttributeDescription(0,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, pos)),
                     vk::VertexInputAttributeDescription(1,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, normal)),
-                    vk::VertexInputAttributeDescription(2,0,vk::Format::eR32G32Sfloat,offsetof(Vertex, texCoord))
+                    vk::VertexInputAttributeDescription(2,0,vk::Format::eR32G32Sfloat,offsetof(Vertex, uv))
                 };
 
                 return attributeDescription;
             }
-        };
-
-        class GraphicsBase :public Object {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_NO_CLASS_FACTORY;
-        public:
-            virtual ~GraphicsBase() = 0 {};
         };
 
     }

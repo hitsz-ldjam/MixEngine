@@ -278,6 +278,8 @@ namespace Mix {
     }
 }
 
+#ifdef GLTF_ENABLED
+
 Mix::Graphics::gltf::BoundingBox Mix::Graphics::gltf::BoundingBox::getAABB(const glm::mat4 & m) {
     glm::vec3 min = glm::vec3(m[3]);
     glm::vec3 max = min;
@@ -1376,6 +1378,152 @@ void Mix::Graphics::gltf::Model::updateAnimation(uint32_t index, float time) {
     if (updated) {
         for (auto &node : nodes) {
             node->update();
+        }
+    }
+}
+
+#endif // !GLTF_ENABLED
+
+namespace Mix {
+    namespace Graphics {
+        std::pair<ModelId, std::vector<MeshId>> gltf::MeshMgr::loadModel(const Utils::GLTFLoader::ModelData& modelData) {
+            // create Vertex buffer
+            vk::DeviceSize byteSize = modelData.vertices.size() * sizeof(Vertex);
+
+            vk::BufferCreateInfo vertexStagingInfo(vk::BufferCreateFlags(),
+                                                   byteSize,
+                                                   vk::BufferUsageFlagBits::eTransferSrc);
+
+            vk::Buffer vertexStaging = mCore->device().createBuffer(vertexStagingInfo);
+            MemoryBlock vertexStagingMem = mpAllocator->allocate(vertexStaging,
+                                                                 vk::MemoryPropertyFlagBits::eHostVisible |
+                                                                 vk::MemoryPropertyFlagBits::eHostCoherent);
+
+            memcpy(static_cast<char*>(vertexStagingMem.ptr), modelData.vertices.data(), static_cast<size_t>(byteSize));
+
+            vk::BufferCreateInfo vertexBufferInfo(vk::BufferCreateFlags(),
+                                                  byteSize,
+                                                  vk::BufferUsageFlagBits::eTransferDst |
+                                                  vk::BufferUsageFlagBits::eVertexBuffer);
+
+            vk::Buffer vertexBuffer = mCore->device().createBuffer(vertexBufferInfo);
+            MemoryBlock vertexMem = mpAllocator->allocate(vertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+            vk::BufferCopy vertexBufferCopy(0, 0, byteSize);
+            // create indices buffer
+            byteSize = modelData.indices.size() * sizeof(uint32_t);
+
+            vk::BufferCreateInfo indexStagingInfo(vk::BufferCreateFlags(),
+                                                  byteSize,
+                                                  vk::BufferUsageFlagBits::eTransferSrc);
+
+            vk::Buffer indexStaging = mCore->device().createBuffer(indexStagingInfo);
+            MemoryBlock indexStagingMem = mpAllocator->allocate(indexStaging,
+                                                                vk::MemoryPropertyFlagBits::eHostVisible |
+                                                                vk::MemoryPropertyFlagBits::eHostCoherent);
+
+            memcpy(static_cast<char*>(indexStagingMem.ptr), modelData.indices.data(), static_cast<size_t>(byteSize));
+
+            vk::BufferCreateInfo indexBufferInfo(vk::BufferCreateFlags(),
+                                                 byteSize,
+                                                 vk::BufferUsageFlagBits::eTransferDst |
+                                                 vk::BufferUsageFlagBits::eIndexBuffer);
+
+            vk::Buffer indexBuffer = mCore->device().createBuffer(indexBufferInfo);
+            MemoryBlock indexMem = mpAllocator->allocate(indexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+            vk::BufferCopy indexBufferCopy(0, 0, byteSize);
+
+            // todo try to submit commandbuffer in endLoad() after all loadModel() calls
+            mCmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+            mCmd.copyBuffer(vertexStaging, vertexBuffer, vertexBufferCopy);
+            mCmd.copyBuffer(indexStaging, indexBuffer, indexBufferCopy);
+            mCmd.end();
+
+            vk::SubmitInfo submitInfo;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &mCmd;
+
+            mCore->getQueues().transfer.value().submit(submitInfo, mFence.get());
+            mCore->device().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
+            mCore->device().resetFences(mFence.get());
+
+            //destroy staging buffer, free staging memory
+            mCore->device().destroyBuffer(vertexStaging);
+            mCore->device().destroyBuffer(indexStaging);
+            mpAllocator->deallocate(vertexStagingMem);
+            mpAllocator->deallocate(indexStagingMem);
+
+            ModelInfo modelInfo;
+            modelInfo.name = modelData.name;
+            modelInfo.vertexBuffer = vertexBuffer;
+            modelInfo.vertexMem = vertexMem;
+            modelInfo.indexBuffer = indexBuffer;
+            modelInfo.indexMem = indexMem;
+            modelInfo.meshes.reserve(modelData.meshes.size());
+
+            std::vector<MeshId> meshIds;
+            meshIds.reserve(modelData.meshes.size());
+            for (auto& mesh : modelData.meshes) {
+                MeshInfo meshInfo;
+                meshInfo.name = mesh.name;
+                meshInfo.firstVertex = mesh.firstVertex;
+                meshInfo.vertexCount = mesh.vertexCount;
+                meshInfo.firstIndex = mesh.firstIndex;
+                meshInfo.indexCount = mesh.indexCount;
+
+                modelInfo.meshes[mNextMeshId.now()] = meshInfo;
+                meshIds.push_back(mNextMeshId.next());
+            }
+
+            mModels[mNextModelId.now()] = std::move(modelInfo);
+
+            return std::make_pair(mNextModelId.next(), std::move(meshIds));
+        }
+
+        std::shared_ptr<gltf::MeshData> gltf::MeshMgr::getMesh(const ModelId & modelId, const MeshId & meshId) {
+            if (mModels.count(modelId) == 0)
+                return nullptr;
+
+            if (mModels[modelId].meshes.count(meshId) == 0)
+                return nullptr;
+
+            std::shared_ptr<MeshData> ref = std::make_shared<MeshData>();
+            auto model = mModels[meshId];
+            auto& mesh = model.meshes[meshId];
+            ref->name = mesh.name;
+            ref->vertexBuffer = model.vertexBuffer;
+            ref->indexBuffer = model.indexBuffer;
+            ref->firstVertex = mesh.firstVertex;
+            ref->firstIndex = mesh.firstIndex;
+            ref->vertexCount = mesh.vertexCount;
+            ref->indexCount = mesh.indexCount;
+
+            return ref;
+        }
+
+        void gltf::MeshMgr::init(std::shared_ptr<Core> core, std::shared_ptr<DeviceAllocator> allocator) {
+            GraphicsComponent::init(core);
+            mpAllocator = allocator;
+
+            mFence = mCore->getSyncObjMgr().createFence();
+            mCore->device().resetFences(mFence.get());
+        }
+
+        void gltf::MeshMgr::destroy() {
+            if (!mCore)
+                return;
+
+            for (auto& pair : mModels) {
+                mCore->device().destroyBuffer(pair.second.vertexBuffer);
+                mCore->device().destroyBuffer(pair.second.indexBuffer);
+                mpAllocator->deallocate(pair.second.vertexMem);
+                mpAllocator->deallocate(pair.second.indexMem);
+            }
+
+            mModels.clear();
+            mpAllocator = nullptr;
+            mCore = nullptr;
         }
     }
 }

@@ -2,9 +2,7 @@
 #ifndef _MX_TRANSFORM_H_
 #define _MX_TRANSFORM_H_
 
-#include "MxDef.h"
 #include "MxComponent.h"
-
 
 namespace Mix {
     struct Axis {
@@ -45,10 +43,13 @@ namespace Mix {
     public:
         Transform();
 
-        virtual Component* copy() const override;
-
         const glm::vec3& position() const { return mPosition; }
+        glm::vec3& position() { return mPosition; }
         const glm::quat& rotation() const { return mQuaternion; }
+        glm::quat& rotation() { return mQuaternion; }
+        const glm::vec3 scale() const { return mScale; }
+        glm::vec3 scale() { return mScale; }
+
         glm::vec3 eulerAngle() const;
 
         const Axis& localAxis() const { return mAxis; }

@@ -2,9 +2,6 @@
 
 namespace Mix {
     namespace Graphics {
-        MX_IMPLEMENT_RTTI_NoCreateFunc(SyncObjectMgr, GraphicsBase);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(SyncObjectMgr);
-
         Fence SyncObjectMgr::createFence(const vk::FenceCreateFlags flags) {
             vk::FenceCreateInfo createInfo = {};
             createInfo.flags = flags;
@@ -48,10 +45,5 @@ namespace Mix {
             mDevice = nullptr;
         }
 
-        MX_IMPLEMENT_RTTI_NoCreateFunc(Semaphore, GraphicsBase);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Semaphore);
-
-        MX_IMPLEMENT_RTTI_NoCreateFunc(Fence, GraphicsBase);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Fence);
     }
 }

@@ -28,8 +28,6 @@ namespace Mix {
 
 
         class ShaderMgr :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
         public:
             virtual ~ShaderMgr() { destroy(); };
 

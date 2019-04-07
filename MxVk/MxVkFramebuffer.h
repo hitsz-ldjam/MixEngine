@@ -9,8 +9,6 @@
 namespace Mix {
     namespace Graphics {
         class Framebuffer :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
         public:
             virtual ~Framebuffer() { destroy(); }
 

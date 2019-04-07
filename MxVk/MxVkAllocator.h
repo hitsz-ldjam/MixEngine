@@ -3,16 +3,15 @@
 #define _MX_VK_ALLOCATOR_H_
 
 #include "MxVkCore.h"
+#include "../Utils/MxUtils.h"
 
 namespace Mix {
     namespace Graphics {
-        vk::DeviceSize nextPowerOf2(vk::DeviceSize size);
-        bool isPowerOf2(vk::DeviceSize size);
-
         struct MemoryBlock {
-            vk::DeviceMemory memory;
-            vk::DeviceSize offset;
-            vk::DeviceSize size;
+            vk::DeviceMemory memory = nullptr;
+            vk::DeviceSize offset = 0;
+            vk::DeviceSize size = 0;
+
             bool free = false;
             void* ptr = nullptr;
 
@@ -27,7 +26,7 @@ namespace Mix {
 
         class Chunk {
         public:
-            Chunk(std::shared_ptr<Core>& core, vk::DeviceSize size, uint32_t memoryTypeIndex);
+            Chunk(std::shared_ptr<Core> core, vk::DeviceSize size, uint32_t memoryTypeIndex);
 
             Chunk(const Chunk& chunk) = delete;
             Chunk(Chunk&& chunk);
@@ -65,7 +64,7 @@ namespace Mix {
         class ChunkFactory :public GraphicsComponent {
         public:
             void setMinChunkSize(vk::DeviceSize size) {
-                assert(isPowerOf2(size));
+                assert(Utils::isPowerOf2(size));
                 mMinChunkSize = size;
             }
 
@@ -99,8 +98,8 @@ namespace Mix {
         public:
             void init(std::shared_ptr<Core>& core) override;
             MemoryBlock allocate(vk::DeviceSize size, vk::DeviceSize alignment, uint32_t memoryTypeIndex) override;
-            MemoryBlock allocate(const vk::Image& image, const vk::MemoryPropertyFlags & properties);
-            MemoryBlock allocate(const vk::Buffer& buffer, const vk::MemoryPropertyFlags& properties);
+            MemoryBlock allocate(const vk::Image& image, const vk::MemoryPropertyFlags & properties, vk::MemoryRequirements* memReq = nullptr);
+            MemoryBlock allocate(const vk::Buffer& buffer, const vk::MemoryPropertyFlags& properties, vk::MemoryRequirements* memReq = nullptr);
             void deallocate(MemoryBlock& block) override;
 
         private:

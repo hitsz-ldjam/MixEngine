@@ -4,42 +4,54 @@
 #define _MX_GAME_OBJECT_H_
 
 #include "MxObject.h"
-#include "MxComponent.h"
 #include "MxTransform.h"
 #include <vector>
 #include <set>
+#include <type_traits>
 
 
 namespace Mix {
+    class Component;
+    class Transform;
+
     // todo: finish this class
     class GameObject : public Object {
         MX_DECLARE_RTTI;
         MX_DECLARE_CLASS_FACTORY;
     public:
         GameObject() :mParent(nullptr) {
+            addGameObj(this);
             addComponent<Transform>();
         }
 
-        GameObject(const GameObject& obj);
-
+        GameObject(const GameObject& obj) = delete;
         GameObject(GameObject&& obj);
 
         virtual ~GameObject() {
             if (mParent)
                 mParent->removeChild(this);
 
-            for (auto child : mChildren)
-                removeChild(child);
+            for (auto it = mChildren.begin(); it != mChildren.end();) {
+                delete (*it++);
+            }
+                
 
             for (auto comp : mComponents)
                 delete comp;
+
+            removeGameObj(this);
         }
 
-        GameObject& operator=(const GameObject& obj);
+        GameObject& operator=(const GameObject& obj) = delete;
         GameObject& operator=(GameObject&& obj);
 
         template<typename T>
         T* addComponent();
+
+        Component* addComponent(Component* comp);
+
+        template<typename T, typename... Args>
+        T* addComponent(Args&& ...args);
 
         template<typename T>
         T* getComponent();
@@ -110,19 +122,52 @@ namespace Mix {
 
         std::string mName;
         Tag mTag;
+
+        // static
+    public:
+        static GameObject* find(const std::string& name);
+        static std::vector<GameObject*> findGameObjsWithTag(const Tag& tag);
+        static GameObject* findGameObjWithTag(const Tag& tag);
+
+    private:
+        static void addGameObj(GameObject* obj) {
+            mGameObjList.push_back(obj);
+        }
+
+        static void removeGameObj(GameObject* obj) {
+            auto it = std::find(mGameObjList.begin(), mGameObjList.end(), obj);
+            if (it == mGameObjList.end())
+                return;
+            mGameObjList.erase(it);
+        }
+
+        static std::vector<GameObject*> mGameObjList;
     };
 
 
     template<typename T>
     inline T * GameObject::addComponent() {
-        T* t = new T();
-        Component* comp = dynamic_cast<Component*>(t);
-
         // if type T isn't derived from Component
-        if (!comp)
+        T* t = reinterpret_cast<T*>(1);
+        if (!dynamic_cast<Component*>(t))
             throw ComponentCastError();
 
-        mComponents.insert(comp);
+        t = new T();
+        t->setGameObj(this);
+        mComponents.insert(t);
+        return t;
+    }
+
+    template<typename T, typename ...Args>
+    inline T * GameObject::addComponent(Args && ...args) {
+        // if type T isn't derived from Component
+        T* t = reinterpret_cast<T*>(1);
+        if (!dynamic_cast<Component*>(t))
+            throw ComponentCastError();
+
+        t = new T(std::forward<Args>(args)...);
+        t->setGameObj(this);
+        mComponents.insert(t);
         return t;
     }
 

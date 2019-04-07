@@ -18,9 +18,7 @@
 
 namespace Mix {
     namespace Graphics {
-        class Core :public GraphicsBase {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
+        class Core {
         public:
             Core();
             virtual ~Core() {
@@ -149,9 +147,7 @@ namespace Mix {
         };
 
 
-        class GraphicsComponent :public GraphicsBase {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_NO_CLASS_FACTORY;
+        class GraphicsComponent {
         public:
             virtual ~GraphicsComponent() = 0 {};
             GraphicsComponent() { mCore = nullptr; }

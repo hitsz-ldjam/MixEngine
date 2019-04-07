@@ -13,7 +13,7 @@ namespace Mix {
     const glm::vec3 Axis::worldForward = glm::vec3(0.0f, 0.0f, 1.0f);
 
     void Axis::applyRotate(const glm::mat4 & mat) {
-        glm::mat3 m = mat;
+        glm::mat3 m = glm::mat3(mat);
         x = m * x;
         y = m * y;
         z = m * z;
@@ -26,7 +26,7 @@ namespace Mix {
     }
 
     void Axis::rotateFromInit(const glm::mat4 & mat) {
-        glm::mat3 m = mat;
+        glm::mat3 m = glm::mat3(mat);
         x = m * worldX;
         y = m * worldY;
         z = m * worldZ;
@@ -43,12 +43,6 @@ namespace Mix {
         mScale(1.0f, 1.0f, 1.0f),
         mAxis(),
         mQuaternion(1.0f, 0.0f, 0.0f, 0.0f) {
-    }
-
-    Component * Transform::copy() const {
-        Transform* t = new Transform(*this);
-        t->mGameObj = nullptr;
-        return t;
     }
 
     glm::vec3 Transform::eulerAngle() const {
@@ -81,7 +75,7 @@ namespace Mix {
     void Transform::rotateAround(const glm::vec3 & point, const glm::vec3 & axis, const float angle) {
         glm::vec3 relativePos = mPosition - point;
         glm::mat4 mat = glm::rotate(glm::mat4(1.0f), angle, axis);
-        relativePos = mat * glm::vec4(relativePos, 1.0f);
+        relativePos = glm::vec3(mat * glm::vec4(relativePos, 1.0f));
         mPosition = relativePos + point;
     }
 

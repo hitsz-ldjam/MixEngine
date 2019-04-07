@@ -3,7 +3,6 @@
 #define _MX_TIMER_H_
 
 
-#include "MxDef.h"
 #include "MxObject.h"
 #include <chrono>
 

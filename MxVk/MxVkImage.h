@@ -3,6 +3,7 @@
 #define _MX_VK_IMAGE_H_
 
 #include "../Mx/MxComponent.h"
+#include "../Utils/MxUtils.h"
 #include "MxVkCore.h"
 #include "MxVkAllocator.h"
 #include <algorithm>
@@ -67,8 +68,6 @@ namespace Mix {
         };
 
         class ImageMgr :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
         private:
             struct TempData {
                 std::string name;
@@ -119,10 +118,6 @@ namespace Mix {
 
             void flush();
 
-            vk::DeviceSize align(vk::DeviceSize size, vk::DeviceSize alignment) {
-                return (size + alignment - 1) & ~(alignment - 1);
-            }
-
             vk::DeviceSize leastMultiple(vk::DeviceSize a, vk::DeviceSize b) {
                 vk::DeviceSize m = a, n = b, c;
                 while (b != 0) {
@@ -135,16 +130,16 @@ namespace Mix {
 
             vk::Format gliToVulkanFormat(gli::format format);
 
-            void loadTexture2D(const std::string& name, const gli::texture& texture);
+            void loadImage2D(const std::string& name, const gli::texture& texture);
             /*
-            void loadTexture2DArray(const std::string& name, const gli::texture& texture);
+            void loadImage2DArray(const std::string& name, const gli::texture& texture);
 
-            void loadTexture1D(const std::string& name, const gli::texture& texture);
-            void loadTexture1DArray(const std::string& name, const gli::texture& texture);
+            void loadImage1D(const std::string& name, const gli::texture& texture);
+            void loadImage1DArray(const std::string& name, const gli::texture& texture);
 
-            void loadTexutre3D(const std::string& name, const gli::texture& texture);
+            void loadImage3D(const std::string& name, const gli::texture& texture);
 
-            void loadTexutreCube(const std::string& name, const gli::texture& texture);
+            void loadImageCube(const std::string& name, const gli::texture& texture);
             */
         };
 

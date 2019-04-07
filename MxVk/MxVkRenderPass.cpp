@@ -3,9 +3,6 @@
 #include "vulkan/vulkan.h"
 namespace Mix {
     namespace Graphics {
-        MX_IMPLEMENT_RTTI_NoCreateFunc(RenderPass, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(RenderPass);
-
         void RenderPass::clear() {
             
         }

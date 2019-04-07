@@ -7,8 +7,6 @@
 
 #include "MixEngine.h"
 
-#include "MxVk/MxVkGraphics.h"
-
 void drawSlipLine() {
     std::cout << "------------------------" << std::endl;
 }
@@ -39,7 +37,9 @@ public:
         puts("Demo deleted");
     }
 
-    virtual Component* copy() const override { return new Demo; };
+    virtual Component* copy() const {
+        return new Demo();
+    }
 
     void init() override {
         window.create("Mix Engine Demo", 640, 480);
@@ -60,9 +60,8 @@ public:
         graphics.setTargetWindow(&window);
         graphics.build();
 
-
-
         obj = new Mix::GameObject();
+        obj->addChild(graphics.createModelObj(gltfLoader.loadFromGlb("E:/Git/vulkan-learning-master/res/models/gltfSample/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", "DamagedHelmet")));
         timer.start();
     }
 
@@ -97,10 +96,13 @@ private:
 
     Mix::AudioClip* clip = nullptr;
 
+
     Mix::Graphics::Graphics graphics;
     Mix::Timer timer;
 
     Mix::GameObject* obj;
+    Mix::Utils::GLTFLoader gltfLoader;
+
 };
 
 #endif

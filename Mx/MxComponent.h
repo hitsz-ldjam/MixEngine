@@ -9,6 +9,7 @@
 
 namespace Mix {
     class GameObject;
+    class Transform;
 
     class Component : public Object {
         MX_DECLARE_RTTI;
@@ -25,7 +26,7 @@ namespace Mix {
             return mGameObj;
         }
 
-        virtual Component* copy() const = 0;
+        //virtual Component* copy() const = 0;
 
     protected:
         GameObject* mGameObj;

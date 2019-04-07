@@ -5,12 +5,16 @@
 #include <cstdint>
 #include <string>
 
-// for GLM
+#include <vulkan/vulkan.hpp>
+
+// include GLI
+#include <gli/gli.hpp>
+
+// include GLM
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-// include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -19,8 +23,6 @@
 #include <glm/gtc/epsilon.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// include GLI
-#include <gli/gli.hpp>
 
 #define MX_ENGINE_NAME "MixEngine"
 #define MX_ENGINE_VERSION_MAJOR 0
@@ -40,6 +42,10 @@ namespace Mix {
     typedef uint32_t VersionInt;
     typedef uint32_t LayerIndex;
     typedef std::string Tag;
+    typedef vk::DeviceSize Id;
+    typedef vk::DeviceSize IdStep;
+    typedef Id MeshId;
+    typedef Id ModelId;
 
     namespace Version {
         static VersionInt makeVersion(uint32_t major, uint32_t minor, uint32_t patch) {

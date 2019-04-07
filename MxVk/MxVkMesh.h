@@ -2,7 +2,7 @@
 #ifndef _MX_VK_MESH_H_
 #define _MX_VK_MESH_H_
 
-
+#include "../Utils/MxUtils.h"
 #include "MxVkDef.h"
 #include "MxVkCore.h"
 #include "MxVkAllocator.h"
@@ -13,17 +13,17 @@
 #include <vector>
 #include <array>
 #include <unordered_map>
+#include <memory>
 
-#define GLTF_ENABLED
+// #define GLTF_ENABLED
 
 #ifdef GLTF_ENABLED
-
 
 #define TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_MSC_SECURE_CRT
-#include <tiny_gltf.h>
+#include <glTF/tiny_gltf.h>
 
 #define MAX_NUM_JOINTS 128u
 
@@ -32,34 +32,8 @@
 
 namespace Mix {
     namespace Graphics {
+#pragma region FBX
         namespace fbx {
-        //struct Vertex {
-        //    glm::vec3 pos;
-        //    glm::vec3 normal;
-        //    glm::vec2 texCoord;
-
-        //    //get vertex input description
-        //    static std::vector<vk::VertexInputBindingDescription>& getBindingDescrip() {
-        //        static std::vector<vk::VertexInputBindingDescription> bindingDescription = {
-        //        vk::VertexInputBindingDescription(0,sizeof(Vertex),vk::VertexInputRate::eVertex) };
-
-        //        return bindingDescription;
-        //    }
-
-
-
-        //    //get vertex input attributi description
-        //    static std::vector<vk::VertexInputAttributeDescription>& getAttributeDescrip() {
-        //        static std::vector<vk::VertexInputAttributeDescription> attributeDescription = {
-        //            vk::VertexInputAttributeDescription(0,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, pos)),
-        //            vk::VertexInputAttributeDescription(1,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, normal)),
-        //            vk::VertexInputAttributeDescription(2,0,vk::Format::eR32G32Sfloat,offsetof(Vertex, texCoord))
-        //        };
-
-        //        return attributeDescription;
-        //    }
-        //};
-
             struct MeshInfo {
                 std::string name;
                 vk::Buffer buffer;
@@ -159,9 +133,85 @@ namespace Mix {
             };
         }
 
+#pragma endregion
+
+#pragma region GLTF_NO_ANIMATION
+
+        namespace gltf {
+            struct MeshData {
+                std::string name;
+                vk::Buffer vertexBuffer;
+                vk::Buffer indexBuffer;
+                uint32_t firstVertex;
+                uint32_t vertexCount;
+                uint32_t firstIndex;
+                uint32_t indexCount;
+            };
+
+            class MeshMgr :GraphicsComponent {
+            public:
+                virtual ~MeshMgr() {
+                    destroy();
+                }
+
+                void init(std::shared_ptr<Core> core, std::shared_ptr<DeviceAllocator> allocator);
+
+                void beginLoad(const vk::CommandBuffer& cmd) {
+                    if (!mBegin) {
+                        mBegin = true;
+                        mCmd = cmd;
+                    }
+                }
+
+                std::pair<ModelId,std::vector<MeshId>> loadModel(const Utils::GLTFLoader::ModelData& modelData);
+
+                void endLoad() {
+                    mCmd = nullptr;
+                }
+
+                std::shared_ptr<MeshData> getMesh(const ModelId & modelId, const MeshId & meshId);
+
+                void destroy();
+
+            private:
+                bool mBegin = false;
+                vk::CommandBuffer mCmd;
+
+                Fence mFence;
+
+                std::shared_ptr<DeviceAllocator> mpAllocator;
+
+                struct MeshInfo {
+                    std::string name;
+                    uint32_t firstVertex;
+                    uint32_t vertexCount;
+                    uint32_t firstIndex;
+                    uint32_t indexCount;
+                };
+
+                struct ModelInfo {
+                    std::string name;
+                    vk::Buffer vertexBuffer;
+                    MemoryBlock vertexMem;
+                    MemoryBlock indexMem;
+                    vk::Buffer indexBuffer;
+                    std::unordered_map<MeshId, MeshInfo> meshes;
+                };
+
+                std::unordered_map<ModelId, ModelInfo> mModels;
+
+                Utils::NextIdGenerator mNextModelId;
+                Utils::NextIdGenerator mNextMeshId;
+            };
+        }
+
+#pragma endregion
+
+
 // todo add glTF support
 #ifdef GLTF_ENABLED
 
+#pragma region GLTF_ANIMATION
         namespace gltf {
             struct Node;
 
@@ -475,6 +525,7 @@ namespace Mix {
             };
         }
 
+#pragma endregion
 #endif // GLTF_ENABLED
     }
 }
