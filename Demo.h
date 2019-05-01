@@ -50,11 +50,14 @@ public:
 
         SDL_SetRelativeMouseMode(SDL_FALSE);
 
-        clip = Mix::AudioClip::open("Media/test.mp3", // Pass audio path here
+        clip = Mix::AudioClip::open("", // Pass audio path here
                                     Mix::AudioClipLoadType::DecompressOnLoad
                                     | Mix::AudioClipLoadType::ThreeD
                                     | Mix::AudioClipLoadType::Loop);
         clip->init(false);
+        clip->set3DAttributes(&pos, &vel);
+        clip->play();
+        lastPos = pos;
 
         graphics.init();
         graphics.setTargetWindow(&window);
@@ -95,8 +98,9 @@ private:
     Mix::Window window;
 
     Mix::AudioClip* clip = nullptr;
-
-
+  
+    glm::vec3 pos = {-10., 0., 3.}, lastPos = {0., 0., 0.}, vel = {0., 0., 0.};
+  
     Mix::Graphics::Graphics graphics;
     Mix::Timer timer;
 
