@@ -9,15 +9,16 @@
 namespace Mix {
     namespace Graphics {
         class CommandMgr :public GraphicsComponent {
+            MX_DECLARE_RTTI;
+            MX_DECLARE_CLASS_FACTORY;
         public:
             virtual ~CommandMgr() { destroy(); }
-            void create(const vk::QueueFlagBits queueType,
-                        const vk::CommandPoolCreateFlags& flags = vk::CommandPoolCreateFlags());
+            void create(const vk::QueueFlagBits queueType);
 
-            std::vector<vk::CommandBuffer> allocCommandBuffers(uint32_t count, vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary);
-            vk::CommandBuffer allocCommandBuffer(vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary);
+            std::vector<vk::CommandBuffer> allocCommandBuffers(vk::CommandBufferLevel level, uint32_t count);
+
             void freeCommandBuffers(const std::vector<vk::CommandBuffer>& commandBuffers);
-            void freeCommandBuffers(const vk::CommandBuffer commandBuffer);
+
             vk::CommandBuffer beginTempCommandBuffer();
 
             void endTempCommandBuffer(vk::CommandBuffer commandBuffer);

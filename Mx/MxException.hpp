@@ -25,12 +25,6 @@ namespace Mix {
         }
     };
 
-    class ComponentCastError :public std::runtime_error {
-    public :
-        ComponentCastError() :runtime_error("Wrong type when add component") {
-        }
-    };
-
 }
 
 #endif // !_MX_EXCEPTION_HPP_

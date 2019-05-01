@@ -2,6 +2,9 @@
 
 namespace Mix {
     namespace Graphics {
+        MX_IMPLEMENT_RTTI_NoCreateFunc(Debug, GraphicsComponent);
+        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Debug);
+
         const vk::DebugUtilsMessengerEXT& Debug::setDebugCallback(const vk::DebugUtilsMessageSeverityFlagsEXT & messageSeverity, const vk::DebugUtilsMessageTypeFlagsEXT & messageType, PFN_vkDebugUtilsMessengerCallbackEXT callback, void * userData) {
             vk::DebugUtilsMessengerCreateInfoEXT createInfo;
             createInfo.messageSeverity = messageSeverity;
@@ -24,9 +27,6 @@ namespace Mix {
         }
 
         void Debug::destroy() {
-            if (!mCore)
-                return;
-
             for (const auto& messenger : mMessengers)
                 mCore->instance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->dynamicLoader());
 

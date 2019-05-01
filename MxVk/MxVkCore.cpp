@@ -2,6 +2,13 @@
 
 namespace Mix {
     namespace Graphics {
+        MX_IMPLEMENT_RTTI_NoCreateFunc(GraphicsBase, Object);
+
+        MX_IMPLEMENT_RTTI_NoCreateFunc(GraphicsComponent, GraphicsBase);
+
+        MX_IMPLEMENT_RTTI_NoCreateFunc(Core, GraphicsBase);
+        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Core);
+
         Core::Core()
             :mWindow(nullptr) {
             mInitInfo = new InitInfo();
@@ -141,12 +148,9 @@ namespace Mix {
                                 vkGetInstanceProcAddr,
                                 static_cast<VkDevice>(mLogicalDevice),
                                 vkGetDeviceProcAddr);
-
-            mSyncObjMgr.init(mLogicalDevice);
         }
 
         void Core::destroy() {
-            mSyncObjMgr.destroy();
             mLogicalDevice.destroy();
             mInstance.destroy(mSurface);
             mInstance.destroy();

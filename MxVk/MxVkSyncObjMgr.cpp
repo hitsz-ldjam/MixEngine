@@ -2,11 +2,14 @@
 
 namespace Mix {
     namespace Graphics {
+        MX_IMPLEMENT_RTTI_NoCreateFunc(SyncObjectMgr, GraphicsComponent);
+        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(SyncObjectMgr);
+
         Fence SyncObjectMgr::createFence(const vk::FenceCreateFlags flags) {
             vk::FenceCreateInfo createInfo = {};
             createInfo.flags = flags;
 
-            mFences.push_back(mDevice.createFence(createInfo));
+            mFences.push_back(mCore->device().createFence(createInfo));
             return Fence(this, mFences.back());
         }
 
@@ -15,13 +18,13 @@ namespace Mix {
             if (it == mFences.end())
                 throw SyncObjNotFound();
 
-            mDevice.destroyFence(*it);
+            mCore->device().destroyFence(*it);
             mFences.erase(it);
         }
 
         Semaphore SyncObjectMgr::createSemaphore() {
             vk::SemaphoreCreateInfo createInfo;
-            mSemaphores.push_back(mDevice.createSemaphore(createInfo));
+            mSemaphores.push_back(mCore->device().createSemaphore(createInfo));
             return Semaphore(this, mSemaphores.back());
         }
 
@@ -30,20 +33,25 @@ namespace Mix {
             if (it == mSemaphores.end())
                 throw SyncObjNotFound();
 
-            mDevice.destroySemaphore(*it);
+            mCore->device().destroySemaphore(*it);
             mSemaphores.erase(it);
         }
 
         void SyncObjectMgr::destroy() {
             for (auto& fence : mFences)
-                mDevice.destroyFence(fence);
+                mCore->device().destroyFence(fence);
             for (auto& semphore : mSemaphores)
-                mDevice.destroySemaphore(semphore);
+                mCore->device().destroySemaphore(semphore);
 
             mFences.clear();
             mSemaphores.clear();
-            mDevice = nullptr;
+            mCore = nullptr;
         }
 
+        MX_IMPLEMENT_RTTI_NoCreateFunc(Semaphore, GraphicsBase);
+        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Semaphore);
+
+        MX_IMPLEMENT_RTTI_NoCreateFunc(Fence, GraphicsBase);
+        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Fence);
     }
 }

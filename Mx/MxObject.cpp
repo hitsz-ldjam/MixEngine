@@ -4,8 +4,6 @@ namespace Mix {
 
     MX_IMPLEMENT_RTTI_NoParent_NoCreateFunc(Object);
 
-    std::vector<Object*> Object::mObjectList;
-
     bool Object::registerFactoryFunc(const std::string & typeName, FactoryFunction func) {
 
         auto funcMap = GlobalClassFactoryFuncMap::getInstance().lock();

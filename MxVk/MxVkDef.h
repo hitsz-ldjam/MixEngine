@@ -4,9 +4,10 @@
 
 #include"../Mx/MxDef.h"
 #include"../Mx/MxObject.h"
-#include <vulkan/vulkan.hpp>
+#include"vulkan/vulkan.hpp"
 #include <optional>
-#include <memory>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 
 namespace Mix {
@@ -52,7 +53,7 @@ namespace Mix {
         struct Vertex {
             glm::vec3 pos;
             glm::vec3 normal;
-            glm::vec2 uv;
+            glm::vec2 texCoord;
 
             //get vertex input description
             static std::vector<vk::VertexInputBindingDescription>& getBindingDescrip() {
@@ -69,7 +70,7 @@ namespace Mix {
                 static std::vector<vk::VertexInputAttributeDescription> attributeDescription = {
                     vk::VertexInputAttributeDescription(0,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, pos)),
                     vk::VertexInputAttributeDescription(1,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, normal)),
-                    vk::VertexInputAttributeDescription(2,0,vk::Format::eR32G32Sfloat,offsetof(Vertex, uv))
+                    vk::VertexInputAttributeDescription(2,0,vk::Format::eR32G32Sfloat,offsetof(Vertex, texCoord))
                 };
 
                 return attributeDescription;
