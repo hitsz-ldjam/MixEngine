@@ -5,6 +5,25 @@
 #include <cstdint>
 #include <string>
 
+#include <vulkan/vulkan.hpp>
+
+// include GLI
+#include <gli/gli.hpp>
+
+// include GLM
+#define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_LEFT_HANDED
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/epsilon.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 #define MX_ENGINE_NAME "MixEngine"
 #define MX_ENGINE_VERSION_MAJOR 0
 #define MX_ENGINE_VERSION_MINOR 0
@@ -21,8 +40,14 @@
 namespace Mix {
 
     typedef uint32_t VersionInt;
+    typedef uint32_t LayerIndex;
+    typedef std::string Tag;
+    typedef vk::DeviceSize Id;
+    typedef vk::DeviceSize IdStep;
+    typedef Id MeshId;
+    typedef Id ModelId;
 
-    struct Version {
+    namespace Version {
         static VersionInt makeVersion(uint32_t major, uint32_t minor, uint32_t patch) {
             return (major << 22 | minor << 12 | patch);
         }
@@ -40,12 +65,20 @@ namespace Mix {
         }
     };
 
-    struct EngineInfo {
-        static const std::string engineName;
+    namespace EngineInfo {
+        static const std::string engineName = MX_ENGINE_NAME;
 
-        static const VersionInt engineVersion;
+        static const VersionInt engineVersion = Version::makeVersion(MX_ENGINE_VERSION_MAJOR,
+                                                                     MX_ENGINE_VERSION_MINOR,
+                                                                     MX_ENGINE_VERSION_PATCH);
     };
 
+    namespace Constants {
+        constexpr float Epsilon = 0.000001f;
+        constexpr float Pi = 3.141593f;
+    }
+
+    enum class Space { World, Self };
 }
 
 #endif // !_MX_DEF_H_

@@ -7,13 +7,38 @@
 
 #include "MixEngine.h"
 
-#include "MxVk/MxVkGraphics.h"
+void drawSlipLine() {
+    std::cout << "------------------------" << std::endl;
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::vec3& vec3) {
+    return os << "[ " << vec3.x << ", " << vec3.y << ", " << vec3.z << " ]";
+}
+
+std::ostream& operator<<(std::ostream& os, const Mix::Axis& axis) {
+    return os << "{ " << axis.x << ", " << axis.y << ", " << axis.z << " }";
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::quat& quat) {
+    return os << "[ " << quat.x << ", " << quat.y << ", " << quat.z << ", " << quat.w << " ]";
+}
+
+std::ostream& operator<<(std::ostream& os, const Mix::Transform& trans) {
+    std::cout << trans.position() << std::endl;
+    std::cout << trans.localAxis() << std::endl;
+    return std::cout << trans.eulerAngle() << std::endl;
+}
 
 class Demo : public Mix::Behaviour {
 public:
     ~Demo() {
         delete clip;
+        delete obj;
         puts("Demo deleted");
+    }
+
+    virtual Component* copy() const {
+        return new Demo();
     }
 
     void init() override {
@@ -37,28 +62,51 @@ public:
         graphics.init();
         graphics.setTargetWindow(&window);
         graphics.build();
+
+        obj = new Mix::GameObject();
+        obj->addChild(graphics.createModelObj(gltfLoader.loadFromGlb("E:/Git/vulkan-learning-master/res/models/gltfSample/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", "DamagedHelmet")));
+        timer.start();
     }
 
     void update() override {
-        glm::ivec2 d = Mix::Input::MousePositionDelta();
-        if(d.y || d.x)
-            std::cout << d.x << ", " << d.y << std::endl;
+        timer.tick();
 
-        pos.x = sin(Mix::Time::getTime() * 0.5) * 10;
-        vel.x = (pos.x - lastPos.x) / Mix::Time::getDeltaTime();
-        lastPos = pos;
-        clip->set3DAttributes(&pos, &vel);
-        
-        graphics.update(10 * Mix::Time::getDeltaTime());
+        auto tran = obj->getComponent<Mix::Transform>();
+        if (Mix::Input::GetAxisRaw(SDL_SCANCODE_W))
+            tran->translate(Mix::Axis::worldForward, Mix::Space::World);
+        if (Mix::Input::GetAxisRaw(SDL_SCANCODE_S))
+            tran->translate(-Mix::Axis::worldForward, Mix::Space::World);
+        if (Mix::Input::GetAxisRaw(SDL_SCANCODE_D))
+            tran->translate(Mix::Axis::worldRight, Mix::Space::World);
+        if (Mix::Input::GetAxisRaw(SDL_SCANCODE_A))
+            tran->translate(-Mix::Axis::worldRight, Mix::Space::World);
+        if (Mix::Input::GetAxisRaw(SDL_SCANCODE_SPACE))
+            tran->translate(Mix::Axis::worldUp, Mix::Space::World);
+        if (Mix::Input::GetAxisRaw(SDL_SCANCODE_LCTRL))
+            tran->translate(-Mix::Axis::worldUp, Mix::Space::World);
+
+        tran->lookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+
+        clip->set3DAttributes(&tran->position());
+
+        static bool flag = true;
+
+        graphics.update(static_cast<float>(timer.deltaTime()));
     }
 
 private:
     Mix::Window window;
 
     Mix::AudioClip* clip = nullptr;
+  
     glm::vec3 pos = {-10., 0., 3.}, lastPos = {0., 0., 0.}, vel = {0., 0., 0.};
-
+  
     Mix::Graphics::Graphics graphics;
+    Mix::Timer timer;
+
+    Mix::GameObject* obj;
+    Mix::Utils::GLTFLoader gltfLoader;
+
 };
 
 #endif

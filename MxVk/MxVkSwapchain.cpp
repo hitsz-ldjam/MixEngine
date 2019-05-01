@@ -2,10 +2,7 @@
 
 namespace Mix {
     namespace Graphics {
-        MX_IMPLEMENT_RTTI_NoCreateFunc(Swapchain, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Swapchain);
-
-        void  Swapchain::init(const Core * core) {
+        void  Swapchain::init(std::shared_ptr<Core>& core) {
             mCore = core;
             mSupportDetails.capabilities =
                 mCore->physicalDevice().getSurfaceCapabilitiesKHR(mCore->surface());
@@ -18,20 +15,29 @@ namespace Mix {
         }
 
         void Swapchain::destroy() {
+            if (!mCore)
+                return;
+
             for (auto& view : mImageViews)
                 mCore->device().destroyImageView(view);
             mCore->device().destroySwapchainKHR(mSwapchain);
+            mCore = nullptr;
         }
 
-        void  Swapchain::create(SyncObjectMgr& syncMgr, const std::vector<vk::SurfaceFormatKHR>& rqFormats, const std::vector<vk::PresentModeKHR>& rqPresentMode, const vk::Extent2D& rqExtent) {
+        void  Swapchain::create(const std::vector<vk::SurfaceFormatKHR>& rqFormats, const std::vector<vk::PresentModeKHR>& rqPresentMode, const vk::Extent2D& rqExtent) {
             mImageAvlSph.resize(mImageCount);
             mRenderFinishedSph.resize(mImageCount);
             mInFlightFences.resize(mImageCount);
 
             for (uint32_t i = 0; i < mImageCount; ++i) {
-                mImageAvlSph[i] = syncMgr.createSemaphore();
-                mRenderFinishedSph[i] = syncMgr.createSemaphore();
-                mInFlightFences[i] = syncMgr.createFence();
+                mImageAvlSph[i] = mCore->getSyncObjMgr().createSemaphore();
+                mRenderFinishedSph[i] = mCore->getSyncObjMgr().createSemaphore();
+                mInFlightFences[i] = mCore->getSyncObjMgr().createFence();
+            }
+
+            // to keep thins in present() right
+            for (uint32_t i = 1; i < mImageCount; ++i) {
+                mCore->device().resetFences(mInFlightFences[i].get());
             }
 
             vk::SurfaceFormatKHR format;
@@ -140,11 +146,11 @@ namespace Mix {
         }
 
         void Swapchain::present(vk::CommandBuffer& cmdBuffer) {
-            mCore->device().waitForFences(mInFlightFences[mCurrFrame].get(),
+            mCore->device().waitForFences(mInFlightFences[mLastFrame].get(),
                                           VK_TRUE,
                                           std::numeric_limits<uint64_t>::max());
 
-            mCore->device().resetFences(mInFlightFences[mCurrFrame].get());
+            mCore->device().resetFences(mInFlightFences[mLastFrame].get());
 
             auto acquireResult = mCore->device().acquireNextImageKHR(mSwapchain,
                                                                      std::numeric_limits<uint64_t>::max(),
@@ -192,9 +198,7 @@ namespace Mix {
             } else if (acquireResult.result != vk::Result::eSuccess)
                 throw SwapchainSwapFailed();
 
-            /*std::cout << "image index " << acquireResult.value << std::endl
-                << "current frame " << mCurrFrame << std::endl;*/
-
+            mLastFrame = mCurrFrame;
             mCurrFrame = (mCurrFrame + 1) % mImageCount;
         }
     }

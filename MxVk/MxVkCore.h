@@ -8,6 +8,7 @@
 
 #include "MxVkDef.h"
 #include "MxVkExcept.hpp"
+#include "MxVkSyncObjMgr.h"
 #include <string>
 #include <vector>
 #include <functional>
@@ -17,19 +18,7 @@
 
 namespace Mix {
     namespace Graphics {
-        class Core;
-
-        class GraphicsBase :public Object {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_NO_CLASS_FACTORY;
-        public:
-            virtual ~GraphicsBase() = 0 {};
-        };
-
-
-        class Core :public GraphicsBase {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
+        class Core {
         public:
             Core();
             virtual ~Core() {
@@ -109,6 +98,10 @@ namespace Mix {
                 return mStaticLoader;
             }
 
+            SyncObjectMgr& getSyncObjMgr() {
+                return mSyncObjMgr;
+            }
+
             static std::vector<vk::ExtensionProperties> getSupportedExtensions() {
                 return vk::enumerateInstanceExtensionProperties();
             }
@@ -145,21 +138,22 @@ namespace Mix {
             std::vector<vk::LayerProperties> mSupportedLayers;
             std::vector<PhysicalDeviceInfo> mAllPhysicalDevices;
 
+            // classes that are used in other part of program frequently
+            SyncObjectMgr mSyncObjMgr;
+
         private:
             uint32_t evaluatePhysicalDevice(const PhysicalDeviceInfo& info);
             QueueFamilyIndexSet getQueueFamilyIndexSet(const PhysicalDeviceInfo& info);
         };
 
 
-        class GraphicsComponent :public GraphicsBase {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_NO_CLASS_FACTORY;
+        class GraphicsComponent {
         public:
             virtual ~GraphicsComponent() = 0 {};
             GraphicsComponent() { mCore = nullptr; }
-            virtual void init(const Core* core) { mCore = core; }
+            virtual void init(std::shared_ptr<Core>& core) { mCore = core; }
         protected:
-            const Core* mCore = nullptr;
+            std::shared_ptr<Core> mCore;
         };
     }
 }

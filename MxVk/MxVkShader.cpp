@@ -2,10 +2,10 @@
 
 namespace Mix {
     namespace Graphics {
-        MX_IMPLEMENT_RTTI_NoCreateFunc(ShaderMgr, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(ShaderMgr);
-
         void ShaderMgr::destroy() {
+            if (!mCore)
+                return;
+
             for (auto& pair : mModules) {
                 mCore->device().destroyShaderModule(pair.second.module);
             }

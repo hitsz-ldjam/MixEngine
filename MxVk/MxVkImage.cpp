@@ -4,7 +4,7 @@
 namespace Mix {
     namespace Graphics {
         namespace Tools {
-            vk::Image createImage2D(const Core & core, const vk::Extent2D & extent, const vk::Format format, const vk::ImageUsageFlags & usage, const uint32_t mipLevels, const uint32_t arrayLayers, const vk::SampleCountFlagBits sampleCount, const vk::ImageLayout initialLayout, const vk::ImageTiling tiling, const vk::SharingMode sharingMode) {
+            vk::Image createImage2D(Core & core, const vk::Extent2D & extent, const vk::Format format, const vk::ImageUsageFlags & usage, const uint32_t mipLevels, const uint32_t arrayLayers, const vk::SampleCountFlagBits sampleCount, const vk::ImageLayout initialLayout, const vk::ImageTiling tiling, const vk::SharingMode sharingMode) {
                 vk::ImageCreateInfo createInfo;
                 createInfo.imageType = vk::ImageType::e2D;
                 createInfo.extent = vk::Extent3D(extent, 1);
@@ -34,7 +34,7 @@ namespace Mix {
                 return device.createImageView(createInfo);
             }
 
-            vk::DeviceMemory allocateImageMemory(const Core & core, const vk::Image & image, const vk::MemoryPropertyFlags & properties) {
+            vk::DeviceMemory allocateImageMemory(Core & core, const vk::Image & image, const vk::MemoryPropertyFlags & properties) {
                 vk::MemoryRequirements memRq = core.device().getImageMemoryRequirements(image);
 
                 vk::MemoryAllocateInfo allocInfo;
@@ -155,7 +155,7 @@ namespace Mix {
                                           imageMemoryBarrier);
             }
 
-            Image createDepthStencil(const Core & core, const vk::Extent2D & extent, const vk::SampleCountFlagBits sampleCount) {
+            Image createDepthStencil(Core & core, const vk::Extent2D & extent, const vk::SampleCountFlagBits sampleCount) {
                 static vk::Format candidates[] = {
                     vk::Format::eD32SfloatS8Uint,
                     vk::Format::eD24UnormS8Uint,
@@ -188,5 +188,280 @@ namespace Mix {
                 return image;
             }
         }
+
+#pragma region MyRegion
+
+        void ImageMgr::init(std::shared_ptr<Core> & core, std::shared_ptr<DeviceAllocator>& allocator) {
+            GraphicsComponent::init(core);
+            mpAllocator = allocator;
+
+            vk::BufferCreateInfo createInfo;
+            createInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+            createInfo.size = mBufferSize;
+            createInfo.sharingMode = vk::SharingMode::eExclusive;
+
+            mStagingBuffer = mCore->device().createBuffer(createInfo);
+
+            mMemReq = mCore->device().getBufferMemoryRequirements(mStagingBuffer);
+
+            mMemBlock = mpAllocator->allocate(mMemReq.size, mMemReq.alignment, mCore->getMemoryTypeIndex(mMemReq.memoryTypeBits,
+                                                                                                         vk::MemoryPropertyFlagBits::eHostVisible |
+                                                                                                         vk::MemoryPropertyFlagBits::eHostCoherent));
+
+            mCore->device().bindBufferMemory(mStagingBuffer, mMemBlock.memory, mMemBlock.offset);
+
+            mFence = mCore->getSyncObjMgr().createFence();
+            mCore->device().resetFences(mFence.get());
+        }
+
+        void ImageMgr::beginLoad(const vk::CommandBuffer & cmd) {
+            if (!mBegin) {
+                mBegin = true;
+                mCmd = cmd;
+            }
+        }
+
+        vk::Format ImageMgr::gliToVulkanFormat(gli::format format) {
+            vk::Format result;
+            switch (format) {
+            case gli::FORMAT_RGBA8_UNORM_PACK8:
+            case gli::FORMAT_RGBA8_UNORM_PACK32:
+                result = vk::Format::eR8G8B8A8Unorm;
+                break;
+            case gli::FORMAT_BGRA8_UNORM_PACK8:
+                result = vk::Format::eB8G8R8A8Unorm;
+                break;
+            default:
+                result = vk::Format::eUndefined;
+                break;
+            }
+            return result;
+        }
+
+        void ImageMgr::loadImage2D(const std::string & name, const gli::texture& texture) {
+            // check if current size exceeds limits
+            if ((mCurrSize + Utils::align(texture.size(), mMemReq.alignment)) >= mMemReq.size)
+                flush();
+
+            ImageInfo info;
+            info.type = vk::ImageType::e2D;
+            info.format = gliToVulkanFormat(texture.format());
+            info.extent = vk::Extent3D(texture.extent().x, texture.extent().y, 1);
+            info.size = texture.size();
+            info.mipLevels = 1;
+            info.arrayLevels = 1;
+
+            vk::ImageCreateInfo createInfo;
+            createInfo.imageType = info.type;
+            createInfo.extent = info.extent;
+            createInfo.mipLevels = 1;
+            createInfo.arrayLayers = 1;
+            createInfo.format = info.format;
+            createInfo.tiling = vk::ImageTiling::eOptimal;
+            createInfo.initialLayout = vk::ImageLayout::eUndefined;
+            createInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+            createInfo.sharingMode = vk::SharingMode::eExclusive;
+            createInfo.samples = vk::SampleCountFlagBits::e1;
+
+            info.image = mCore->device().createImage(createInfo);
+            mDatas.emplace_back(name, info, static_cast<const char*>(texture.data()));
+
+            mCurrSize += Utils::align(info.size, mMemReq.alignment);
+        }
+
+        void ImageMgr::loadTexture(const std::string & name, const gli::texture & texture) {
+            // check if mCmd is begin
+            if (!mCmdBegin) {
+                mCmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eSimultaneousUse));
+                mCmdBegin = true;
+            }
+
+            // todo implement this function to load texture of all types
+            switch (texture.target()) {
+            /*case gli::target::TARGET_1D:
+                break;
+            case gli::target::TARGET_1D_ARRAY:
+                break;*/
+            case gli::target::TARGET_2D:
+                loadImage2D(name, texture);
+                break;
+            /*case gli::target::TARGET_2D_ARRAY:
+                break;
+            case gli::target::TARGET_3D:
+                break;
+            case gli::target::TARGET_CUBE:
+                break;
+            case gli::target::TARGET_CUBE_ARRAY:
+                break;*/
+            default:
+                std::cerr << "Not supported Type of texture" << std::endl;
+                break;
+            }
+        }
+
+        void ImageMgr::endLoad() {
+            if (mCurrSize)
+                flush();
+            mCmd = nullptr;
+        }
+
+        void ImageMgr::destroy() {
+            if (!mCore)
+                return;
+
+            for (auto& imageInfo : mImageInfos) {
+                mCore->device().destroyImage(imageInfo.second.first.image);
+                mpAllocator->deallocate(imageInfo.second.second);
+            }
+            mImageInfos.clear();
+            mCore->device().destroyBuffer(mStagingBuffer);
+            mpAllocator->deallocate(mMemBlock);
+
+            mCore = nullptr;
+            mpAllocator = nullptr;
+        }
+
+        void ImageMgr::flush() {
+            vk::DeviceSize offset = 0;
+
+            // copy data to staging memory
+            for (auto& data : mDatas) {
+                memcpy(static_cast<char*>(mMemBlock.ptr) + offset,
+                       data.ptr,
+                       static_cast<size_t>(data.imageInfo.size));
+                offset += Utils::align(data.imageInfo.size, mMemReq.alignment);
+            }
+
+            // allocate memory on video memory for images
+            offset = 0;
+            for (auto& data : mDatas) {
+                auto& imageInfo = data.imageInfo;
+                MemoryBlock block = mpAllocator->allocate(imageInfo.image, vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+                vk::BufferImageCopy bufferCopyRegion;
+                bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+                bufferCopyRegion.imageSubresource.mipLevel = 0;
+                bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
+                bufferCopyRegion.imageSubresource.layerCount = 1;
+                bufferCopyRegion.imageExtent = imageInfo.extent;
+                bufferCopyRegion.bufferOffset = offset;
+
+                offset += Utils::align(imageInfo.size, mMemReq.alignment);
+
+                vk::ImageSubresourceRange subresourceRange;
+                subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+                subresourceRange.baseMipLevel = 0;
+                subresourceRange.levelCount = 1;
+                subresourceRange.baseArrayLayer = 0;
+                subresourceRange.layerCount = 1;
+
+                Tools::transferImageLayout(mCmd,
+                                           imageInfo.image,
+                                           vk::ImageLayout::eUndefined,
+                                           vk::ImageLayout::eTransferDstOptimal,
+                                           subresourceRange,
+                                           vk::PipelineStageFlagBits::eTopOfPipe,
+                                           vk::PipelineStageFlagBits::eTransfer);
+
+                mCmd.copyBufferToImage(mStagingBuffer,
+                                       imageInfo.image,
+                                       vk::ImageLayout::eTransferDstOptimal,
+                                       bufferCopyRegion);
+
+                Tools::transferImageLayout(mCmd,
+                                           imageInfo.image,
+                                           vk::ImageLayout::eTransferDstOptimal,
+                                           vk::ImageLayout::eShaderReadOnlyOptimal,
+                                           subresourceRange,
+                                           vk::PipelineStageFlagBits::eTransfer,
+                                           vk::PipelineStageFlagBits::eFragmentShader);
+
+                mImageInfos.insert(std::make_pair(data.name, std::make_pair(imageInfo, block)));
+            }
+
+            mCmd.end();
+            mCmdBegin = false;
+
+            vk::SubmitInfo submitInfo;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &mCmd;
+
+            mCore->getQueues().transfer.value().submit(submitInfo, mFence.get());
+            mCore->device().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
+            mCore->device().resetFences(mFence.get());
+
+            // clear all stored info waiting for next flush()
+            mCurrSize = 0;
+            mDatas.clear();
+            /*vk::DeviceSize totalSize = 0;
+            std::vector<vk::DeviceSize> sizes;
+            sizes.reserve(mDatas.size());
+            for (auto& data : mDatas) {
+                auto& imageInfo = std::get<1>(data);
+                sizes.push_back(mCore->device().getImageMemoryRequirements(imageInfo.image).size);
+                totalSize += sizes.back();
+            }
+
+            vk::MemoryAllocateInfo allocInfo;
+            allocInfo.allocationSize = totalSize;
+            allocInfo.memoryTypeIndex = mCore->getMemoryTypeIndex(mCore->device().getImageMemoryRequirements(std::get<1>(mDatas[0]).image).memoryTypeBits,
+                                                                  vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+            vk::DeviceMemory texMemory = mCore->device().allocateMemory(allocInfo);
+            offset = 0;
+            for (uint32_t i = 0; i < mDatas.size(); ++i) {
+                mCore->device().bindImageMemory(std::get<1>(mDatas[i]).image, texMemory, offset);
+                offset += sizes[i];
+            }
+
+            offset = 0;
+            for (uint32_t i = 0; i < mDatas.size(); ++i) {
+                auto& imageInfo = std::get<1>(mDatas[i]);
+
+                vk::BufferImageCopy bufferCopyRegion;
+                bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+                bufferCopyRegion.imageSubresource.mipLevel = 0;
+                bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
+                bufferCopyRegion.imageSubresource.layerCount = 1;
+                bufferCopyRegion.imageExtent = imageInfo.extent;
+                bufferCopyRegion.bufferOffset = offset;
+
+                offset += align(imageInfo.size, mMemReq.alignment);
+
+                vk::ImageSubresourceRange subresourceRange;
+                subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+                subresourceRange.baseMipLevel = 0;
+                subresourceRange.levelCount = 1;
+                subresourceRange.baseArrayLayer = 0;
+                subresourceRange.layerCount = 1;
+
+                Tools::transferImageLayout(mCmd,
+                                           imageInfo.image,
+                                           vk::ImageLayout::eUndefined,
+                                           vk::ImageLayout::eTransferDstOptimal,
+                                           subresourceRange,
+                                           vk::PipelineStageFlagBits::eTopOfPipe,
+                                           vk::PipelineStageFlagBits::eTransfer);
+
+                mCmd.copyBufferToImage(mStagingBuffer,
+                                       imageInfo.image,
+                                       vk::ImageLayout::eTransferDstOptimal,
+                                       bufferCopyRegion);
+
+                Tools::transferImageLayout(mCmd,
+                                           imageInfo.image,
+                                           vk::ImageLayout::eTransferDstOptimal,
+                                           vk::ImageLayout::eShaderReadOnlyOptimal,
+                                           subresourceRange,
+                                           vk::PipelineStageFlagBits::eTransfer,
+                                           vk::PipelineStageFlagBits::eFragmentShader);
+            }
+
+            for (auto& data : mDatas) {
+                mImageInfos.insert(std::make_pair(std::get<0>(data), std::get<1>(data)));
+            }*/
+        }
+#pragma endregion
+
     }
 }

@@ -2,9 +2,6 @@
 
 namespace Mix {
     namespace Graphics {
-        MX_IMPLEMENT_RTTI_NoCreateFunc(Pipeline, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Pipeline);
-
         void Pipeline::clear() {
             if (mPipelineStates) {
                 delete mPipelineStates;
@@ -29,7 +26,7 @@ namespace Mix {
             return *this;
         }
 
-        void Pipeline::init(const Core * core) {
+        void Pipeline::init(std::shared_ptr<Core> & core) {
             mCore = core;
             mPipelineStates = new PipelineStates;
         }
@@ -256,9 +253,6 @@ namespace Mix {
             mPipeline = nullptr;
             mPipelineLayout = nullptr;
         }
-
-        MX_IMPLEMENT_RTTI_NoCreateFunc(PipelineMgr, GraphicsComponent);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(PipelineMgr);
 
         Pipeline & PipelineMgr::createPipeline(const std::string & name, const vk::RenderPass renderPass, const uint32_t subpassIndex) {
             if (mPipelines.count(name) != 0)

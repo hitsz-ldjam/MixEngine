@@ -12,8 +12,6 @@
 namespace Mix {
     namespace Graphics {
         class Debug :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
         public:
             Debug() { mCore = nullptr; };
             virtual ~Debug() { destroy(); }

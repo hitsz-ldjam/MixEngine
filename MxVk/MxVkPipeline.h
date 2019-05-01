@@ -8,9 +8,7 @@
 
 namespace Mix {
     namespace Graphics {
-        class Pipeline :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
+        class Pipeline :public GraphicsComponent{
         public:
             void destroy();
 
@@ -18,7 +16,7 @@ namespace Mix {
 
             Pipeline & operator=(Pipeline && pipeline);
 
-            virtual void init(const Core* core) override;
+            virtual void init(std::shared_ptr<Core>& core) override;
 
             void setTargetRenderPass(const vk::RenderPass renderPass, const uint32_t subpassIndex);
 
@@ -109,8 +107,6 @@ namespace Mix {
         };
 
         class PipelineMgr :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
         private:
             std::map<std::string, Pipeline> mPipelines;
 

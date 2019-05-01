@@ -3,7 +3,8 @@
 #define _MX_VK_SYNCOBJMGR_H_
 
 
-#include "MxVkCore.h"
+#include "MxVkDef.h"
+#include "MxVkExcept.hpp"
 
 
 namespace Mix {
@@ -11,10 +12,12 @@ namespace Mix {
         class Fence;
         class Semaphore;
 
-        class SyncObjectMgr :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
+        class SyncObjectMgr{
         public:
+            void init(const vk::Device& device) {
+                mDevice = device;
+            }
+
             virtual ~SyncObjectMgr() {
                 destroy();
             }
@@ -29,15 +32,14 @@ namespace Mix {
 
             void destroy();
         private:
+            vk::Device mDevice;
             std::vector<vk::Fence> mFences;
             std::vector<vk::Semaphore> mSemaphores;
         };
 
         // todo
 
-        class Semaphore :GraphicsBase {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
+        class Semaphore {
         public:
             Semaphore() :mMgr(nullptr), mSemaphore(nullptr) {};
 
@@ -78,7 +80,7 @@ namespace Mix {
                 destroy();
             }
 
-            vk::Semaphore get() {
+            vk::Semaphore& get() {
                 return mSemaphore;
             }
 
@@ -87,9 +89,7 @@ namespace Mix {
             vk::Semaphore mSemaphore;
         };
 
-        class Fence :GraphicsBase {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
+        class Fence {
         public:
             Fence() :mMgr(nullptr), mFence(nullptr) {};
 
@@ -130,7 +130,7 @@ namespace Mix {
                 destroy();
             }
 
-            vk::Fence get() {
+            vk::Fence& get() {
                 return mFence;
             }
 

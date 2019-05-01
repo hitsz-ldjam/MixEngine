@@ -12,14 +12,12 @@
 namespace Mix {
     namespace Graphics {
         class Swapchain :public GraphicsComponent {
-            MX_DECLARE_RTTI;
-            MX_DECLARE_CLASS_FACTORY;
         public:
-            virtual ~Swapchain() {
+            ~Swapchain() {
                 destroy();
             }
 
-            virtual void init(const Core* core) override;
+            void init(std::shared_ptr<Core>& core) override;
 
             void setImageCount(const uint32_t count) {
                 mImageCount = mSupportDetails.capabilities.minImageCount < count ? count : mSupportDetails.capabilities.minImageCount;
@@ -28,9 +26,9 @@ namespace Mix {
 
             void destroy();
 
-            void create(SyncObjectMgr& syncMgr,
-                        const std::vector<vk::SurfaceFormatKHR>& rqFormats,
-                        const std::vector<vk::PresentModeKHR>& rqPresentMode, const vk::Extent2D& rqExtent);
+            void create(const std::vector<vk::SurfaceFormatKHR>& rqFormats,
+                        const std::vector<vk::PresentModeKHR>& rqPresentMode,
+                        const vk::Extent2D& rqExtent);
 
             const std::vector<vk::SurfaceFormatKHR>& supportedFormat() const {
                 return mSupportDetails.formats;
@@ -62,6 +60,7 @@ namespace Mix {
             vk::PresentModeKHR mPresentMode;
             vk::Extent2D mExtent;
             size_t mCurrFrame = 0;
+            size_t mLastFrame = 0;
 
             uint32_t mImageCount = 2;
             std::vector<vk::Image> mImages;

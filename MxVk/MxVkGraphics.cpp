@@ -2,94 +2,219 @@
 
 namespace Mix {
     namespace Graphics {
-        MX_IMPLEMENT_RTTI_NoCreateFunc(Graphics, GraphicsBase);
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Graphics);
-
         void Graphics::init() {
-            mCore = new Core();
-            mDebug = new Debug();
-            mSwapchain = new Swapchain();
+            mCore = std::make_shared<Core>();
+            mDebug = std::make_shared<Debug>();
+            mSwapchain = std::make_shared<Swapchain>();
 
-            mShaderMgr = new ShaderMgr();
-            mPipelineMgr = new PipelineMgr();
-            mSyncObjMgr = new SyncObjectMgr();
+            mShaderMgr = std::make_shared<ShaderMgr>();
+            mPipelineMgr = std::make_shared<PipelineMgr>();
 
-            mRenderPass = new RenderPass();
-            mDescriptorPool = new DescriptorPool();
-            mDescriptorSetLayout = new DescriptorSetLayout();
-            mCommandMgr = new CommandMgr();
+            mRenderPass = std::make_shared<RenderPass>();
+            mDescriptorPool = std::make_shared<DescriptorPool>();
+            mCommandMgr = std::make_shared<CommandMgr>();
+
+            mImageMgr = std::make_shared<ImageMgr>();
+            mMeshMgr = std::make_shared<gltf::MeshMgr>();
+
         }
 
         void Graphics::build() {
             buildCore();
-            mSyncObjMgr->init(mCore);
-            mDescriptorPool->init(mCore);
-            mDescriptorSetLayout->init(mCore);
             buildDebugUtils();
+            buildCommandMgr();
+            mDescriptorPool->init(mCore);
+            mAllocator = std::make_shared<DeviceAllocator>();
+            mAllocator->init(mCore);
             buildSwapchain();
             buildDepthStencil();
             buildRenderPass();
             buildDescriptorSetLayout();
             buildShaders();
             buildPipeline();
-            buildCommandMgr();
             buildFrameBuffers();
 
-            buildVertexBuffers();
+            loadResource();
+
             buildUniformBuffers();
             buildDescriptorSets();
             buildCommandBuffers();
         }
 
         void Graphics::update(float deltaTime) {
-            Uniform ubo = {};
-            ubo.view = glm::lookAt(glm::vec3(1.0f, 1.0f, 1.0f),
-                                   glm::vec3(0.0f, 0.0f, 0.0f),
-                                   glm::vec3(0.0f, 0.0f, 1.0f));
-
-            ubo.proj = glm::perspective(glm::radians(45.0f),
-                                        float(WIN_WIDTH) / WIN_HEIGHT,
-                                        0.1f, 100.0f);
-            ubo.proj[1][1] *= -1.0f;
-
-            static float angle = 0.0f;
-            ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians((angle += deltaTime * 10.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
-
-            uniforms[mSwapchain->currentFrame()]->map();
-            uniforms[mSwapchain->currentFrame()]->copyTo(&ubo, sizeof(ubo));
-            uniforms[mSwapchain->currentFrame()]->unmap();
+            updateUniformBuffer(deltaTime);
+            updateCmdBuffer(deltaTime);
 
             mSwapchain->present(mCommandBuffers[mSwapchain->currentFrame()]);
+        }
+
+        void Graphics::updateCmdBuffer(float deltaTime) {
+            auto currFrame = mSwapchain->currentFrame();
+
+            vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+            mCommandBuffers[currFrame].begin(beginInfo);
+
+            std::vector<vk::ClearValue> clearValues(2);
+            clearValues[0].color = std::array<float, 4>{0.0f, 0.75f, 1.0f, 1.0f};
+            clearValues[1].depthStencil = { 1.0f,0 };
+
+            //begin render pass
+            mRenderPass->beginRenderPass(mCommandBuffers[currFrame], mFramebuffers[currFrame]->get(), clearValues,
+                                         mSwapchain->extent());
+
+            mCommandBuffers[currFrame].bindPipeline(vk::PipelineBindPoint::eGraphics, mPipelineMgr->getPipeline("pipeline").get());
+
+            mCommandBuffers[currFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                                          mPipelineMgr->getPipeline("pipeline").pipelineLayout(),
+                                                          0,
+                                                          mDescriptorSets[currFrame],
+                                                          nullptr);
+
+            std::vector<MeshRenderer*> renderers = Object::findObjectsOfType<MeshRenderer>();
+            for (MeshRenderer* renderer : renderers) {
+                RenderInfo info = renderer->getRenderInfo();
+
+                mCommandBuffers[currFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                                              mPipelineMgr->getPipeline("pipeline").pipelineLayout(),
+                                                              1,
+                                                              renderer->descriptorSet(currFrame),
+                                                              nullptr);
+
+                auto mesh = mMeshMgr->getMesh(info.meshRef.model, info.meshRef.mesh);
+
+                mCommandBuffers[currFrame].bindVertexBuffers(0,
+                                                             mesh->vertexBuffer,
+                                                             { 0 });
+
+                mCommandBuffers[currFrame].bindIndexBuffer(mesh->indexBuffer, 0, vk::IndexType::eUint32);
+
+                mCommandBuffers[currFrame].drawIndexed(mesh->indexCount,
+                                                       1,
+                                                       mesh->firstIndex,
+                                                       mesh->firstVertex,
+                                                       0);
+            }
+            //end render pass
+            mRenderPass->endRenderPass(mCommandBuffers[currFrame]);
+
+            //end command buffer
+            mCommandBuffers[currFrame].end();
+        }
+
+        void Graphics::Graphics::updateUniformBuffer(float deltaTime) {
+            auto objects = Object::findObjectsOfType<MeshRenderer>();
+            for (auto obj : objects) {
+                auto buffer = obj->uniformBuffers(mSwapchain->currentFrame());
+                auto& uniform = obj->uniform();
+                buffer->copyTo(&uniform, sizeof(uniform));
+            }
+
+            CameraUniform ubo;
+            ubo.position = glm::vec4(0.0f, 0.0f, 3.0f, 1.0f);
+            glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
+            ubo.forward = glm::vec4(glm::normalize(target - glm::vec3(ubo.position)), 0.0f);
+            ubo.viewMat = glm::lookAt(glm::vec3(ubo.position),
+                                      target,
+                                      glm::vec3(0.0f, 1.0f, 0.0f));
+
+            ubo.projMat = glm::perspective(glm::radians(45.0f),
+                                           float(WIN_WIDTH) / WIN_HEIGHT,
+                                           0.1f, 1000.0f);
+            ubo.projMat[1][1] *= -1.0f;
+
+            uniforms[mSwapchain->currentFrame()]->copyTo(&ubo, sizeof(ubo));
         }
 
         void Graphics::destroy() {
             mCore->device().waitIdle();
 
-            delete mCommandMgr;
-
             mCore->device().destroyImageView(mDepthStencilView);
             mCore->device().destroyImage(mDepthStencil.image);
             mCore->device().freeMemory(mDepthStencil.memory);
+
+            mCore->device().destroyImageView(texImageView);
+            mCore->device().destroySampler(sampler);
 
             for (auto& buffer : uniforms) {
                 delete buffer;
             }
 
-            delete box;
-
             for (auto& framebuffer : mFramebuffers)
                 delete framebuffer;
+        }
 
-            delete mShaderMgr;
-            delete mSwapchain;
-            delete mDescriptorSetLayout;
-            delete mDescriptorPool;
-            delete mPipelineMgr;
-            delete mRenderPass;
+        GameObject* Graphics::createModelObj(const Utils::GLTFLoader::ModelData& modelData) {
+            // test
+            vk::DescriptorImageInfo imageInfo;
+            imageInfo.imageView = texImageView;
+            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            imageInfo.sampler = sampler;
 
-            delete mSyncObjMgr;
-            delete mDebug;
-            delete mCore;
+            auto cmd = mCommandMgr->allocCommandBuffer();
+
+            mMeshMgr->beginLoad(cmd);
+            auto idPair = std::move(mMeshMgr->loadModel(modelData));
+            mCommandMgr->freeCommandBuffers(cmd);
+            mMeshMgr->endLoad();
+
+            MeshFilter* filter;
+            Transform* transform;
+            MeshRenderer* render;
+
+            GameObject* obj = new GameObject();
+            for (size_t i = 0; i < modelData.meshes.size(); ++i) {
+                GameObject* child = new GameObject();
+
+                transform = child->getComponent<Transform>();
+                transform->position() = modelData.meshes[i].transform.translation;
+                transform->rotation() = modelData.meshes[i].transform.rotation;
+                transform->scale() = modelData.meshes[i].transform.scale;
+
+                filter = child->addComponent<MeshFilter>();
+                filter->setMeshRef(idPair.first, idPair.second[i]);
+
+                std::vector<std::shared_ptr<Buffer>> uniformBuffers;
+                std::vector<vk::DescriptorSet> descriptorSets;
+                uniformBuffers.reserve(mSwapchain->imageCount());
+
+                for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
+                    uniformBuffers.emplace_back(Buffer::createBuffer(mCore,
+                                                mAllocator,
+                                                vk::BufferUsageFlagBits::eUniformBuffer,
+                                                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                                                sizeof(MeshUniform)));
+                }
+
+                descriptorSets = mDescriptorPool->allocDescriptorSet(mDescriptorSetLayout["Object"]->get(), mSwapchain->imageCount());
+                for (size_t i = 0; i < descriptorSets.size(); ++i) {
+                    std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {};
+                    descriptorWrites[0].dstSet = descriptorSets[i]; //descriptor which will be write in
+                    descriptorWrites[0].dstBinding = 0; //destination binding
+                    descriptorWrites[0].dstArrayElement = 0;
+                    descriptorWrites[0].descriptorType = vk::DescriptorType::eUniformBuffer; //the type of the descriptor that will be wirte in
+                    descriptorWrites[0].descriptorCount = 1; //descriptor count
+                    descriptorWrites[0].pBufferInfo = &uniformBuffers[i]->descriptor; //descriptorBufferInfo
+                    descriptorWrites[0].pImageInfo = nullptr;
+                    descriptorWrites[0].pTexelBufferView = nullptr;
+
+                    descriptorWrites[1].dstSet = descriptorSets[i];
+                    descriptorWrites[1].dstBinding = 1;
+                    descriptorWrites[1].dstArrayElement = 0;
+                    descriptorWrites[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+                    descriptorWrites[1].descriptorCount = 1;
+                    descriptorWrites[1].pBufferInfo = nullptr;
+                    descriptorWrites[1].pImageInfo = &imageInfo;
+                    descriptorWrites[1].pTexelBufferView = nullptr;
+
+                    mCore->device().updateDescriptorSets(descriptorWrites, nullptr);
+                }
+
+                render = child->addComponent<MeshRenderer>(uniformBuffers, descriptorSets);
+
+                obj->addChild(child);
+            }
+
+            return obj;
         }
 
         void Graphics::buildCore() {
@@ -112,8 +237,7 @@ namespace Mix {
             // todo
             mSwapchain->init(mCore);
             mSwapchain->setImageCount(2);
-            mSwapchain->create(*mSyncObjMgr,
-                               mSwapchain->supportedFormat(),
+            mSwapchain->create(mSwapchain->supportedFormat(),
                                { vk::PresentModeKHR::eFifo },
                                vk::Extent2D(640, 480));
         }
@@ -160,13 +284,24 @@ namespace Mix {
         }
 
         void Graphics::buildDescriptorSetLayout() {
-            mDescriptorSetLayout->addBindings(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
-            mDescriptorSetLayout->create();
+            auto cameraLayout = std::make_shared<DescriptorSetLayout>();
+            cameraLayout->init(mCore);
+            cameraLayout->addBindings(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
+            cameraLayout->create();
+
+            auto objLayout = std::make_shared<DescriptorSetLayout>();
+            objLayout->init(mCore);
+            objLayout->addBindings(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
+            objLayout->addBindings(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment);
+            objLayout->create();
+
+            mDescriptorSetLayout["Camera"] = cameraLayout;
+            mDescriptorSetLayout["Object"] = objLayout;
         }
 
         void Graphics::buildShaders() {
             mShaderMgr->init(mCore);
-            std::ifstream inFile("Shaders/vShader.spv", std::ios_base::ate | std::ios_base::binary);
+            std::ifstream inFile("Shaders/vShader.vert.spv", std::ios_base::ate | std::ios_base::binary);
             size_t fileSize = static_cast<uint32_t>(inFile.tellg());
             std::vector<char> shaderCode(fileSize);
             inFile.seekg(std::ios_base::beg);
@@ -174,7 +309,7 @@ namespace Mix {
             inFile.close();
             mShaderMgr->createShader("vShader", shaderCode.data(), shaderCode.size(), vk::ShaderStageFlagBits::eVertex);
 
-            inFile.open("Shaders/fShader.spv", std::ios_base::ate | std::ios_base::binary);;
+            inFile.open("Shaders/fShader.frag.spv", std::ios_base::ate | std::ios_base::binary);;
             fileSize = static_cast<uint32_t>(inFile.tellg());
             shaderCode.resize(fileSize);
             inFile.seekg(std::ios_base::beg);
@@ -223,14 +358,15 @@ namespace Mix {
 
             pipeline.addDefaultBlendAttachments();
 
-            pipeline.addDescriptorSetLayout(mDescriptorSetLayout->get());
+            pipeline.addDescriptorSetLayout(mDescriptorSetLayout["Camera"]->get());
+            pipeline.addDescriptorSetLayout(mDescriptorSetLayout["Object"]->get());
 
             pipeline.create();
         }
 
         void Graphics::buildCommandMgr() {
             mCommandMgr->init(mCore);
-            mCommandMgr->create(vk::QueueFlagBits::eGraphics);
+            mCommandMgr->create(vk::QueueFlagBits::eGraphics, vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
         }
 
         void Graphics::buildFrameBuffers() {
@@ -249,85 +385,34 @@ namespace Mix {
             }
         }
 
-        void Graphics::buildVertexBuffers() {
-            vk::DeviceSize bufferSize = sizeof(Vertex)*vertices.size();
-
-            box = Buffer::createBuffer(mCore,
-                                       vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-                                       vk::MemoryPropertyFlagBits::eDeviceLocal,
-                                       bufferSize);
-
-            Buffer::copyToDeviceBuffer(mCore,
-                                       mCommandMgr,
-                                       box,
-                                       vertices.data());
-        }
-
         void Graphics::Graphics::buildUniformBuffers() {
             uniforms.resize(mSwapchain->imageCount());
 
             for (size_t i = 0; i < uniforms.size(); ++i) {
                 uniforms[i] = Buffer::createBuffer(mCore,
+                                                   mAllocator,
                                                    vk::BufferUsageFlagBits::eUniformBuffer,
                                                    vk::MemoryPropertyFlagBits::eHostVisible |
                                                    vk::MemoryPropertyFlagBits::eHostCoherent,
-                                                   sizeof(Uniform));
+                                                   sizeof(CameraUniform));
             }
         }
 
         void Graphics::Graphics::buildCommandBuffers() {
-            mCommandBuffers = mCommandMgr->allocCommandBuffers(vk::CommandBufferLevel::ePrimary,
-                                                               mSwapchain->imageCount());
-
-            for (size_t i = 0; i < mCommandBuffers.size(); ++i) {
-                vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
-
-                mCommandBuffers[i].begin(beginInfo);
-
-                std::vector<vk::ClearValue> clearValues(2);
-                clearValues[0].color = std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f};
-                clearValues[1].depthStencil = { 1.0f,0 };
-
-                //begin render pass
-                mRenderPass->beginRenderPass(mCommandBuffers[i], mFramebuffers[i]->get(), clearValues,
-                                             mSwapchain->extent());
-
-                mCommandBuffers[i].bindPipeline(vk::PipelineBindPoint::eGraphics, mPipelineMgr->getPipeline("pipeline").get());
-
-                mCommandBuffers[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                                      mPipelineMgr->getPipeline("pipeline").pipelineLayout(),
-                                                      0,
-                                                      { mDescriptorSets[i] },
-                                                      nullptr);
-
-                mCommandBuffers[i].bindVertexBuffers(0,
-                                                     box->buffer,
-                                                     { 0 });
-
-                mCommandBuffers[i].draw(static_cast<uint32_t>(vertices.size()),
-                                        1,
-                                        0,
-                                        0);
-
-                //end render pass
-                mRenderPass->endRenderPass(mCommandBuffers[i]);
-
-                    //end command buffer
-                mCommandBuffers[i].end();
-            }
+            mCommandBuffers = mCommandMgr->allocCommandBuffers(mSwapchain->imageCount(),
+                                                               vk::CommandBufferLevel::ePrimary);
         }
 
         void Graphics::Graphics::buildDescriptorSets() {
             //create descriptor pool
-            mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBuffer, mSwapchain->imageCount());
-            mDescriptorPool->create(mSwapchain->imageCount());
+            mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBuffer, mSwapchain->imageCount() * 5);
+            mDescriptorPool->addPoolSize(vk::DescriptorType::eCombinedImageSampler, mSwapchain->imageCount() * 5);
+            mDescriptorPool->create(mSwapchain->imageCount() * 5);
 
-            //allocate descriptor sets
-            mDescriptorSets = mDescriptorPool->allocDescriptorSet(*mDescriptorSetLayout, mSwapchain->imageCount());
+            // test allocate camera descriptor set
+            mDescriptorSets = mDescriptorPool->allocDescriptorSet(mDescriptorSetLayout["Camera"]->get(), mSwapchain->imageCount());
 
-
-
-            //update descriptor sets
+            // update descriptor sets
             for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
                 std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {};
                 descriptorWrites[0].dstSet = mDescriptorSets[i]; //descriptor which will be write in
@@ -341,6 +426,52 @@ namespace Mix {
 
                 mCore->device().updateDescriptorSets(descriptorWrites, nullptr);
             }
+        }
+
+        void Graphics::Graphics::loadResource() {
+            mImageMgr->init(mCore, mAllocator);
+            mMeshMgr->init(mCore, mAllocator);
+
+            const gli::texture2d texture(gli::load("Texture/1.DDS"));
+            auto cmd = mCommandMgr->allocCommandBuffer();
+            mImageMgr->beginLoad(cmd);
+            mImageMgr->loadTexture("front", texture);
+            mImageMgr->endLoad();
+            mCommandMgr->freeCommandBuffers(cmd);
+
+            vk::ImageViewCreateInfo viewInfo;
+            viewInfo.viewType = vk::ImageViewType::e2D;
+            viewInfo.format = mImageMgr->getImage("front").format;
+            viewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = 0;
+            viewInfo.subresourceRange.layerCount = 1;
+            viewInfo.image = mImageMgr->getImage("front").image;
+
+            texImageView = mCore->device().createImageView(viewInfo);
+
+            vk::SamplerCreateInfo samplerInfo;
+            samplerInfo.magFilter = vk::Filter::eLinear;
+            samplerInfo.minFilter = vk::Filter::eLinear;
+            samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+            samplerInfo.addressModeU = vk::SamplerAddressMode::eClampToEdge;
+            samplerInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
+            samplerInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
+
+            sampler = mCore->device().createSampler(samplerInfo);
+
+            /*{
+                Utils::GLTFLoader loader;
+                loader.loadFromGLBStore("E:/Git/vulkan-learning-master/res/models/gltfSample/Duck/glTF-Binary/Duck.glb", "Duck");
+
+                auto cmd = mCommandMgr->allocCommandBuffer();
+                mMeshMgr->init(mCore, mAllocator);
+                mMeshMgr->beginLoad(cmd);
+                mMeshMgr->loadModel(loader.getModelData("Duck"));
+                mMeshMgr->endLoad();
+                mCommandMgr->freeCommandBuffers(cmd);
+            }*/
         }
     }
 }
