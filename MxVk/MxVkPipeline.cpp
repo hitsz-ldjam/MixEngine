@@ -26,7 +26,7 @@ namespace Mix {
             return *this;
         }
 
-        void Pipeline::init(std::shared_ptr<Core> & core) {
+        void Pipeline::Init(std::shared_ptr<Core> & core) {
             mCore = core;
             mPipelineStates = new PipelineStates;
         }
@@ -200,7 +200,7 @@ namespace Mix {
             layoutCreateInfo.pPushConstantRanges = mPipelineStates->pushConstantRanges.data();
             layoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(mPipelineStates->pushConstantRanges.size());
 
-            mPipelineLayout = mCore->device().createPipelineLayout(layoutCreateInfo);
+            mPipelineLayout = mCore->GetDevice().createPipelineLayout(layoutCreateInfo);
 
             vk::PipelineViewportStateCreateInfo viewportState = {};
             viewportState.pViewports = mPipelineStates->viewports.data();
@@ -237,7 +237,7 @@ namespace Mix {
             pipelineCreateInfo.basePipelineHandle = nullptr;	//基础管线（vulkan允许在已经存在的管线上派生新的管线）
             pipelineCreateInfo.basePipelineIndex = -1;
 
-            mPipeline = mCore->device().createGraphicsPipeline(nullptr, pipelineCreateInfo);
+            mPipeline = mCore->GetDevice().createGraphicsPipeline(nullptr, pipelineCreateInfo);
 
             clear();
             return true;
@@ -247,8 +247,8 @@ namespace Mix {
             if (!mCore)
                 return;
 
-            mCore->device().destroyPipeline(mPipeline);
-            mCore->device().destroyPipelineLayout(mPipelineLayout);
+            mCore->GetDevice().destroyPipeline(mPipeline);
+            mCore->GetDevice().destroyPipelineLayout(mPipelineLayout);
             mCore = nullptr;
             mPipeline = nullptr;
             mPipelineLayout = nullptr;
@@ -259,7 +259,7 @@ namespace Mix {
                 throw PipelineAlreadyExist(name);
 
             Pipeline pipeline;
-            pipeline.init(mCore);
+            pipeline.Init(mCore);
             pipeline.setTargetRenderPass(renderPass, subpassIndex);
             mPipelines[name] = std::move(pipeline);
             return mPipelines[name];

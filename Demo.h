@@ -1,111 +1,100 @@
 #pragma once
 
-#ifndef _Demo_H_
-#define _Demo_H_
+#ifndef Demo_H_
+#define DEMO_H_
 
 #include <iostream>
 
 #include "MixEngine.h"
 
-void drawSlipLine() {
+inline void drawSlipLine() {
     std::cout << "------------------------" << std::endl;
 }
 
-std::ostream& operator<<(std::ostream& os, const glm::vec3& vec3) {
-    return os << "[ " << vec3.x << ", " << vec3.y << ", " << vec3.z << " ]";
+inline std::ostream& operator<<(std::ostream& _os, const glm::vec3& _vec3) {
+    return _os << "[ " << _vec3.x << ", " << _vec3.y << ", " << _vec3.z << " ]";
 }
 
-std::ostream& operator<<(std::ostream& os, const Mix::Axis& axis) {
-    return os << "{ " << axis.x << ", " << axis.y << ", " << axis.z << " }";
+inline std::ostream& operator<<(std::ostream& _os, const Mix::Axis& _axis) {
+    return _os << "{ " << _axis.x << ", " << _axis.y << ", " << _axis.z << " }";
 }
 
-std::ostream& operator<<(std::ostream& os, const glm::quat& quat) {
-    return os << "[ " << quat.x << ", " << quat.y << ", " << quat.z << ", " << quat.w << " ]";
+inline std::ostream& operator<<(std::ostream& _os, const glm::quat& _quat) {
+    return _os << "[ " << _quat.x << ", " << _quat.y << ", " << _quat.z << ", " << _quat.w << " ]";
 }
 
-std::ostream& operator<<(std::ostream& os, const Mix::Transform& trans) {
-    std::cout << trans.position() << std::endl;
-    std::cout << trans.localAxis() << std::endl;
-    return std::cout << trans.eulerAngle() << std::endl;
+inline std::ostream& operator<<(std::ostream& _os, const Mix::Transform& _trans) {
+    _os << _trans.position() << std::endl;
+    _os << _trans.localAxis() << std::endl;
+    return _os << _trans.eulerAngle() << std::endl;
 }
 
-class Demo : public Mix::Behaviour {
+class Demo final : public Mix::Behaviour {
 public:
     ~Demo() {
         delete clip;
-        delete obj;
+        delete mObj;
         puts("Demo deleted");
     }
 
-    virtual Component* copy() const {
-        return new Demo();
-    }
-
     void init() override {
-        window.create("Mix Engine Demo", 640, 480);
+        mWindow.create("Mix Engine Demo", 640, 480);
 
-        SDL_Surface* surface = SDL_GetWindowSurface(window.getWindowPtr());
+        SDL_Surface* surface = SDL_GetWindowSurface(mWindow.getWindowPtr());
         SDL_FillRect(surface, nullptr, SDL_MapRGB(surface->format, 0, 128, 225));
-        SDL_UpdateWindowSurface(window.getWindowPtr());
+        SDL_UpdateWindowSurface(mWindow.getWindowPtr());
 
         SDL_SetRelativeMouseMode(SDL_FALSE);
 
-        clip = Mix::AudioClip::open("", // Pass audio path here
+        clip = Mix::AudioClip::Open("Media/test.mp3", // Pass audio path here
                                     Mix::AudioClipLoadType::DecompressOnLoad
                                     | Mix::AudioClipLoadType::ThreeD
                                     | Mix::AudioClipLoadType::Loop);
-        clip->init(false);
-        clip->set3DAttributes(&pos, &vel);
-        clip->play();
-        lastPos = pos;
+        clip->Init(false);
 
-        graphics.init();
-        graphics.setTargetWindow(&window);
-        graphics.build();
+        mGraphics.Init();
+        mGraphics.SetTargetWindow(&mWindow);
+        mGraphics.Build();
 
-        obj = new Mix::GameObject();
-        obj->addChild(graphics.createModelObj(gltfLoader.loadFromGlb("E:/Git/vulkan-learning-master/res/models/gltfSample/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", "DamagedHelmet")));
-        timer.start();
+        mObj = new Mix::GameObject();
+        mObj->addChild(mGraphics.CreateModelObj(mGltfLoader.LoadFromGlb(
+            ,
+            "E:/Git/vulkan-learning-master/res/models/gltfSample/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", "DamagedHelmet")));
+        mTimer.Start();
     }
 
     void update() override {
-        timer.tick();
+        mTimer.Tick();
 
-        auto tran = obj->getComponent<Mix::Transform>();
+        auto tran = mObj->GetComponent<Mix::Transform>();
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_W))
-            tran->translate(Mix::Axis::worldForward, Mix::Space::World);
+            tran->translate(Mix::Axis::worldForward, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_S))
-            tran->translate(-Mix::Axis::worldForward, Mix::Space::World);
+            tran->translate(-Mix::Axis::worldForward, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_D))
-            tran->translate(Mix::Axis::worldRight, Mix::Space::World);
+            tran->translate(Mix::Axis::worldRight, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_A))
-            tran->translate(-Mix::Axis::worldRight, Mix::Space::World);
+            tran->translate(-Mix::Axis::worldRight, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_SPACE))
-            tran->translate(Mix::Axis::worldUp, Mix::Space::World);
+            tran->translate(Mix::Axis::worldUp, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_LCTRL))
-            tran->translate(-Mix::Axis::worldUp, Mix::Space::World);
+            tran->translate(-Mix::Axis::worldUp, Mix::Space::WORLD);
+        clip->Set3DAttributes(&tran->position());
 
-        tran->lookAt(glm::vec3(0.0f, 0.0f, 0.0f));
-
-        clip->set3DAttributes(&tran->position());
-
-        static bool flag = true;
-
-        graphics.update(static_cast<float>(timer.deltaTime()));
+        mGraphics.Update(static_cast<float>(mTimer.DeltaTime()));
     }
 
 private:
-    Mix::Window window;
+    Mix::Window mWindow;
 
     Mix::AudioClip* clip = nullptr;
-  
-    glm::vec3 pos = {-10., 0., 3.}, lastPos = {0., 0., 0.}, vel = {0., 0., 0.};
-  
-    Mix::Graphics::Graphics graphics;
-    Mix::Timer timer;
 
-    Mix::GameObject* obj;
-    Mix::Utils::GLTFLoader gltfLoader;
+
+    Mix::Graphics::Vulkan mGraphics;
+    Mix::Timer              mTimer;
+
+    Mix::GameObject* mObj = nullptr;
+    Mix::Utils::GltfLoader mGltfLoader;
 
 };
 

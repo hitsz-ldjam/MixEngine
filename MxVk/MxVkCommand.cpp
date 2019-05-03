@@ -10,16 +10,16 @@ namespace Mix {
             vk::CommandPoolCreateInfo createInfo = {};
 
             if (queueType == vk::QueueFlagBits::eGraphics) {
-                createInfo.queueFamilyIndex = mCore->getQueueFamilyIndices().graphics.value();
-                mQueue = mCore->getQueues().graphics.value();
+                createInfo.queueFamilyIndex = mCore->GetQueueFamilyIndices().graphics.value();
+                mQueue = mCore->GetQueues().graphics.value();
             }
             if (queueType == vk::QueueFlagBits::eCompute) {
-                createInfo.queueFamilyIndex = mCore->getQueueFamilyIndices().compute.value();
-                mQueue = mCore->getQueues().compute.value();
+                createInfo.queueFamilyIndex = mCore->GetQueueFamilyIndices().compute.value();
+                mQueue = mCore->GetQueues().compute.value();
             }
             createInfo.flags = flags;
 
-            mCommandPool = mCore->device().createCommandPool(createInfo);
+            mCommandPool = mCore->GetDevice().createCommandPool(createInfo);
         }
 
         std::vector<vk::CommandBuffer> CommandMgr::allocCommandBuffers(uint32_t count, vk::CommandBufferLevel level) {
@@ -28,7 +28,7 @@ namespace Mix {
             allocateInfo.level = level;
             allocateInfo.commandBufferCount = count;
 
-            std::vector<vk::CommandBuffer> buffer = mCore->device().allocateCommandBuffers(allocateInfo);
+            std::vector<vk::CommandBuffer> buffer = mCore->GetDevice().allocateCommandBuffers(allocateInfo);
             mCommandBuffers.insert(mCommandBuffers.end(), buffer.cbegin(), buffer.cend());
             return std::move(buffer);
 
@@ -43,20 +43,20 @@ namespace Mix {
                 if (std::find(mCommandBuffers.cbegin(), mCommandBuffers.cend(), buffer) == mCommandBuffers.cend())
                     throw std::runtime_error("Error : Member of [ commandBuffers ] not included in this command pool");
             }
-            mCore->device().freeCommandBuffers(mCommandPool, commandBuffers);
+            mCore->GetDevice().freeCommandBuffers(mCommandPool, commandBuffers);
         }
 
         void CommandMgr::freeCommandBuffers(const vk::CommandBuffer commandBuffer) {
             auto it = std::find(mCommandBuffers.begin(), mCommandBuffers.end(), commandBuffer);
             if(it==mCommandBuffers.end())
                 throw std::runtime_error("Error : Member of [ commandBuffers ] not included in this command pool");
-            mCore->device().freeCommandBuffers(mCommandPool, commandBuffer);
+            mCore->GetDevice().freeCommandBuffers(mCommandPool, commandBuffer);
 
         }
 
         vk::CommandBuffer CommandMgr::beginTempCommandBuffer() {
             sTempBufferAllocInfo.commandPool = mCommandPool;
-            vk::CommandBuffer temp = mCore->device().allocateCommandBuffers(sTempBufferAllocInfo)[0];
+            vk::CommandBuffer temp = mCore->GetDevice().allocateCommandBuffers(sTempBufferAllocInfo)[0];
             temp.begin(sTempBufferBeginInfo);
             return temp;
         }
@@ -73,7 +73,7 @@ namespace Mix {
             if (!mCore)
                 return;
 
-            mCore->device().destroyCommandPool(mCommandPool);
+            mCore->GetDevice().destroyCommandPool(mCommandPool);
             mCommandPool = nullptr;
             mCommandBuffers.clear();
             mCore = nullptr;

@@ -4,7 +4,7 @@ namespace Mix {
     namespace Graphics {
         namespace fbx {
             void MeshMgr::init(std::shared_ptr<Core>& core, std::shared_ptr<DeviceAllocator>& allocator) {
-                GraphicsComponent::init(core);
+                GraphicsComponent::Init(core);
                 mpAllocator = allocator;
 
                 vk::BufferCreateInfo createInfo;
@@ -12,8 +12,8 @@ namespace Mix {
                 createInfo.size = mBufferSize;
                 createInfo.sharingMode = vk::SharingMode::eExclusive;
 
-                mFence = mCore->getSyncObjMgr().createFence();
-                mCore->device().resetFences(mFence.get());
+                mFence = mCore->GetSyncObjMgr().createFence();
+                mCore->GetDevice().resetFences(mFence.get());
             }
 
             void MeshMgr::beginLoad(const vk::CommandBuffer & cmd) {
@@ -43,8 +43,8 @@ namespace Mix {
                                                        byteSize,
                                                        vk::BufferUsageFlagBits::eTransferSrc);
 
-                vk::Buffer stagingBuffer = mCore->device().createBuffer(stagingBufferInfo);
-                MemoryBlock stagingMemBlock = mpAllocator->allocate(stagingBuffer,
+                vk::Buffer stagingBuffer = mCore->GetDevice().createBuffer(stagingBufferInfo);
+                MemoryBlock stagingMemBlock = mpAllocator->Allocate(stagingBuffer,
                                                                     vk::MemoryPropertyFlagBits::eHostVisible |
                                                                     vk::MemoryPropertyFlagBits::eHostCoherent);
 
@@ -59,8 +59,8 @@ namespace Mix {
                                                 vk::BufferUsageFlagBits::eTransferDst |
                                                 vk::BufferUsageFlagBits::eVertexBuffer);
 
-                vk::Buffer buffer = mCore->device().createBuffer(bufferInfo);
-                MemoryBlock memBlock = mpAllocator->allocate(buffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+                vk::Buffer buffer = mCore->GetDevice().createBuffer(bufferInfo);
+                MemoryBlock memBlock = mpAllocator->Allocate(buffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
                 vk::BufferCopy bufferCopy;
                 bufferCopy.size = byteSize;
@@ -76,13 +76,13 @@ namespace Mix {
                 submitInfo.commandBufferCount = 1;
                 submitInfo.pCommandBuffers = &mCmd;
 
-                mCore->getQueues().transfer.value().submit(submitInfo, mFence.get());
-                mCore->device().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
-                mCore->device().resetFences(mFence.get());
+                mCore->GetQueues().transfer.value().submit(submitInfo, mFence.get());
+                mCore->GetDevice().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
+                mCore->GetDevice().resetFences(mFence.get());
 
                 //destroy staging buffer, free staging memory
-                mCore->device().destroyBuffer(stagingBuffer);
-                mpAllocator->deallocate(stagingMemBlock);
+                mCore->GetDevice().destroyBuffer(stagingBuffer);
+                mpAllocator->Deallocate(stagingMemBlock);
 
                 uint32_t vertexOffset = 0;
                 mMeshInfos.reserve(mMeshInfos.size() + modelData.size());
@@ -134,8 +134,8 @@ namespace Mix {
                     return;
 
                 for (auto& pair : mMeshInfos) {
-                    mCore->device().destroyBuffer(pair.second.meshInfo.buffer);
-                    mpAllocator->deallocate(pair.second.memoryBlock);
+                    mCore->GetDevice().destroyBuffer(pair.second.meshInfo.buffer);
+                    mpAllocator->Deallocate(pair.second.memoryBlock);
                 }
 
                 mMeshInfos.clear();
@@ -280,7 +280,7 @@ namespace Mix {
 
 #ifdef GLTF_ENABLED
 
-Mix::Graphics::gltf::BoundingBox Mix::Graphics::gltf::BoundingBox::getAABB(const glm::mat4 & m) {
+Mix::Vulkan::gltf::BoundingBox Mix::Vulkan::gltf::BoundingBox::getAABB(const glm::mat4 & m) {
     glm::vec3 min = glm::vec3(m[3]);
     glm::vec3 max = min;
     glm::vec3 v0, v1;
@@ -306,20 +306,20 @@ Mix::Graphics::gltf::BoundingBox Mix::Graphics::gltf::BoundingBox::getAABB(const
     return BoundingBox(min, max);
 }
 
-void Mix::Graphics::gltf::Texture::updateDescriptor() {
+void Mix::Vulkan::gltf::Texture::updateDescriptor() {
     descriptor.sampler = sampler;
     descriptor.imageView = view;
     descriptor.imageLayout = imageLayout;
 }
 
-void Mix::Graphics::gltf::Texture::destroy() {
+void Mix::Vulkan::gltf::Texture::destroy() {
     core->device().destroyImageView(view);
     core->device().destroyImage(image);
     core->device().freeMemory(deviceMemory);
     core->device().destroySampler(sampler);
 }
 
-void Mix::Graphics::gltf::Texture::fromglTfImage(tinygltf::Image & gltfimage, TextureSampler textureSampler) {
+void Mix::Vulkan::gltf::Texture::fromglTfImage(tinygltf::Image & gltfimage, TextureSampler textureSampler) {
     unsigned char* buffer = nullptr;
     vk::DeviceSize bufferSize = 0;
     bool deleteBuffer = false;
@@ -537,7 +537,7 @@ void Mix::Graphics::gltf::Texture::fromglTfImage(tinygltf::Image & gltfimage, Te
         delete[] buffer;
 }
 
-Mix::Graphics::gltf::Mesh::Mesh(std::shared_ptr<Core> core, std::shared_ptr<DeviceAllocator> allocator, const glm::mat4 matrix) {
+Mix::Vulkan::gltf::Mesh::Mesh(std::shared_ptr<Core> core, std::shared_ptr<DeviceAllocator> allocator, const glm::mat4 matrix) {
     this->core = core;
     this->allocator = allocator;
 
@@ -549,14 +549,14 @@ Mix::Graphics::gltf::Mesh::Mesh(std::shared_ptr<Core> core, std::shared_ptr<Devi
     createInfo.sharingMode = vk::SharingMode::eExclusive;
 
     buffer = core->device().createBuffer(createInfo);
-    memBlock = allocator->allocate(buffer,
+    memBlock = allocator->Allocate(buffer,
                                    vk::MemoryPropertyFlagBits::eHostVisible |
                                    vk::MemoryPropertyFlagBits::eHostCoherent);
 
     descriptor = vk::DescriptorBufferInfo(buffer, 0, sizeof(uniformBlock));
 }
 
-void Mix::Graphics::gltf::Node::update() {
+void Mix::Vulkan::gltf::Node::update() {
     if (mesh) {
         glm::mat4 m = getMatrix();
         if (skin) {
@@ -584,7 +584,7 @@ void Mix::Graphics::gltf::Node::update() {
     }
 }
 
-void Mix::Graphics::gltf::Model::destroy() {
+void Mix::Vulkan::gltf::Model::destroy() {
     if (vertices.buffer != nullptr) {
         core->device().destroy(vertices.buffer);
         allocator->deallocate(vertices.memory);
@@ -614,7 +614,7 @@ void Mix::Graphics::gltf::Model::destroy() {
     skins.clear();
 }
 
-Mix::Graphics::gltf::Node * Mix::Graphics::gltf::Model::findNode(Node * parent, uint32_t index) {
+Mix::Vulkan::gltf::Node * Mix::Vulkan::gltf::Model::findNode(Node * parent, uint32_t index) {
     Node* nodeFound = nullptr;
     if (parent->index == index) {
         return parent;
@@ -628,7 +628,7 @@ Mix::Graphics::gltf::Node * Mix::Graphics::gltf::Model::findNode(Node * parent, 
     return nodeFound;
 }
 
-Mix::Graphics::gltf::Node * Mix::Graphics::gltf::Model::nodeFromIndex(uint32_t index) {
+Mix::Vulkan::gltf::Node * Mix::Vulkan::gltf::Model::nodeFromIndex(uint32_t index) {
     Node* nodeFound = nullptr;
     for (auto &node : nodes) {
         nodeFound = findNode(node, index);
@@ -639,7 +639,7 @@ Mix::Graphics::gltf::Node * Mix::Graphics::gltf::Model::nodeFromIndex(uint32_t i
     return nodeFound;
 }
 
-void Mix::Graphics::gltf::Model::loadNode(Node * parent, const tinygltf::Node & node, uint32_t nodeIndex, const tinygltf::Model & model, std::vector<uint32_t>& indexBuffer, std::vector<Vertex>& vertexBuffer, float globalscale) {
+void Mix::Vulkan::gltf::Model::loadNode(Node * parent, const tinygltf::Node & node, uint32_t nodeIndex, const tinygltf::Model & model, std::vector<uint32_t>& mIndexBuffer, std::vector<Vertex>& mVertexBuffer, float globalscale) {
     Node *newNode = new Node();
     newNode->index = nodeIndex;
     newNode->parent = parent;
@@ -670,20 +670,20 @@ void Mix::Graphics::gltf::Model::loadNode(Node * parent, const tinygltf::Node & 
     // Node with children
     if (node.children.size() > 0) {
         for (size_t i = 0; i < node.children.size(); i++) {
-            loadNode(newNode, model.nodes[node.children[i]], node.children[i], model, indexBuffer, vertexBuffer, globalscale);
+            loadNode(newNode, model.nodes[node.children[i]], node.children[i], model, mIndexBuffer, mVertexBuffer, globalscale);
         }
     }
 
     // Node contains mesh data
     if (node.mesh > -1) {
-        const tinygltf::Mesh mesh = model.meshes[node.mesh];
+        const tinygltf::Mesh mesh = model.mMeshes[node.mesh];
         Mesh *newMesh = new Mesh(core, allocator, newNode->matrix);
 
         for (size_t j = 0; j < mesh.primitives.size(); j++) {
             const tinygltf::Primitive &primitive = mesh.primitives[j];
 
-            uint32_t indexStart = static_cast<uint32_t>(indexBuffer.size());
-            uint32_t vertexStart = static_cast<uint32_t>(vertexBuffer.size());
+            uint32_t indexStart = static_cast<uint32_t>(mIndexBuffer.size());
+            uint32_t vertexStart = static_cast<uint32_t>(mVertexBuffer.size());
             uint32_t indexCount = 0;
             uint32_t vertexCount = 0;
             glm::vec3 posMin{};
@@ -753,7 +753,7 @@ void Mix::Graphics::gltf::Model::loadNode(Node * parent, const tinygltf::Node & 
 
                     vert.joint0 = hasSkin ? glm::vec4(glm::make_vec4(&bufferJoints[v * 4])) : glm::vec4(0.0f);
                     vert.weight0 = hasSkin ? glm::make_vec4(&bufferWeights[v * 4]) : glm::vec4(0.0f);
-                    vertexBuffer.push_back(vert);
+                    mVertexBuffer.push_back(vert);
                 }
             }
             // Indices
@@ -770,7 +770,7 @@ void Mix::Graphics::gltf::Model::loadNode(Node * parent, const tinygltf::Node & 
                 {
                     const uint32_t *buf = static_cast<const uint32_t*>(dataPtr);
                     for (size_t index = 0; index < accessor.count; index++) {
-                        indexBuffer.push_back(buf[index] + vertexStart);
+                        mIndexBuffer.push_back(buf[index] + vertexStart);
                     }
                     break;
                 }
@@ -778,7 +778,7 @@ void Mix::Graphics::gltf::Model::loadNode(Node * parent, const tinygltf::Node & 
                 {
                     const uint16_t *buf = static_cast<const uint16_t*>(dataPtr);
                     for (size_t index = 0; index < accessor.count; index++) {
-                        indexBuffer.push_back(buf[index] + vertexStart);
+                        mIndexBuffer.push_back(buf[index] + vertexStart);
                     }
                     break;
                 }
@@ -786,7 +786,7 @@ void Mix::Graphics::gltf::Model::loadNode(Node * parent, const tinygltf::Node & 
                 {
                     const uint8_t *buf = static_cast<const uint8_t*>(dataPtr);
                     for (size_t index = 0; index < accessor.count; index++) {
-                        indexBuffer.push_back(buf[index] + vertexStart);
+                        mIndexBuffer.push_back(buf[index] + vertexStart);
                     }
                     break;
                 }
@@ -819,7 +819,7 @@ void Mix::Graphics::gltf::Model::loadNode(Node * parent, const tinygltf::Node & 
     linearNodes.push_back(newNode);
 }
 
-void Mix::Graphics::gltf::Model::loadSkins(tinygltf::Model & gltfModel) {
+void Mix::Vulkan::gltf::Model::loadSkins(tinygltf::Model & gltfModel) {
     for (tinygltf::Skin &source : gltfModel.skins) {
         Skin *newSkin = new Skin{};
         newSkin->name = source.name;
@@ -850,7 +850,7 @@ void Mix::Graphics::gltf::Model::loadSkins(tinygltf::Model & gltfModel) {
     }
 }
 
-void Mix::Graphics::gltf::Model::loadTextures(tinygltf::Model & gltfModel) {
+void Mix::Vulkan::gltf::Model::loadTextures(tinygltf::Model & gltfModel) {
     for (tinygltf::Texture &tex : gltfModel.textures) {
         tinygltf::Image image = gltfModel.images[tex.source];
         TextureSampler textureSampler;
@@ -871,7 +871,7 @@ void Mix::Graphics::gltf::Model::loadTextures(tinygltf::Model & gltfModel) {
     }
 }
 
-vk::SamplerAddressMode Mix::Graphics::gltf::Model::getVkWrapMode(int32_t wrapMode) {
+vk::SamplerAddressMode Mix::Vulkan::gltf::Model::getVkWrapMode(int32_t wrapMode) {
     switch (wrapMode) {
     case 10497:
         return vk::SamplerAddressMode::eRepeat;
@@ -882,7 +882,7 @@ vk::SamplerAddressMode Mix::Graphics::gltf::Model::getVkWrapMode(int32_t wrapMod
     }
 }
 
-vk::Filter Mix::Graphics::gltf::Model::getVkFilterMode(int32_t filterMode) {
+vk::Filter Mix::Vulkan::gltf::Model::getVkFilterMode(int32_t filterMode) {
     switch (filterMode) {
     case 9728:
         return vk::Filter::eNearest;
@@ -899,7 +899,7 @@ vk::Filter Mix::Graphics::gltf::Model::getVkFilterMode(int32_t filterMode) {
     }
 }
 
-void Mix::Graphics::gltf::Model::loadTextureSamplers(tinygltf::Model & gltfModel) {
+void Mix::Vulkan::gltf::Model::loadTextureSamplers(tinygltf::Model & gltfModel) {
     for (tinygltf::Sampler smpl : gltfModel.samplers) {
         TextureSampler sampler;
         sampler.minFilter = getVkFilterMode(smpl.minFilter);
@@ -911,7 +911,7 @@ void Mix::Graphics::gltf::Model::loadTextureSamplers(tinygltf::Model & gltfModel
     }
 }
 
-void Mix::Graphics::gltf::Model::loadMaterials(tinygltf::Model & gltfModel) {
+void Mix::Vulkan::gltf::Model::loadMaterials(tinygltf::Model & gltfModel) {
     for (tinygltf::Material &mat : gltfModel.materials) {
         Material material{};
         if (mat.values.find("baseColorTexture") != mat.values.end()) {
@@ -958,7 +958,6 @@ void Mix::Graphics::gltf::Model::loadMaterials(tinygltf::Model & gltfModel) {
         }
         if (mat.additionalValues.find("emissiveFactor") != mat.additionalValues.end()) {
             material.emissiveFactor = glm::vec4(glm::make_vec3(mat.additionalValues["emissiveFactor"].ColorFactor().data()), 1.0);
-            material.emissiveFactor = glm::vec4(0.0f);
         }
 
         // Extensions
@@ -994,11 +993,11 @@ void Mix::Graphics::gltf::Model::loadMaterials(tinygltf::Model & gltfModel) {
 
         materials.push_back(material);
     }
-    // Push a default material at the end of the list for meshes with no material assigned
+    // Push a default material at the end of the list for mMeshes with no material assigned
     materials.push_back(Material());
 }
 
-void Mix::Graphics::gltf::Model::loadAnimations(tinygltf::Model & gltfModel) {
+void Mix::Vulkan::gltf::Model::loadAnimations(tinygltf::Model & gltfModel) {
     for (tinygltf::Animation &anim : gltfModel.animations) {
         Animation animation;
         animation.name = anim.name;
@@ -1113,7 +1112,7 @@ void Mix::Graphics::gltf::Model::loadAnimations(tinygltf::Model & gltfModel) {
     }
 }
 
-void Mix::Graphics::gltf::Model::loadFromFile(std::string filename, float scale) {
+void Mix::Vulkan::gltf::Model::loadFromFile(std::string filename, float scale) {
     tinygltf::Model gltfModel;
     tinygltf::TinyGLTF gltfContext;
     std::string error;
@@ -1127,8 +1126,8 @@ void Mix::Graphics::gltf::Model::loadFromFile(std::string filename, float scale)
 
     bool fileLoaded = binary ? gltfContext.LoadBinaryFromFile(&gltfModel, &error, &warning, filename.c_str()) : gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, filename.c_str());
 
-    std::vector<uint32_t> indexBuffer;
-    std::vector<Vertex> vertexBuffer;
+    std::vector<uint32_t> mIndexBuffer;
+    std::vector<Vertex> mVertexBuffer;
 
     if (fileLoaded) {
         loadTextureSamplers(gltfModel);
@@ -1139,7 +1138,7 @@ void Mix::Graphics::gltf::Model::loadFromFile(std::string filename, float scale)
         const tinygltf::Scene &scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
         for (size_t i = 0; i < scene.nodes.size(); i++) {
             const tinygltf::Node node = gltfModel.nodes[scene.nodes[i]];
-            loadNode(nullptr, node, scene.nodes[i], gltfModel, indexBuffer, vertexBuffer, scale);
+            loadNode(nullptr, node, scene.nodes[i], gltfModel, mIndexBuffer, mVertexBuffer, scale);
         }
         if (gltfModel.animations.size() > 0) {
             loadAnimations(gltfModel);
@@ -1164,9 +1163,9 @@ void Mix::Graphics::gltf::Model::loadFromFile(std::string filename, float scale)
 
     extensions = gltfModel.extensionsUsed;
 
-    size_t vertexBufferSize = vertexBuffer.size() * sizeof(Vertex);
-    size_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
-    indices.count = static_cast<uint32_t>(indexBuffer.size());
+    size_t vertexBufferSize = mVertexBuffer.size() * sizeof(Vertex);
+    size_t indexBufferSize = mIndexBuffer.size() * sizeof(uint32_t);
+    indices.count = static_cast<uint32_t>(mIndexBuffer.size());
 
     assert(vertexBufferSize > 0);
 
@@ -1181,10 +1180,10 @@ void Mix::Graphics::gltf::Model::loadFromFile(std::string filename, float scale)
                                            vertexBufferSize,
                                            vk::BufferUsageFlagBits::eTransferSrc);
     vertexStaging.buffer = core->device().createBuffer(stagingBufferInfo);
-    vertexStaging.memory = allocator->allocate(vertexStaging.buffer,
+    vertexStaging.memory = allocator->Allocate(vertexStaging.buffer,
                                                vk::MemoryPropertyFlagBits::eHostVisible |
                                                vk::MemoryPropertyFlagBits::eHostCoherent);
-    memcpy(vertexStaging.memory.ptr, vertexBuffer.data(), vertexBufferSize);
+    memcpy(vertexStaging.memory.ptr, mVertexBuffer.data(), vertexBufferSize);
 
     // Index data
     if (indexBufferSize > 0) {
@@ -1192,10 +1191,10 @@ void Mix::Graphics::gltf::Model::loadFromFile(std::string filename, float scale)
                                                indexBufferSize,
                                                vk::BufferUsageFlagBits::eTransferSrc);
         indexStaging.buffer = core->device().createBuffer(stagingBufferInfo);
-        indexStaging.memory = allocator->allocate(indexStaging.buffer,
+        indexStaging.memory = allocator->Allocate(indexStaging.buffer,
                                                   vk::MemoryPropertyFlagBits::eHostVisible |
                                                   vk::MemoryPropertyFlagBits::eHostCoherent);
-        memcpy(indexStaging.memory.ptr, indexBuffer.data(), indexBufferSize);
+        memcpy(indexStaging.memory.ptr, mIndexBuffer.data(), indexBufferSize);
     }
 
     // Create device local buffers
@@ -1206,7 +1205,7 @@ void Mix::Graphics::gltf::Model::loadFromFile(std::string filename, float scale)
                                           vk::BufferUsageFlagBits::eVertexBuffer);
 
     vertices.buffer = core->device().createBuffer(vertexBufferInfo);
-    vertices.memory = allocator->allocate(vertices.buffer,
+    vertices.memory = allocator->Allocate(vertices.buffer,
                                           vk::MemoryPropertyFlagBits::eDeviceLocal);
 
     // Index buffer
@@ -1217,7 +1216,7 @@ void Mix::Graphics::gltf::Model::loadFromFile(std::string filename, float scale)
                                              vk::BufferUsageFlagBits::eIndexBuffer);
 
         indices.buffer = core->device().createBuffer(indexBufferInfo);
-        indices.memory = allocator->allocate(indices.buffer,
+        indices.memory = allocator->Allocate(indices.buffer,
                                              vk::MemoryPropertyFlagBits::eDeviceLocal);
     }
 
@@ -1255,7 +1254,7 @@ void Mix::Graphics::gltf::Model::loadFromFile(std::string filename, float scale)
     getSceneDimensions();
 }
 
-void Mix::Graphics::gltf::Model::calculateBoundingBox(Node * node, Node * parent) {
+void Mix::Vulkan::gltf::Model::calculateBoundingBox(Node * node, Node * parent) {
     BoundingBox parentBvh = parent ? parent->bvh : BoundingBox(dimensions.min, dimensions.max);
 
     if (node->mesh) {
@@ -1277,7 +1276,7 @@ void Mix::Graphics::gltf::Model::calculateBoundingBox(Node * node, Node * parent
     }
 }
 
-void Mix::Graphics::gltf::Model::getSceneDimensions() {
+void Mix::Vulkan::gltf::Model::getSceneDimensions() {
     // Calculate binary volume hierarchy for all nodes in the scene
     for (auto node : linearNodes) {
         calculateBoundingBox(node, nullptr);
@@ -1300,7 +1299,7 @@ void Mix::Graphics::gltf::Model::getSceneDimensions() {
     aabb[3][2] = dimensions.min[2];
 }
 
-void Mix::Graphics::gltf::Model::drawNode(Node * node, vk::CommandBuffer cmdBuffer) {
+void Mix::Vulkan::gltf::Model::drawNode(Node * node, vk::CommandBuffer cmdBuffer) {
     if (node->mesh) {
         for (Primitive *primitive : node->mesh->primitives) {
             cmdBuffer.drawIndexed(primitive->indexCount,
@@ -1315,7 +1314,7 @@ void Mix::Graphics::gltf::Model::drawNode(Node * node, vk::CommandBuffer cmdBuff
     }
 }
 
-void Mix::Graphics::gltf::Model::draw(vk::CommandBuffer cmdBuffer) {
+void Mix::Vulkan::gltf::Model::draw(vk::CommandBuffer cmdBuffer) {
     cmdBuffer.bindVertexBuffers(0, vertices.buffer, { 0 });
     cmdBuffer.bindIndexBuffer(indices.buffer, 0, vk::IndexType::eUint32);
     for (auto& node : nodes) {
@@ -1323,7 +1322,7 @@ void Mix::Graphics::gltf::Model::draw(vk::CommandBuffer cmdBuffer) {
     }
 }
 
-void Mix::Graphics::gltf::Model::updateAnimation(uint32_t index, float time) {
+void Mix::Vulkan::gltf::Model::updateAnimation(uint32_t index, float time) {
     if (index > static_cast<uint32_t>(animations.size()) - 1) {
         std::cout << "No animation with index " << index << std::endl;
         return;
@@ -1386,7 +1385,7 @@ void Mix::Graphics::gltf::Model::updateAnimation(uint32_t index, float time) {
 
 namespace Mix {
     namespace Graphics {
-        std::pair<ModelId, std::vector<MeshId>> gltf::MeshMgr::loadModel(const Utils::GLTFLoader::ModelData& modelData) {
+        std::pair<ModelId, std::vector<MeshId>> gltf::MeshMgr::loadModel(const Utils::ModelData& modelData) {
             // create Vertex buffer
             vk::DeviceSize byteSize = modelData.vertices.size() * sizeof(Vertex);
 
@@ -1394,8 +1393,8 @@ namespace Mix {
                                                    byteSize,
                                                    vk::BufferUsageFlagBits::eTransferSrc);
 
-            vk::Buffer vertexStaging = mCore->device().createBuffer(vertexStagingInfo);
-            MemoryBlock vertexStagingMem = mpAllocator->allocate(vertexStaging,
+            vk::Buffer vertexStaging = mCore->GetDevice().createBuffer(vertexStagingInfo);
+            MemoryBlock vertexStagingMem = mpAllocator->Allocate(vertexStaging,
                                                                  vk::MemoryPropertyFlagBits::eHostVisible |
                                                                  vk::MemoryPropertyFlagBits::eHostCoherent);
 
@@ -1406,8 +1405,8 @@ namespace Mix {
                                                   vk::BufferUsageFlagBits::eTransferDst |
                                                   vk::BufferUsageFlagBits::eVertexBuffer);
 
-            vk::Buffer vertexBuffer = mCore->device().createBuffer(vertexBufferInfo);
-            MemoryBlock vertexMem = mpAllocator->allocate(vertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+            vk::Buffer vertexBuffer = mCore->GetDevice().createBuffer(vertexBufferInfo);
+            MemoryBlock vertexMem = mpAllocator->Allocate(vertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
             vk::BufferCopy vertexBufferCopy(0, 0, byteSize);
             // create indices buffer
@@ -1417,8 +1416,8 @@ namespace Mix {
                                                   byteSize,
                                                   vk::BufferUsageFlagBits::eTransferSrc);
 
-            vk::Buffer indexStaging = mCore->device().createBuffer(indexStagingInfo);
-            MemoryBlock indexStagingMem = mpAllocator->allocate(indexStaging,
+            vk::Buffer indexStaging = mCore->GetDevice().createBuffer(indexStagingInfo);
+            MemoryBlock indexStagingMem = mpAllocator->Allocate(indexStaging,
                                                                 vk::MemoryPropertyFlagBits::eHostVisible |
                                                                 vk::MemoryPropertyFlagBits::eHostCoherent);
 
@@ -1429,8 +1428,8 @@ namespace Mix {
                                                  vk::BufferUsageFlagBits::eTransferDst |
                                                  vk::BufferUsageFlagBits::eIndexBuffer);
 
-            vk::Buffer indexBuffer = mCore->device().createBuffer(indexBufferInfo);
-            MemoryBlock indexMem = mpAllocator->allocate(indexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+            vk::Buffer indexBuffer = mCore->GetDevice().createBuffer(indexBufferInfo);
+            MemoryBlock indexMem = mpAllocator->Allocate(indexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
             vk::BufferCopy indexBufferCopy(0, 0, byteSize);
 
@@ -1444,15 +1443,15 @@ namespace Mix {
             submitInfo.commandBufferCount = 1;
             submitInfo.pCommandBuffers = &mCmd;
 
-            mCore->getQueues().transfer.value().submit(submitInfo, mFence.get());
-            mCore->device().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
-            mCore->device().resetFences(mFence.get());
+            mCore->GetQueues().transfer.value().submit(submitInfo, mFence.get());
+            mCore->GetDevice().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
+            mCore->GetDevice().resetFences(mFence.get());
 
             //destroy staging buffer, free staging memory
-            mCore->device().destroyBuffer(vertexStaging);
-            mCore->device().destroyBuffer(indexStaging);
-            mpAllocator->deallocate(vertexStagingMem);
-            mpAllocator->deallocate(indexStagingMem);
+            mCore->GetDevice().destroyBuffer(vertexStaging);
+            mCore->GetDevice().destroyBuffer(indexStaging);
+            mpAllocator->Deallocate(vertexStagingMem);
+            mpAllocator->Deallocate(indexStagingMem);
 
             ModelInfo modelInfo;
             modelInfo.name = modelData.name;
@@ -1462,52 +1461,55 @@ namespace Mix {
             modelInfo.indexMem = indexMem;
             modelInfo.meshes.reserve(modelData.meshes.size());
 
+            size_t primitiveCount = 0;
+            for (auto& mesh : modelData.meshes) {
+                primitiveCount += mesh.primitives.size();
+            }
+
             std::vector<MeshId> meshIds;
-            meshIds.reserve(modelData.meshes.size());
+            meshIds.reserve(primitiveCount);
             for (auto& mesh : modelData.meshes) {
                 MeshInfo meshInfo;
                 meshInfo.name = mesh.name;
-                meshInfo.firstVertex = mesh.firstVertex;
-                meshInfo.vertexCount = mesh.vertexCount;
-                meshInfo.firstIndex = mesh.firstIndex;
-                meshInfo.indexCount = mesh.indexCount;
 
-                modelInfo.meshes[mNextMeshId.now()] = meshInfo;
-                meshIds.push_back(mNextMeshId.next());
+                meshInfo.submeshes.reserve(mesh.primitives.size());
+                for (auto& primitive : mesh.primitives) {
+                    SubmeshInfo submeshInfo;
+                    submeshInfo.firstVertex = primitive.firstVertex;
+                    submeshInfo.vertexCount = primitive.vertexCount;
+                    submeshInfo.firstIndex = primitive.firstIndex;
+                    submeshInfo.indexCount = primitive.indexCount;
+
+                    meshInfo.submeshes.emplace_back(std::move(submeshInfo));
+                }
+                modelInfo.meshes[mNextMeshId.Now()] = std::move(meshInfo);
+                meshIds.push_back(mNextMeshId.Next());
             }
 
-            mModels[mNextModelId.now()] = std::move(modelInfo);
+            mModels[mNextModelId.Now()] = std::move(modelInfo);
 
-            return std::make_pair(mNextModelId.next(), std::move(meshIds));
+            return std::make_pair(mNextModelId.Next(), std::move(meshIds));
         }
 
-        std::shared_ptr<gltf::MeshData> gltf::MeshMgr::getMesh(const ModelId & modelId, const MeshId & meshId) {
-            if (mModels.count(modelId) == 0)
-                return nullptr;
+        const gltf::MeshMgr::ModelInfo & gltf::MeshMgr::getModel(const ModelId & modelId) {
+            assert(mModels.count(modelId) != 0);
+            return mModels[modelId];
+        }
 
-            if (mModels[modelId].meshes.count(meshId) == 0)
-                return nullptr;
-
-            std::shared_ptr<MeshData> ref = std::make_shared<MeshData>();
-            auto model = mModels[meshId];
-            auto& mesh = model.meshes[meshId];
-            ref->name = mesh.name;
-            ref->vertexBuffer = model.vertexBuffer;
-            ref->indexBuffer = model.indexBuffer;
-            ref->firstVertex = mesh.firstVertex;
-            ref->firstIndex = mesh.firstIndex;
-            ref->vertexCount = mesh.vertexCount;
-            ref->indexCount = mesh.indexCount;
-
-            return ref;
+        gltf::MeshMgr::SingleMeshInfo gltf::MeshMgr::getMesh(const ModelId & modelId, const MeshId & meshId) {
+            assert(mModels.count(modelId) != 0);
+            assert(mModels[modelId].meshes.count(meshId) != 0);
+            return SingleMeshInfo(mModels[modelId].vertexBuffer,
+                                  mModels[modelId].indexBuffer,
+                                  mModels[modelId].meshes[meshId]);
         }
 
         void gltf::MeshMgr::init(std::shared_ptr<Core> core, std::shared_ptr<DeviceAllocator> allocator) {
-            GraphicsComponent::init(core);
+            GraphicsComponent::Init(core);
             mpAllocator = allocator;
 
-            mFence = mCore->getSyncObjMgr().createFence();
-            mCore->device().resetFences(mFence.get());
+            mFence = mCore->GetSyncObjMgr().createFence();
+            mCore->GetDevice().resetFences(mFence.get());
         }
 
         void gltf::MeshMgr::destroy() {
@@ -1515,10 +1517,10 @@ namespace Mix {
                 return;
 
             for (auto& pair : mModels) {
-                mCore->device().destroyBuffer(pair.second.vertexBuffer);
-                mCore->device().destroyBuffer(pair.second.indexBuffer);
-                mpAllocator->deallocate(pair.second.vertexMem);
-                mpAllocator->deallocate(pair.second.indexMem);
+                mCore->GetDevice().destroyBuffer(pair.second.vertexBuffer);
+                mCore->GetDevice().destroyBuffer(pair.second.indexBuffer);
+                mpAllocator->Deallocate(pair.second.vertexMem);
+                mpAllocator->Deallocate(pair.second.indexMem);
             }
 
             mModels.clear();

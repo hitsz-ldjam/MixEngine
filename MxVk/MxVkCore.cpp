@@ -3,11 +3,11 @@
 namespace Mix {
     namespace Graphics {
         Core::Core()
-            :mWindow(nullptr) {
+            : mWindow(nullptr) {
             mInitInfo = new InitInfo();
         }
 
-        void Core::createInstance() {
+        void Core::CreateInstance() {
             // setup application info
             vk::ApplicationInfo appInfo(mAppName.c_str(),
                                         mAppVersion,
@@ -23,7 +23,8 @@ namespace Mix {
             if (mInitInfo->debugMode) {
                 createInfo.enabledLayerCount = static_cast<uint32_t>(mInitInfo->validationLayers.size());
                 createInfo.ppEnabledLayerNames = mInitInfo->validationLayers.data();
-            } else {
+            }
+            else {
                 createInfo.enabledLayerCount = 0;
                 createInfo.ppEnabledLayerNames = nullptr;
             }
@@ -37,8 +38,8 @@ namespace Mix {
             SDL_Vulkan_CreateSurface(mWindow->getWindowPtr(), static_cast<VkInstance>(mInstance), &surface);
             mSurface = static_cast<vk::SurfaceKHR>(surface);
 
-            mSupportedExtensions = getSupportedExtensions();
-            mSupportedLayers = getSupportedLayers();
+            mSupportedExtensions = GetSupportedExtensions();
+            mSupportedLayers = GetSupportedLayers();
 
             auto physicalDevices = mInstance.enumeratePhysicalDevices();
             for (auto& physicalDevice : physicalDevices) {
@@ -49,20 +50,20 @@ namespace Mix {
                 info.features = physicalDevice.getFeatures();
                 info.extensions = physicalDevice.enumerateDeviceExtensionProperties();
                 info.queueFamilies = physicalDevice.getQueueFamilyProperties();
-                info.familyIndexSet = getQueueFamilyIndexSet(info);
+                info.familyIndexSet = GetQueueFamilyIndexSet(info);
                 info.memoryProperties = physicalDevice.getMemoryProperties();
 
                 mAllPhysicalDevices.push_back(std::move(info));
             }
         }
 
-        void Core::pickPhysicalDevice(const std::function<uint32_t(const PhysicalDeviceInfo&)>& marker) {
+        void Core::PickPhysicalDevice(const std::function<uint32_t(const PhysicalDeviceInfo&)>& marker) {
             const PhysicalDeviceInfo* top = nullptr;
             uint32_t topScore = 0;
 
             for (auto& deviceInfo : mAllPhysicalDevices) {
                 // pick the physical device with the highest score
-                uint32_t score = marker ? marker(deviceInfo) : evaluatePhysicalDevice(deviceInfo);
+                const auto score = marker ? marker(deviceInfo) : EvaluatePhysicalDevice(deviceInfo);
                 if (topScore <= score) {
                     topScore = score;
                     top = &deviceInfo;
@@ -76,11 +77,11 @@ namespace Mix {
 
         }
 
-        void Core::createLogicalDevice() {
+        void Core::CreateLogicalDevice() {
             auto& physicalDevice = mPhysicalDeviceInfo.physicalDevice;
             auto physicalDeviceInfo = std::find_if(mAllPhysicalDevices.begin(),
                                                    mAllPhysicalDevices.end(),
-                                                   [&physicalDevice](const PhysicalDeviceInfo& info)->bool {
+                                                   [&physicalDevice](const PhysicalDeviceInfo& info)-> bool {
                                                        return info.physicalDevice == physicalDevice;
                                                    });
 
@@ -116,7 +117,8 @@ namespace Mix {
             if (mInitInfo->debugMode) {
                 createInfo.enabledLayerCount = static_cast<uint32_t>(mInitInfo->validationLayers.size());
                 createInfo.ppEnabledLayerNames = mInitInfo->validationLayers.data();
-            } else {
+            }
+            else {
                 createInfo.ppEnabledLayerNames = nullptr;
                 createInfo.enabledLayerCount = 0;
             }
@@ -132,7 +134,7 @@ namespace Mix {
                 mQueueSet.transfer = mLogicalDevice.getQueue(physicalDeviceInfo->familyIndexSet.transfer.value(), 0);
         }
 
-        void Core::endInit() {
+        void Core::EndInit() {
             //clear mInitInfo, it won't be used anymore
             MX_FREE_POINTER(mInitInfo);
             mInitInfo = nullptr;
@@ -145,7 +147,7 @@ namespace Mix {
             mSyncObjMgr.init(mLogicalDevice);
         }
 
-        void Core::destroy() {
+        void Core::Destroy() {
             mSyncObjMgr.destroy();
             mLogicalDevice.destroy();
             mInstance.destroy(mSurface);
@@ -154,57 +156,56 @@ namespace Mix {
             mInstance = nullptr;
         }
 
-        void Core::setDebugMode(const bool on) {
-            mInitInfo->debugMode = on;
+        void Core::SetDebugMode(const bool _on) const {
+            mInitInfo->debugMode = _on;
             if (mInitInfo->debugMode) {
                 mInitInfo->instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
                 mInitInfo->validationLayers.push_back("VK_LAYER_LUNARG_standard_validation");
             }
         }
 
-        void Core::setTargetWindow(Window * window) {
-            mWindow = window;
+        void Core::SetTargetWindow(Window* _window) {
+            mWindow = _window;
             unsigned int count;
-            SDL_Vulkan_GetInstanceExtensions(window->getWindowPtr(), &count, nullptr);
+            SDL_Vulkan_GetInstanceExtensions(_window->getWindowPtr(), &count, nullptr);
             std::vector<const char*> extensions(count);
-            SDL_Vulkan_GetInstanceExtensions(window->getWindowPtr(), &count, extensions.data());
-            mInitInfo->instanceExtensions.insert(mInitInfo->instanceExtensions.end(), extensions.begin(), extensions.end());
+            SDL_Vulkan_GetInstanceExtensions(_window->getWindowPtr(), &count, extensions.data());
+            mInitInfo->instanceExtensions.insert(mInitInfo->instanceExtensions.end(), extensions.begin(),
+                                                 extensions.end());
         }
 
-        uint32_t Core::getMemoryTypeIndex(const uint32_t type, const vk::MemoryPropertyFlags & properties) const {
+        uint32_t Core::GetMemoryTypeIndex(const uint32_t _type, const vk::MemoryPropertyFlags& _properties) const {
             for (uint32_t i = 0; i < mPhysicalDeviceInfo.memoryProperties.memoryTypeCount; ++i) {
-                if (type  & (1 << i) && mPhysicalDeviceInfo.memoryProperties.memoryTypes[i].propertyFlags & properties)
+                if (_type & (1 << i) && mPhysicalDeviceInfo.memoryProperties.memoryTypes[i].propertyFlags & _properties)
                     return i;
             }
             return ~0U;
         }
 
-        bool Core::checkFormatFeatureSupport(const vk::Format format, const vk::ImageTiling tiling, const vk::FormatFeatureFlags features) const {
-            auto prop = mPhysicalDeviceInfo.physicalDevice.getFormatProperties(format);
+        bool Core::CheckFormatFeatureSupport(const vk::Format _format, const vk::ImageTiling _tiling,
+                                             const vk::FormatFeatureFlags& _features) const {
+            const auto prop = mPhysicalDeviceInfo.physicalDevice.getFormatProperties(_format);
 
-            if (tiling == vk::ImageTiling::eLinear && (prop.linearTilingFeatures & features) == features)
+            if (_tiling == vk::ImageTiling::eLinear && (prop.linearTilingFeatures & _features) == _features)
                 return true;
-            else if (tiling == vk::ImageTiling::eOptimal && (prop.optimalTilingFeatures & features) == features)
+            if (_tiling == vk::ImageTiling::eOptimal && (prop.optimalTilingFeatures & _features) == _features)
                 return true;
-            else
-                return false;
+            return false;
         }
 
-        uint32_t Core::evaluatePhysicalDevice(const PhysicalDeviceInfo & info) {
+        uint32_t Core::EvaluatePhysicalDevice(const PhysicalDeviceInfo& _info) const {
             // todo complete this in later update
             // divide required extensions into two parts
             // [must supported]: if not score is zero
             // [optinal]:if support one of this part, then ++score
             uint32_t score = 0;
-            if (info.properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+            if (_info.properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
                 ++score;
 
             {
-                // when meet one required extension, ++score
-                bool found = false;
                 for (auto& rqExtension : mInitInfo->deviceExtensions) {
-                    found = false;
-                    for (const auto& avaliable : info.extensions) {
+                    auto found = false;
+                    for (const auto& avaliable : _info.extensions) {
                         if (strcmp(rqExtension, avaliable.extensionName) == 0) {
                             found = true;
                             break;
@@ -220,16 +221,16 @@ namespace Mix {
             {
                 // if device cannot meet the queue flags requirement, score is zero
                 bool suit = true;
-                if (!info.familyIndexSet.present)
+                if (!_info.familyIndexSet.present)
                     suit = false;
 
-                if ((mInitInfo->queueFlags & vk::QueueFlagBits::eGraphics) && (!info.familyIndexSet.graphics))
+                if ((mInitInfo->queueFlags & vk::QueueFlagBits::eGraphics) && (!_info.familyIndexSet.graphics))
                     suit = false;
 
-                if ((mInitInfo->queueFlags & vk::QueueFlagBits::eCompute) && (!info.familyIndexSet.compute))
+                if ((mInitInfo->queueFlags & vk::QueueFlagBits::eCompute) && (!_info.familyIndexSet.compute))
                     suit = false;
 
-                if ((mInitInfo->queueFlags & vk::QueueFlagBits::eTransfer) && (!info.familyIndexSet.transfer))
+                if ((mInitInfo->queueFlags & vk::QueueFlagBits::eTransfer) && (!_info.familyIndexSet.transfer))
                     suit = false;
 
                 if (!suit)
@@ -239,23 +240,23 @@ namespace Mix {
             return score;
         }
 
-        QueueFamilyIndexSet Core::getQueueFamilyIndexSet(const PhysicalDeviceInfo& info) {
+        QueueFamilyIndexSet Core::GetQueueFamilyIndexSet(const PhysicalDeviceInfo& _info) {
             QueueFamilyIndexSet indexSet;
-            for (QueueFamilyIndex i = 0; i < info.queueFamilies.size(); ++i) {
-                if (info.queueFamilies[i].queueCount == 0) {
+            for (QueueFamilyIndex i = 0; i < _info.queueFamilies.size(); ++i) {
+                if (_info.queueFamilies[i].queueCount == 0) {
                     return indexSet;
                 }
 
-                if (!indexSet.graphics && (info.queueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics))
+                if (!indexSet.graphics && (_info.queueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics))
                     indexSet.graphics = i;
 
-                if (!indexSet.compute && (info.queueFamilies[i].queueFlags & vk::QueueFlagBits::eCompute))
+                if (!indexSet.compute && (_info.queueFamilies[i].queueFlags & vk::QueueFlagBits::eCompute))
                     indexSet.compute = i;
 
-                if (!indexSet.transfer && (info.queueFamilies[i].queueFlags & vk::QueueFlagBits::eTransfer))
+                if (!indexSet.transfer && (_info.queueFamilies[i].queueFlags & vk::QueueFlagBits::eTransfer))
                     indexSet.transfer = i;
 
-                if (!indexSet.present && info.physicalDevice.getSurfaceSupportKHR(i, mSurface))
+                if (!indexSet.present && _info.physicalDevice.getSurfaceSupportKHR(i, mSurface))
                     indexSet.present = i;
             }
             return indexSet;

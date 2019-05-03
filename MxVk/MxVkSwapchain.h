@@ -17,7 +17,7 @@ namespace Mix {
                 destroy();
             }
 
-            void init(std::shared_ptr<Core>& core) override;
+            void Init(std::shared_ptr<Core>& core) override;
 
             void setImageCount(const uint32_t count) {
                 mImageCount = mSupportDetails.capabilities.minImageCount < count ? count : mSupportDetails.capabilities.minImageCount;

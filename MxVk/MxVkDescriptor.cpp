@@ -17,11 +17,11 @@ namespace Mix {
             createInfo.pBindings = mBindings.data();
             createInfo.bindingCount = static_cast<uint32_t>(mBindings.size());
 
-            mLayout = mCore->device().createDescriptorSetLayout(createInfo);
+            mLayout = mCore->GetDevice().createDescriptorSetLayout(createInfo);
         }
 
         void DescriptorSetLayout::destroy() {
-            mCore->device().destroyDescriptorSetLayout(mLayout);
+            mCore->GetDevice().destroyDescriptorSetLayout(mLayout);
             clear();
             mCore = nullptr;
         }
@@ -46,7 +46,7 @@ namespace Mix {
             createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
             createInfo.maxSets = maxSets;
 
-            mDescriptorPool = mCore->device().createDescriptorPool(createInfo);
+            mDescriptorPool = mCore->GetDevice().createDescriptorPool(createInfo);
         }
 
         std::vector<vk::DescriptorSet> DescriptorPool::allocDescriptorSet(const std::vector<vk::DescriptorSetLayout>& layouts) {
@@ -55,7 +55,7 @@ namespace Mix {
             allocInfo.pSetLayouts = layouts.data();
             allocInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
 
-            return mCore->device().allocateDescriptorSets(allocInfo);
+            return mCore->GetDevice().allocateDescriptorSets(allocInfo);
         }
 
         vk::DescriptorSet DescriptorPool::allocDescriptorSet(const vk::DescriptorSetLayout layout) {
@@ -64,7 +64,7 @@ namespace Mix {
             allocInfo.pSetLayouts = &layout;
             allocInfo.descriptorSetCount = 1;
 
-            return mCore->device().allocateDescriptorSets(allocInfo)[0];
+            return mCore->GetDevice().allocateDescriptorSets(allocInfo)[0];
         }
 
         std::vector<vk::DescriptorSet> DescriptorPool::allocDescriptorSet(const vk::DescriptorSetLayout layout, const uint32_t count) {
@@ -92,7 +92,7 @@ namespace Mix {
             if (!mCore)
                 return;
 
-            mCore->device().destroyDescriptorPool(mDescriptorPool);
+            mCore->GetDevice().destroyDescriptorPool(mDescriptorPool);
             mDescriptorPool = nullptr;
             mCore = nullptr;
         }

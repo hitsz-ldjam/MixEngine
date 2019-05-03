@@ -57,8 +57,8 @@ namespace Mix {
         glm::vec3 right() const { return mAxis.x; }
         glm::vec3 up() const { return mAxis.y; }
 
-        void translate(const glm::vec3& translation, const Space relativeTo = Space::Self);
-        void translate(const float x, const float y, const float z, const Space relativeTo = Space::Self) {
+        void translate(const glm::vec3& translation, const Space relativeTo = Space::SELF);
+        void translate(const float x, const float y, const float z, const Space relativeTo = Space::SELF) {
             translate(glm::vec3(x, y, z), relativeTo);
         }
         void translate(const glm::vec3& translation, const Transform& relativeTo) {
@@ -70,17 +70,17 @@ namespace Mix {
             translate(glm::vec3(x, y, z), relativeTo);
         }
 
-        void rotate(const glm::vec3& eulers, const Space relativeTo = Space::Self);
-        void rotate(const float xAngle, const float yAngle, const float zAngle, const Space relativeTo = Space::Self) {
+        void rotate(const glm::vec3& eulers, const Space relativeTo = Space::SELF);
+        void rotate(const float xAngle, const float yAngle, const float zAngle, const Space relativeTo = Space::SELF) {
             rotate(glm::vec3(xAngle, yAngle, zAngle), relativeTo);
         };
-        void rotate(const glm::vec3& axis, const float angle, const Space relativeTo = Space::Self) {
+        void rotate(const glm::vec3& axis, const float angle, const Space relativeTo = Space::SELF) {
             rotate(glm::eulerAngles(glm::angleAxis(angle, axis)), relativeTo);
         }
 
         void rotateAround(const glm::vec3& point, const glm::vec3& axis, const float angle);
 
-        void scale(const glm::vec3& scale, const Space relativeTo = Space::Self);
+        void scale(const glm::vec3& scale, const Space relativeTo = Space::SELF);
 
         void lookAt(const glm::vec3& worldPosition, const glm::vec3& worldUp = Axis::worldUp);
         void lookAt(const Transform& target, const glm::vec3& worldUp = Axis::worldUp) {

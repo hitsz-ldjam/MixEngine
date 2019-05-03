@@ -17,7 +17,7 @@ namespace Mix {
                 createInfo.sharingMode = sharingMode;
                 createInfo.samples = sampleCount;
 
-                return core.device().createImage(createInfo);
+                return core.GetDevice().createImage(createInfo);
             }
 
             vk::ImageView createImageView2D(const vk::Device & device, const vk::Image & image, const vk::Format format, const vk::ImageAspectFlags & aspectFlags, const uint32_t baseMipLevel, const uint32_t levelCount, const uint32_t baseLayer, const uint32_t layerCount) {
@@ -35,13 +35,13 @@ namespace Mix {
             }
 
             vk::DeviceMemory allocateImageMemory(Core & core, const vk::Image & image, const vk::MemoryPropertyFlags & properties) {
-                vk::MemoryRequirements memRq = core.device().getImageMemoryRequirements(image);
+                vk::MemoryRequirements memRq = core.GetDevice().getImageMemoryRequirements(image);
 
                 vk::MemoryAllocateInfo allocInfo;
                 allocInfo.allocationSize = memRq.size;
-                allocInfo.memoryTypeIndex = core.getMemoryTypeIndex(memRq.memoryTypeBits, properties);
+                allocInfo.memoryTypeIndex = core.GetMemoryTypeIndex(memRq.memoryTypeBits, properties);
 
-                return core.device().allocateMemory(allocInfo);
+                return core.GetDevice().allocateMemory(allocInfo);
             }
 
             void transferImageLayout(const vk::CommandBuffer & cmdbuffer, vk::Image image, vk::ImageLayout oldImageLayout, vk::ImageLayout newImageLayout, const vk::ImageSubresourceRange & subresourceRange, vk::PipelineStageFlags srcStageMask, vk::PipelineStageFlags dstStageMask) {
@@ -165,7 +165,7 @@ namespace Mix {
                 vk::Format format;
                 vk::FormatProperties prop;
                 for (auto candidate : candidates) {
-                    if (core.checkFormatFeatureSupport(candidate,
+                    if (core.CheckFormatFeatureSupport(candidate,
                                                        vk::ImageTiling::eOptimal,
                                                        vk::FormatFeatureFlagBits::eDepthStencilAttachment)) {
 
@@ -181,7 +181,7 @@ namespace Mix {
                                             vk::ImageUsageFlagBits::eDepthStencilAttachment);
 
                 image.memory = allocateImageMemory(core, image.image, vk::MemoryPropertyFlagBits::eDeviceLocal);
-                core.device().bindImageMemory(image.image, image.memory, 0);
+                core.GetDevice().bindImageMemory(image.image, image.memory, 0);
                 image.extent = vk::Extent3D(extent, 1);
                 image.format = format;
 
@@ -192,7 +192,7 @@ namespace Mix {
 #pragma region MyRegion
 
         void ImageMgr::init(std::shared_ptr<Core> & core, std::shared_ptr<DeviceAllocator>& allocator) {
-            GraphicsComponent::init(core);
+            GraphicsComponent::Init(core);
             mpAllocator = allocator;
 
             vk::BufferCreateInfo createInfo;
@@ -200,18 +200,18 @@ namespace Mix {
             createInfo.size = mBufferSize;
             createInfo.sharingMode = vk::SharingMode::eExclusive;
 
-            mStagingBuffer = mCore->device().createBuffer(createInfo);
+            mStagingBuffer = mCore->GetDevice().createBuffer(createInfo);
 
-            mMemReq = mCore->device().getBufferMemoryRequirements(mStagingBuffer);
+            mMemReq = mCore->GetDevice().getBufferMemoryRequirements(mStagingBuffer);
 
-            mMemBlock = mpAllocator->allocate(mMemReq.size, mMemReq.alignment, mCore->getMemoryTypeIndex(mMemReq.memoryTypeBits,
+            mMemBlock = mpAllocator->Allocate(mMemReq.size, mMemReq.alignment, mCore->GetMemoryTypeIndex(mMemReq.memoryTypeBits,
                                                                                                          vk::MemoryPropertyFlagBits::eHostVisible |
                                                                                                          vk::MemoryPropertyFlagBits::eHostCoherent));
 
-            mCore->device().bindBufferMemory(mStagingBuffer, mMemBlock.memory, mMemBlock.offset);
+            mCore->GetDevice().bindBufferMemory(mStagingBuffer, mMemBlock.memory, mMemBlock.offset);
 
-            mFence = mCore->getSyncObjMgr().createFence();
-            mCore->device().resetFences(mFence.get());
+            mFence = mCore->GetSyncObjMgr().createFence();
+            mCore->GetDevice().resetFences(mFence.get());
         }
 
         void ImageMgr::beginLoad(const vk::CommandBuffer & cmd) {
@@ -240,7 +240,7 @@ namespace Mix {
 
         void ImageMgr::loadImage2D(const std::string & name, const gli::texture& texture) {
             // check if current size exceeds limits
-            if ((mCurrSize + Utils::align(texture.size(), mMemReq.alignment)) >= mMemReq.size)
+            if (mCurrSize && (mCurrSize + Utils::Align(texture.size(), mMemReq.alignment)) >= mMemReq.size)
                 flush();
 
             ImageInfo info;
@@ -263,10 +263,10 @@ namespace Mix {
             createInfo.sharingMode = vk::SharingMode::eExclusive;
             createInfo.samples = vk::SampleCountFlagBits::e1;
 
-            info.image = mCore->device().createImage(createInfo);
+            info.image = mCore->GetDevice().createImage(createInfo);
             mDatas.emplace_back(name, info, static_cast<const char*>(texture.data()));
 
-            mCurrSize += Utils::align(info.size, mMemReq.alignment);
+            mCurrSize += Utils::Align(info.size, mMemReq.alignment);
         }
 
         void ImageMgr::loadTexture(const std::string & name, const gli::texture & texture) {
@@ -310,12 +310,12 @@ namespace Mix {
                 return;
 
             for (auto& imageInfo : mImageInfos) {
-                mCore->device().destroyImage(imageInfo.second.first.image);
-                mpAllocator->deallocate(imageInfo.second.second);
+                mCore->GetDevice().destroyImage(imageInfo.second.first.image);
+                mpAllocator->Deallocate(imageInfo.second.second);
             }
             mImageInfos.clear();
-            mCore->device().destroyBuffer(mStagingBuffer);
-            mpAllocator->deallocate(mMemBlock);
+            mCore->GetDevice().destroyBuffer(mStagingBuffer);
+            mpAllocator->Deallocate(mMemBlock);
 
             mCore = nullptr;
             mpAllocator = nullptr;
@@ -329,14 +329,14 @@ namespace Mix {
                 memcpy(static_cast<char*>(mMemBlock.ptr) + offset,
                        data.ptr,
                        static_cast<size_t>(data.imageInfo.size));
-                offset += Utils::align(data.imageInfo.size, mMemReq.alignment);
+                offset += Utils::Align(data.imageInfo.size, mMemReq.alignment);
             }
 
-            // allocate memory on video memory for images
+            // Allocate memory on video memory for images
             offset = 0;
             for (auto& data : mDatas) {
                 auto& imageInfo = data.imageInfo;
-                MemoryBlock block = mpAllocator->allocate(imageInfo.image, vk::MemoryPropertyFlagBits::eDeviceLocal);
+                MemoryBlock block = mpAllocator->Allocate(imageInfo.image, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
                 vk::BufferImageCopy bufferCopyRegion;
                 bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -346,7 +346,7 @@ namespace Mix {
                 bufferCopyRegion.imageExtent = imageInfo.extent;
                 bufferCopyRegion.bufferOffset = offset;
 
-                offset += Utils::align(imageInfo.size, mMemReq.alignment);
+                offset += Utils::Align(imageInfo.size, mMemReq.alignment);
 
                 vk::ImageSubresourceRange subresourceRange;
                 subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -386,9 +386,9 @@ namespace Mix {
             submitInfo.commandBufferCount = 1;
             submitInfo.pCommandBuffers = &mCmd;
 
-            mCore->getQueues().transfer.value().submit(submitInfo, mFence.get());
-            mCore->device().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
-            mCore->device().resetFences(mFence.get());
+            mCore->GetQueues().transfer.value().submit(submitInfo, mFence.get());
+            mCore->GetDevice().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
+            mCore->GetDevice().resetFences(mFence.get());
 
             // clear all stored info waiting for next flush()
             mCurrSize = 0;

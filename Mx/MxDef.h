@@ -46,6 +46,7 @@ namespace Mix {
     typedef vk::DeviceSize IdStep;
     typedef Id MeshId;
     typedef Id ModelId;
+    typedef long long Guid;
 
     namespace Version {
         static VersionInt makeVersion(uint32_t major, uint32_t minor, uint32_t patch) {
@@ -78,7 +79,7 @@ namespace Mix {
         constexpr float Pi = 3.141593f;
     }
 
-    enum class Space { World, Self };
+    enum class Space { WORLD, SELF };
 }
 
 #endif // !_MX_DEF_H_

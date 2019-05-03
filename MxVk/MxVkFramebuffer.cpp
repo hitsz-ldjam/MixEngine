@@ -19,14 +19,14 @@ namespace Mix {
             createInfo.height = mExtent.height;
             createInfo.layers = mLayers;
 
-            mFramebuffer = mCore->device().createFramebuffer(createInfo);
+            mFramebuffer = mCore->GetDevice().createFramebuffer(createInfo);
         }
 
         void Framebuffer::destroy() {
             if (!mCore)
                 return;
 
-            mCore->device().destroyFramebuffer(mFramebuffer);
+            mCore->GetDevice().destroyFramebuffer(mFramebuffer);
             mCore = nullptr;
             mAttachments.clear();
             mRenderPass = nullptr;

@@ -3,6 +3,7 @@
 #ifndef _MX_GAME_OBJECT_H_
 #define _MX_GAME_OBJECT_H_
 
+#include "MxException.hpp"
 #include "MxObject.h"
 #include "MxTransform.h"
 #include <vector>
@@ -20,12 +21,12 @@ namespace Mix {
         MX_DECLARE_CLASS_FACTORY;
     public:
         GameObject() :mParent(nullptr) {
-            addGameObj(this);
-            addComponent<Transform>();
+            AddGameObj(this);
+            AddComponent<Transform>();
         }
 
-        GameObject(const GameObject& obj) = delete;
-        GameObject(GameObject&& obj);
+        GameObject(const GameObject& _obj) = delete;
+        GameObject(GameObject&& _obj);
 
         virtual ~GameObject() {
             if (mParent)
@@ -39,28 +40,28 @@ namespace Mix {
             for (auto comp : mComponents)
                 delete comp;
 
-            removeGameObj(this);
+            RemoveGameObj(this);
         }
 
         GameObject& operator=(const GameObject& obj) = delete;
-        GameObject& operator=(GameObject&& obj);
+        GameObject& operator=(GameObject&& _obj);
 
         template<typename T>
-        T* addComponent();
+        T* AddComponent();
 
-        Component* addComponent(Component* comp);
+        Component* AddComponent(Component* _comp);
 
         template<typename T, typename... Args>
-        T* addComponent(Args&& ...args);
+        T* AddComponent(Args&& ..._args);
 
         template<typename T>
-        T* getComponent();
+        T* GetComponent();
 
         template<typename T>
-        std::vector<T*> getComponents();
+        std::vector<T*> GetComponents();
 
         template<typename T>
-        T* getComponentInChildren();
+        T* GetComponentInChildren();
 
         void removeComponent(Component* comp);
 
@@ -95,21 +96,17 @@ namespace Mix {
             return mLayer;
         }
 
-        void setLayer(LayerIndex index) {
+        void SetLayer(const LayerIndex _index) {
             // todo complete this when we have scene manager
-            mLayer = index;
+            mLayer = _index;
         }
 
-        void setTag(const Tag& tag) {
-            mTag = tag;
+        void SetTag(const Tag& _tag) {
+            mTag = _tag;
         }
 
-        const Tag& getTag() const {
+        const Tag& GetTag() const {
             return mTag;
-        }
-
-        const std::string& getName() const {
-            return mName;
         }
 
     protected:
@@ -120,22 +117,21 @@ namespace Mix {
         bool mActive = true;
         LayerIndex mLayer = 0;
 
-        std::string mName;
         Tag mTag;
 
         // static
     public:
-        static GameObject* find(const std::string& name);
-        static std::vector<GameObject*> findGameObjsWithTag(const Tag& tag);
-        static GameObject* findGameObjWithTag(const Tag& tag);
+        static GameObject* Find(const std::string& _name);
+        static std::vector<GameObject*> FindGameObjsWithTag(const Tag& _tag);
+        static GameObject* FindGameObjWithTag(const Tag& _tag);
 
     private:
-        static void addGameObj(GameObject* obj) {
-            mGameObjList.push_back(obj);
+        static void AddGameObj(GameObject* _obj) {
+            mGameObjList.push_back(_obj);
         }
 
-        static void removeGameObj(GameObject* obj) {
-            auto it = std::find(mGameObjList.begin(), mGameObjList.end(), obj);
+        static void RemoveGameObj(GameObject* _obj) {
+            const auto it = std::find(mGameObjList.begin(), mGameObjList.end(), _obj);
             if (it == mGameObjList.end())
                 return;
             mGameObjList.erase(it);
@@ -146,7 +142,7 @@ namespace Mix {
 
 
     template<typename T>
-    inline T * GameObject::addComponent() {
+    inline T * GameObject::AddComponent() {
         // if type T isn't derived from Component
         T* t = reinterpret_cast<T*>(1);
         if (!dynamic_cast<Component*>(t))
@@ -159,24 +155,24 @@ namespace Mix {
     }
 
     template<typename T, typename ...Args>
-    inline T * GameObject::addComponent(Args && ...args) {
+    inline T * GameObject::AddComponent(Args && ..._args) {
         // if type T isn't derived from Component
         T* t = reinterpret_cast<T*>(1);
         if (!dynamic_cast<Component*>(t))
             throw ComponentCastError();
 
-        t = new T(std::forward<Args>(args)...);
+        t = new T(std::forward<Args>(_args)...);
         t->setGameObj(this);
         mComponents.insert(t);
         return t;
     }
 
     template<typename T>
-    inline T * GameObject::getComponent() {
+    inline T * GameObject::GetComponent() {
         T* result;
 
         for (auto comp : mComponents) {
-            if (result = dynamic_cast<T*>(comp))
+            if ((result = dynamic_cast<T*>(comp)))
                 return result;
         }
 
@@ -184,12 +180,12 @@ namespace Mix {
     }
 
     template<typename T>
-    inline std::vector<T*> GameObject::getComponents() {
+    inline std::vector<T*> GameObject::GetComponents() {
         std::vector<T*> results;
         T* result;
 
         for (auto comp : mComponents) {
-            if (result = dynamic_cast<T*>(comp))
+            if ((result = dynamic_cast<T*>(comp)))
                 results.push_back(result);
         }
 
@@ -197,18 +193,18 @@ namespace Mix {
     }
 
     template<typename T>
-    inline T * GameObject::getComponentInChildren() {
+    inline T * GameObject::GetComponentInChildren() {
 
-        T* ptr;
-
-        ptr = getComponent(T)();
+        T* ptr = GetComponent<T>();
 
         if (!ptr) {
             for (auto child : mChildren) {
-                if (ptr = child->getComponentInChildren<T>())
+                if ((ptr = child->GetComponentInChildren<T>()))
                     return ptr;
             }
         }
+
+        return nullptr;
     }
 
 

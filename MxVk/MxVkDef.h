@@ -1,12 +1,11 @@
 #pragma once
-#ifndef _MX_VK_DEF_H_
-#define _MX_VK_DEF_H_
+#ifndef MX_VK_DEF_H
+#define MX_VK_DEF_H
 
 #include"../Mx/MxDef.h"
 #include"../Mx/MxObject.h"
 #include <vulkan/vulkan.hpp>
 #include <optional>
-#include <memory>
 
 
 namespace Mix {
@@ -55,7 +54,7 @@ namespace Mix {
             glm::vec2 uv;
 
             //get vertex input description
-            static std::vector<vk::VertexInputBindingDescription>& getBindingDescrip() {
+            static std::vector<vk::VertexInputBindingDescription>& GetBindingDescrip() {
                 static std::vector<vk::VertexInputBindingDescription> bindingDescription = {
                 vk::VertexInputBindingDescription(0,sizeof(Vertex),vk::VertexInputRate::eVertex) };
 
@@ -65,7 +64,7 @@ namespace Mix {
 
 
             //get vertex input attributi description
-            static std::vector<vk::VertexInputAttributeDescription>& getAttributeDescrip() {
+            static std::vector<vk::VertexInputAttributeDescription>& GetAttributeDescrip() {
                 static std::vector<vk::VertexInputAttributeDescription> attributeDescription = {
                     vk::VertexInputAttributeDescription(0,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, pos)),
                     vk::VertexInputAttributeDescription(1,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, normal)),
@@ -78,4 +77,4 @@ namespace Mix {
 
     }
 }
-#endif // !_MX_VK_DEF_H_
+#endif // !MX_VK_DEF_H

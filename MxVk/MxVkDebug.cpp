@@ -8,16 +8,16 @@ namespace Mix {
             createInfo.messageType = messageType;
             createInfo.pfnUserCallback = callback;
 
-            vk::DebugUtilsMessengerEXT messenger = mCore->instance().createDebugUtilsMessengerEXT(createInfo,
+            vk::DebugUtilsMessengerEXT messenger = mCore->GetInstance().createDebugUtilsMessengerEXT(createInfo,
                                                                                                   nullptr,
-                                                                                                  mCore->dynamicLoader());
+                                                                                                  mCore->DynamicLoader());
 
             mMessengers.push_back(std::move(messenger));
             return mMessengers.back();
         }
 
         void Debug::destroyDebugCallback(const vk::DebugUtilsMessengerEXT & messenger) {
-            mCore->instance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->dynamicLoader());
+            mCore->GetInstance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->DynamicLoader());
             mMessengers.erase(std::find(mMessengers.begin(),
                               mMessengers.end(),
                               messenger));
@@ -28,7 +28,7 @@ namespace Mix {
                 return;
 
             for (const auto& messenger : mMessengers)
-                mCore->instance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->dynamicLoader());
+                mCore->GetInstance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->DynamicLoader());
 
             mMessengers.clear();
             mCore = nullptr;

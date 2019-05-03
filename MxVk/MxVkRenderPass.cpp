@@ -7,7 +7,7 @@ namespace Mix {
             
         }
 
-        void RenderPass::init(std::shared_ptr<Core>& core) {
+        void RenderPass::Init(std::shared_ptr<Core>& core) {
             mCore = core;
             mAttachments = std::make_shared<std::vector<vk::AttachmentDescription>>();
             mAttachRefs = std::make_shared<std::vector<vk::AttachmentReference>>();
@@ -161,7 +161,7 @@ namespace Mix {
             createInfo.pDependencies = mDependencies->data();
             createInfo.dependencyCount = static_cast<uint32_t>(mDependencies->size());
 
-            mRenderPass = mCore->device().createRenderPass(createInfo);
+            mRenderPass = mCore->GetDevice().createRenderPass(createInfo);
             clear();
         }
 
@@ -185,7 +185,7 @@ namespace Mix {
             if (!mCore)
                 return;
 
-            mCore->device().destroyRenderPass(mRenderPass);
+            mCore->GetDevice().destroyRenderPass(mRenderPass);
             mCore = nullptr;
             clear();
         }

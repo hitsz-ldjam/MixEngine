@@ -138,17 +138,42 @@ namespace Mix {
 #pragma region GLTF_NO_ANIMATION
 
         namespace gltf {
-            struct MeshData {
-                std::string name;
-                vk::Buffer vertexBuffer;
-                vk::Buffer indexBuffer;
-                uint32_t firstVertex;
-                uint32_t vertexCount;
-                uint32_t firstIndex;
-                uint32_t indexCount;
-            };
-
             class MeshMgr :GraphicsComponent {
+            public:
+                struct SubmeshInfo {
+                    uint32_t firstVertex;
+                    uint32_t vertexCount;
+                    uint32_t firstIndex;
+                    uint32_t indexCount;
+                };
+
+                struct MeshInfo {
+                    std::string name;
+                    std::vector<SubmeshInfo> submeshes;
+                };
+
+                struct ModelInfo {
+                    std::string name;
+                    MemoryBlock vertexMem;
+                    vk::Buffer vertexBuffer;
+                    MemoryBlock indexMem;
+                    vk::Buffer indexBuffer;
+                    std::unordered_map<MeshId, MeshInfo> meshes;
+                };
+
+                // used to draw a single mesh within a model
+                struct SingleMeshInfo {
+                    const vk::Buffer& vertexBuffer;
+                    const vk::Buffer& indexBuffer;
+                    const MeshInfo& meshInfo;
+
+                    SingleMeshInfo(const vk::Buffer& vb, const vk::Buffer& ib, const MeshInfo& mesh) :
+                        vertexBuffer(vb),
+                        indexBuffer(ib),
+                        meshInfo(mesh) {
+                    }
+                };
+
             public:
                 virtual ~MeshMgr() {
                     destroy();
@@ -163,13 +188,14 @@ namespace Mix {
                     }
                 }
 
-                std::pair<ModelId,std::vector<MeshId>> loadModel(const Utils::GLTFLoader::ModelData& modelData);
+                std::pair<ModelId, std::vector<MeshId>> loadModel(const Utils::ModelData& modelData);
 
                 void endLoad() {
                     mCmd = nullptr;
                 }
 
-                std::shared_ptr<MeshData> getMesh(const ModelId & modelId, const MeshId & meshId);
+                const ModelInfo& getModel(const ModelId& modelId);
+                SingleMeshInfo getMesh(const ModelId& modelId, const MeshId& meshId);
 
                 void destroy();
 
@@ -180,23 +206,6 @@ namespace Mix {
                 Fence mFence;
 
                 std::shared_ptr<DeviceAllocator> mpAllocator;
-
-                struct MeshInfo {
-                    std::string name;
-                    uint32_t firstVertex;
-                    uint32_t vertexCount;
-                    uint32_t firstIndex;
-                    uint32_t indexCount;
-                };
-
-                struct ModelInfo {
-                    std::string name;
-                    vk::Buffer vertexBuffer;
-                    MemoryBlock vertexMem;
-                    MemoryBlock indexMem;
-                    vk::Buffer indexBuffer;
-                    std::unordered_map<MeshId, MeshInfo> meshes;
-                };
 
                 std::unordered_map<ModelId, ModelInfo> mModels;
 
@@ -493,8 +502,8 @@ namespace Mix {
                 void loadNode(Node *parent, const tinygltf::Node &node,
                               uint32_t nodeIndex,
                               const tinygltf::Model &model,
-                              std::vector<uint32_t>& indexBuffer,
-                              std::vector<Vertex>& vertexBuffer,
+                              std::vector<uint32_t>& mIndexBuffer,
+                              std::vector<Vertex>& mVertexBuffer,
                               float globalscale);
 
                 void loadSkins(tinygltf::Model &gltfModel);

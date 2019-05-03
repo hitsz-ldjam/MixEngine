@@ -51,10 +51,10 @@ namespace Mix {
 
     void Transform::translate(const glm::vec3 & translation, const Space relativeTo) {
         switch (relativeTo) {
-        case Space::World:
+        case Space::WORLD:
             mPosition += translation;
             break;
-        case Space::Self:
+        case Space::SELF:
             mPosition += (translation.x * mAxis.x + translation.y * mAxis.y + translation.z * mAxis.z);
             break;
         }
@@ -62,10 +62,10 @@ namespace Mix {
 
     void Transform::rotate(const glm::vec3 & eulers, const Space relativeTo) {
         switch (relativeTo) {
-        case Space::World:
+        case Space::WORLD:
             mQuaternion = glm::tquat<float>(eulers)*mQuaternion;
             break;
-        case Space::Self:
+        case Space::SELF:
             mQuaternion = glm::tquat<float>(glm::eulerAngles(mQuaternion) + eulers);
             break;
         }
@@ -81,10 +81,10 @@ namespace Mix {
 
     void Transform::scale(const glm::vec3 & scale, const Space relativeTo) {
         switch (relativeTo) {
-        case Space::World:
+        case Space::WORLD:
             mScale = scale;
             break;
-        case Space::Self:
+        case Space::SELF:
             mScale *= scale;
             break;
         }

@@ -13,7 +13,7 @@ namespace Mix {
             RenderPass() { mCore = nullptr; }
             virtual ~RenderPass() { destroy(); }
 
-            void init(std::shared_ptr<Core>& core) override;
+            void Init(std::shared_ptr<Core>& core) override;
 
             void create();
 

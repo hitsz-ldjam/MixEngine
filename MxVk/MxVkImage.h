@@ -2,11 +2,9 @@
 #ifndef _MX_VK_IMAGE_H_
 #define _MX_VK_IMAGE_H_
 
-#include "../Mx/MxComponent.h"
 #include "../Utils/MxUtils.h"
 #include "MxVkCore.h"
 #include "MxVkAllocator.h"
-#include <algorithm>
 #include <unordered_map>
 
 
@@ -74,7 +72,7 @@ namespace Mix {
                 ImageInfo imageInfo;
                 const char* ptr;
 
-                TempData() :name(), imageInfo(), ptr(nullptr) {}
+                TempData() : imageInfo(), ptr(nullptr) {}
 
                 TempData(const std::string& n, const ImageInfo& i, const char* p) :
                     name(n), imageInfo(i), ptr(p) {
@@ -88,6 +86,7 @@ namespace Mix {
 
             void beginLoad(const vk::CommandBuffer& cmd);
             void loadTexture(const std::string& name, const gli::texture& texture);
+            void loadTexture(const Utils::ImageData& imageData);
             void endLoad();
 
             const ImageInfo& getImage(const std::string& name) {
@@ -105,7 +104,7 @@ namespace Mix {
             vk::CommandBuffer mCmd;
             bool mCmdBegin = false;
 
-            vk::DeviceSize mBufferSize = 8 * 1024 * 1024;
+            vk::DeviceSize mBufferSize = 16 * 1024 * 1024;
 
             vk::Buffer mStagingBuffer;
             MemoryBlock mMemBlock;

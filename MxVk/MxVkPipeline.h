@@ -16,7 +16,7 @@ namespace Mix {
 
             Pipeline & operator=(Pipeline && pipeline);
 
-            virtual void init(std::shared_ptr<Core>& core) override;
+            virtual void Init(std::shared_ptr<Core>& core) override;
 
             void setTargetRenderPass(const vk::RenderPass renderPass, const uint32_t subpassIndex);
 

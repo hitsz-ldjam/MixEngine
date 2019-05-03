@@ -2,16 +2,16 @@
 
 namespace Mix {
     namespace Graphics {
-        void  Swapchain::init(std::shared_ptr<Core>& core) {
+        void  Swapchain::Init(std::shared_ptr<Core>& core) {
             mCore = core;
             mSupportDetails.capabilities =
-                mCore->physicalDevice().getSurfaceCapabilitiesKHR(mCore->surface());
+                mCore->GetPhysicalDevice().getSurfaceCapabilitiesKHR(mCore->GetSurface());
 
             mSupportDetails.formats =
-                mCore->physicalDevice().getSurfaceFormatsKHR(mCore->surface());
+                mCore->GetPhysicalDevice().getSurfaceFormatsKHR(mCore->GetSurface());
 
             mSupportDetails.presentModes =
-                mCore->physicalDevice().getSurfacePresentModesKHR(mCore->surface());
+                mCore->GetPhysicalDevice().getSurfacePresentModesKHR(mCore->GetSurface());
         }
 
         void Swapchain::destroy() {
@@ -19,8 +19,8 @@ namespace Mix {
                 return;
 
             for (auto& view : mImageViews)
-                mCore->device().destroyImageView(view);
-            mCore->device().destroySwapchainKHR(mSwapchain);
+                mCore->GetDevice().destroyImageView(view);
+            mCore->GetDevice().destroySwapchainKHR(mSwapchain);
             mCore = nullptr;
         }
 
@@ -30,14 +30,14 @@ namespace Mix {
             mInFlightFences.resize(mImageCount);
 
             for (uint32_t i = 0; i < mImageCount; ++i) {
-                mImageAvlSph[i] = mCore->getSyncObjMgr().createSemaphore();
-                mRenderFinishedSph[i] = mCore->getSyncObjMgr().createSemaphore();
-                mInFlightFences[i] = mCore->getSyncObjMgr().createFence();
+                mImageAvlSph[i] = mCore->GetSyncObjMgr().createSemaphore();
+                mRenderFinishedSph[i] = mCore->GetSyncObjMgr().createSemaphore();
+                mInFlightFences[i] = mCore->GetSyncObjMgr().createFence();
             }
 
             // to keep thins in present() right
             for (uint32_t i = 1; i < mImageCount; ++i) {
-                mCore->device().resetFences(mInFlightFences[i].get());
+                mCore->GetDevice().resetFences(mInFlightFences[i].get());
             }
 
             vk::SurfaceFormatKHR format;
@@ -51,7 +51,7 @@ namespace Mix {
             VkExtent2D extent = chooseExtent(rqExtent);
 
             vk::SwapchainCreateInfoKHR createInfo = {};
-            createInfo.surface = mCore->surface();
+            createInfo.surface = mCore->GetSurface();
             createInfo.presentMode = presentMode;
             createInfo.minImageCount = mImageCount;
             createInfo.imageFormat = format.format;
@@ -61,8 +61,8 @@ namespace Mix {
             createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
 
             uint32_t queueFamilyIndices[2] = {
-                mCore->getQueueFamilyIndices().graphics.value(),
-                mCore->getQueueFamilyIndices().present.value()
+                mCore->GetQueueFamilyIndices().graphics.value(),
+                mCore->GetQueueFamilyIndices().present.value()
             };
 
             if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
@@ -82,9 +82,9 @@ namespace Mix {
             createInfo.oldSwapchain = nullptr;
 
             // create swapchain
-            mSwapchain = mCore->device().createSwapchainKHR(createInfo, nullptr, mCore->dynamicLoader());
+            mSwapchain = mCore->GetDevice().createSwapchainKHR(createInfo, nullptr, mCore->DynamicLoader());
             //acquire image in swapchain
-            mImages = mCore->device().getSwapchainImagesKHR(mSwapchain, mCore->dynamicLoader());
+            mImages = mCore->GetDevice().getSwapchainImagesKHR(mSwapchain, mCore->DynamicLoader());
             //stroe
             mSurfaceFormat = format;
             mPresentMode = presentMode;
@@ -137,7 +137,7 @@ namespace Mix {
         void  Swapchain::createSwapchainImageView() {
             mImageViews.resize(mImages.size());
             for (size_t i = 0; i < mImages.size(); ++i)
-                mImageViews[i] = Tools::createImageView2D(mCore->device(),
+                mImageViews[i] = Tools::createImageView2D(mCore->GetDevice(),
                                                           mImages[i],
                                                           mSurfaceFormat.format,
                                                           vk::ImageAspectFlagBits::eColor,
@@ -146,13 +146,13 @@ namespace Mix {
         }
 
         void Swapchain::present(vk::CommandBuffer& cmdBuffer) {
-            mCore->device().waitForFences(mInFlightFences[mLastFrame].get(),
+            mCore->GetDevice().waitForFences(mInFlightFences[mLastFrame].get(),
                                           VK_TRUE,
                                           std::numeric_limits<uint64_t>::max());
 
-            mCore->device().resetFences(mInFlightFences[mLastFrame].get());
+            mCore->GetDevice().resetFences(mInFlightFences[mLastFrame].get());
 
-            auto acquireResult = mCore->device().acquireNextImageKHR(mSwapchain,
+            auto acquireResult = mCore->GetDevice().acquireNextImageKHR(mSwapchain,
                                                                      std::numeric_limits<uint64_t>::max(),
                                                                      mImageAvlSph[mCurrFrame].get(),
                                                                      nullptr);
@@ -178,7 +178,7 @@ namespace Mix {
             submitInfo.pCommandBuffers = &cmdBuffer;
             submitInfo.commandBufferCount = 1;
 
-            mCore->getQueues().graphics.value().submit(submitInfo, mInFlightFences[mCurrFrame].get());
+            mCore->GetQueues().graphics.value().submit(submitInfo, mInFlightFences[mCurrFrame].get());
 
             //swapchain present
             vk::PresentInfoKHR presentInfo = {};
@@ -189,7 +189,7 @@ namespace Mix {
             presentInfo.pImageIndices = &acquireResult.value;
             presentInfo.pResults = nullptr;
 
-            auto result = mCore->getQueues().present.value().presentKHR(presentInfo);
+            auto result = mCore->GetQueues().present.value().presentKHR(presentInfo);
 
             if (result == vk::Result::eErrorOutOfDateKHR ||
                 result == vk::Result::eSuboptimalKHR) {

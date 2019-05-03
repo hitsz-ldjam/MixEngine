@@ -4,7 +4,6 @@
 
 
 #include "MxObject.h"
-#include <string>
 
 
 namespace Mix {
@@ -18,11 +17,11 @@ namespace Mix {
         Component() :mGameObj(nullptr) {};
         virtual ~Component() = 0 {};
 
-        void setGameObj(GameObject* gameObj) {
-            mGameObj = gameObj;
+        void SetGameObj(GameObject* _gameObj) {
+            mGameObj = _gameObj;
         }
 
-        GameObject* getGameObj() {
+        GameObject* GetGameObj() const {
             return mGameObj;
         }
 

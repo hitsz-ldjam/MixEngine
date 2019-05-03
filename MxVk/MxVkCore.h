@@ -4,111 +4,112 @@
 
 
 #include "../Mx/MxWindow.h"
-#include <SDL2/SDL_vulkan.h>
 
 #include "MxVkDef.h"
-#include "MxVkExcept.hpp"
 #include "MxVkSyncObjMgr.h"
 #include <string>
 #include <vector>
 #include <functional>
-#include <algorithm>
-#include <optional>
+#include <SDL2/SDL_vulkan.h>
 
 
 namespace Mix {
     namespace Graphics {
-        class Core {
+        class Core final {
         public:
             Core();
-            virtual ~Core() {
-                destroy();
+
+            ~Core() {
+                Destroy();
             }
 
-            void createInstance();
-            void pickPhysicalDevice(const std::function<uint32_t(const PhysicalDeviceInfo&)>& marker = nullptr);
-            void createLogicalDevice();
-            void endInit();
-            void destroy();
+            void CreateInstance();
+            void PickPhysicalDevice(const std::function<uint32_t(const PhysicalDeviceInfo&)>& marker = nullptr);
+            void CreateLogicalDevice();
+            void EndInit();
+            void Destroy();
 
-            const vk::Instance& instance() const { return mInstance; }
-            const vk::PhysicalDevice& physicalDevice() const { return mPhysicalDeviceInfo.physicalDevice; }
-            const vk::Device& device() const { return mLogicalDevice; }
-            const vk::SurfaceKHR& surface() const { return mSurface; }
-            Window* window() { return mWindow; }
+            const vk::Instance& GetInstance() const { return mInstance; }
+            const vk::PhysicalDevice& GetPhysicalDevice() const { return mPhysicalDeviceInfo.physicalDevice; }
+            const vk::Device& GetDevice() const { return mLogicalDevice; }
+            const vk::SurfaceKHR& GetSurface() const { return mSurface; }
+            Window* GetWindow() const { return mWindow; }
 
-            void setAppInfo(const std::string& appName, const VersionInt appVer) {
-                mAppName = appName;
-                mAppVersion = appVer;
-            };
-
-            void setDebugMode(const bool on);
-
-            void setValidationLayers(const std::vector<const char*> layers) {
-                mInitInfo->validationLayers = layers;
+            void SetAppInfo(const std::string& _appName, const VersionInt _appVer) {
+                mAppName = _appName;
+                mAppVersion = _appVer;
             }
 
-            void setInstanceExtensions(const std::vector<const char*> extensions) {
-                mInitInfo->instanceExtensions = extensions;
+            void SetDebugMode(bool _on) const;
+
+            void SetValidationLayers(const std::vector<const char*>& _layers) const {
+                mInitInfo->validationLayers = _layers;
             }
 
-            void setDeviceExtensions(const std::vector<const char*> extensions) {
-                mInitInfo->deviceExtensions = extensions;
+            void SetInstanceExtensions(const std::vector<const char*>& _extensions) const {
+                mInitInfo->instanceExtensions = _extensions;
             }
 
-            void setQueueFlags(const vk::QueueFlags& flags = vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eTransfer) {
-                mInitInfo->queueFlags = flags;
+            void SetDeviceExtensions(const std::vector<const char*>& _extensions) const {
+                mInitInfo->deviceExtensions = _extensions;
             }
 
-            void setPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& features) {
-                mInitInfo->physicalDeviceFeatures = features;
+            void SetQueueFlags(
+                const vk::QueueFlags& _flags = vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eTransfer) const {
+                mInitInfo->queueFlags = _flags;
             }
 
-            void setTargetWindow(Window* window);
+            void SetPhysicalDeviceFeatures(const vk::PhysicalDeviceFeatures& _features) const {
+                mInitInfo->physicalDeviceFeatures = _features;
+            }
 
-            const std::vector<PhysicalDeviceInfo>& getAllPhysicalDeviceInfo() const {
+            void SetTargetWindow(Window* _window);
+
+            const std::vector<PhysicalDeviceInfo>& GetAllPhysicalDeviceInfo() const {
                 return mAllPhysicalDevices;
             }
 
-            const QueueSet& getQueues() const {
+            const QueueSet& GetQueues() const {
                 return mQueueSet;
             }
 
-            const QueueFamilyIndexSet& getQueueFamilyIndices() const {
+            const QueueFamilyIndexSet& GetQueueFamilyIndices() const {
                 return mPhysicalDeviceInfo.familyIndexSet;
             }
 
-            const vk::PhysicalDeviceProperties& getPhysicalDeviceProperties() const {
+            const vk::PhysicalDeviceProperties& GetPhysicalDeviceProperties() const {
                 return mPhysicalDeviceInfo.properties;
             }
 
-            const vk::PhysicalDeviceFeatures& getPhysicalDeviceFeatures() const {
+            const vk::PhysicalDeviceFeatures& GetPhysicalDeviceFeatures() const {
                 return mPhysicalDeviceInfo.features;
             }
 
-            uint32_t getMemoryTypeIndex(const uint32_t type, const vk::MemoryPropertyFlags& properties) const;
+            uint32_t GetMemoryTypeIndex(uint32_t _type, const vk::MemoryPropertyFlags& _properties) const;
 
-            bool checkFormatFeatureSupport(const vk::Format format, const vk::ImageTiling tiling, const vk::FormatFeatureFlags features) const;
+            bool CheckFormatFeatureSupport(vk::Format _format, vk::ImageTiling _tiling, const vk::FormatFeatureFlags
+                                           & _features) const;
 
-            const vk::DispatchLoaderDynamic& dynamicLoader() const {
+            const vk::DispatchLoaderDynamic& DynamicLoader() const {
                 return mDynamicLoader;
             }
 
-            const vk::DispatchLoaderStatic& staticLoader() const {
+            const vk::DispatchLoaderStatic& StaticLoader() const {
                 return mStaticLoader;
             }
 
-            SyncObjectMgr& getSyncObjMgr() {
+            SyncObjectMgr& GetSyncObjMgr() {
                 return mSyncObjMgr;
             }
 
-            static std::vector<vk::ExtensionProperties> getSupportedExtensions() {
+            static std::vector<vk::ExtensionProperties> GetSupportedExtensions() {
                 return vk::enumerateInstanceExtensionProperties();
             }
 
-            static std::vector<vk::LayerProperties> getSupportedLayers() {
+            static std::vector<vk::LayerProperties> GetSupportedLayers() {
                 return vk::enumerateInstanceLayerProperties();
             }
+
         private:
             Window* mWindow;
 
@@ -116,8 +117,7 @@ namespace Mix {
             VersionInt mAppVersion;
 
             struct InitInfo {
-
-                bool debugMode;
+                bool debugMode = false;
                 std::vector<const char*> validationLayers;
                 std::vector<const char*> instanceExtensions;
                 std::vector<const char*> deviceExtensions;
@@ -141,17 +141,17 @@ namespace Mix {
             // classes that are used in other part of program frequently
             SyncObjectMgr mSyncObjMgr;
 
-        private:
-            uint32_t evaluatePhysicalDevice(const PhysicalDeviceInfo& info);
-            QueueFamilyIndexSet getQueueFamilyIndexSet(const PhysicalDeviceInfo& info);
+            uint32_t EvaluatePhysicalDevice(const PhysicalDeviceInfo& _info) const;
+            QueueFamilyIndexSet GetQueueFamilyIndexSet(const PhysicalDeviceInfo& _info);
         };
 
 
         class GraphicsComponent {
         public:
             virtual ~GraphicsComponent() = 0 {};
+
             GraphicsComponent() { mCore = nullptr; }
-            virtual void init(std::shared_ptr<Core>& core) { mCore = core; }
+            virtual void Init(std::shared_ptr<Core>& _core) { mCore = _core; }
         protected:
             std::shared_ptr<Core> mCore;
         };

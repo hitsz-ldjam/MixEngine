@@ -5,11 +5,9 @@
 #include "../Mx/MxWindow.h"
 #include "../Utils/MxUtils.h"
 #include "../Mx/MxObject.h"
-#include "../Mx/MxRender.h"
 #include "../Mx/MxMesh.h"
 
 #include "MxVkDef.h"
-#include "MxVkExcept.hpp"
 #include "MxVkCore.h"
 #include "MxVkDebug.h"
 #include "MxVkAllocator.h"
@@ -22,11 +20,8 @@
 #include "MxVkDescriptor.h"
 #include "MxVkPipeline.h"
 #include "MxVkCommand.h"
-#include "MxVkSyncObjMgr.h"
-#include "MxVkUniform.h"
 
 #include <vector>
-// todo
 #include <fstream>
 
 #define WIN_WIDTH 640
@@ -34,54 +29,72 @@
 
 namespace Mix {
     namespace Graphics {
-        class Graphics {
+        class Vulkan {
         public:
-            Graphics() {};
-            ~Graphics() {
-                destroy();
+            Vulkan() {};
+            ~Vulkan() {
+                Destroy();
             }
 
-            void init();
-            void setTargetWindow(Window* window) {
-                mWindow = window;
-            }
-            void build();
-            void update(float deltaTime);
+            void Init();
 
-            void destroy();
+            void SetTargetWindow(Window* _window) {
+                mWindow = _window;
+            }
+
+            void Build();
+
+            void Update(float _deltaTime);
+
+            void Destroy();
+
             struct Settings {
                 vk::SampleCountFlagBits sampleCount = vk::SampleCountFlagBits::e1;
             };
 
-            /*
-            Interfaces
-            */
-            GameObject* createModelObj(const Utils::GLTFLoader::ModelData& modelData);
+            const vk::Device& GetLogicalDevice() const {
+                return mCore->GetDevice();
+            }
 
+            const vk::PhysicalDevice& GetPhysicalDevice() const {
+                return mCore->GetPhysicalDevice();
+            }
+
+            std::shared_ptr<Core> GetCore() const {
+                return mCore;
+            }
+
+            std::shared_ptr<DeviceAllocator> GetAllocator() const {
+                return mAllocator;
+            }
+
+            std::shared_ptr<CommandMgr> GetCommandMgr() const {
+                return mCommandMgr;
+            }
 
         private:
-            void buildCore();
-            void buildDebugUtils();
-            void buildSwapchain();
-            void buildDepthStencil();
-            void buildRenderPass();
-            void buildDescriptorSetLayout();
-            void buildShaders();
-            void buildPipeline();
-            void buildCommandMgr();
-            void buildFrameBuffers();
+            void BuildCore();
+            void BuildDebugUtils();
+            void BuildSwapchain();
+            void BuildDepthStencil();
+            void BuildRenderPass();
+            void BuildDescriptorSetLayout();
+            void BuildShaders();
+            void BuildPipeline();
+            void BuildCommandMgr();
+            void BuildFrameBuffers();
 
-            void buildUniformBuffers();
-            void buildCommandBuffers();
-            void buildDescriptorSets();
+            void BuildUniformBuffers();
+            void BuildCommandBuffers();
+            void BuildDescriptorSets();
 
             // test
             // build utils to load resources
-            void loadResource();
+            void LoadResource();
 
         private:
-            void updateCmdBuffer(float deltaTime);
-            void updateUniformBuffer(float deltaTime);
+            void UpdateCmdBuffer(float _deltaTime);
+            void UpdateUniformBuffer(float _deltaTime);
 
         private:
             Window*                 mWindow = nullptr;

@@ -1,8 +1,10 @@
 #include "MxVkGraphics.h"
+#include "MxVkUniform.h"
+#include "../Mx/MxRender.h"
 
 namespace Mix {
     namespace Graphics {
-        void Graphics::init() {
+        void Vulkan::Init() {
             mCore = std::make_shared<Core>();
             mDebug = std::make_shared<Debug>();
             mSwapchain = std::make_shared<Swapchain>();
@@ -19,44 +21,44 @@ namespace Mix {
 
         }
 
-        void Graphics::build() {
-            buildCore();
-            buildDebugUtils();
-            buildCommandMgr();
-            mDescriptorPool->init(mCore);
+        void Vulkan::Build() {
+            BuildCore();
+            BuildDebugUtils();
+            BuildCommandMgr();
+            mDescriptorPool->Init(mCore);
             mAllocator = std::make_shared<DeviceAllocator>();
-            mAllocator->init(mCore);
-            buildSwapchain();
-            buildDepthStencil();
-            buildRenderPass();
-            buildDescriptorSetLayout();
-            buildShaders();
-            buildPipeline();
-            buildFrameBuffers();
+            mAllocator->Init(mCore);
+            BuildSwapchain();
+            BuildDepthStencil();
+            BuildRenderPass();
+            BuildDescriptorSetLayout();
+            BuildShaders();
+            BuildPipeline();
+            BuildFrameBuffers();
 
-            loadResource();
+            LoadResource();
 
-            buildUniformBuffers();
-            buildDescriptorSets();
-            buildCommandBuffers();
+            BuildUniformBuffers();
+            BuildDescriptorSets();
+            BuildCommandBuffers();
         }
 
-        void Graphics::update(float deltaTime) {
-            updateUniformBuffer(deltaTime);
-            updateCmdBuffer(deltaTime);
+        void Vulkan::Update(const float _deltaTime) {
+            UpdateUniformBuffer(_deltaTime);
+            UpdateCmdBuffer(_deltaTime);
 
             mSwapchain->present(mCommandBuffers[mSwapchain->currentFrame()]);
         }
 
-        void Graphics::updateCmdBuffer(float deltaTime) {
-            auto currFrame = mSwapchain->currentFrame();
+        void Vulkan::UpdateCmdBuffer(float _deltaTime) {
+            const auto currFrame = mSwapchain->currentFrame();
 
-            vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+            const vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
             mCommandBuffers[currFrame].begin(beginInfo);
 
             std::vector<vk::ClearValue> clearValues(2);
             clearValues[0].color = std::array<float, 4>{0.0f, 0.75f, 1.0f, 1.0f};
-            clearValues[1].depthStencil = { 1.0f,0 };
+            clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0.0f);
 
             //begin render pass
             mRenderPass->beginRenderPass(mCommandBuffers[currFrame], mFramebuffers[currFrame]->get(), clearValues,
@@ -70,7 +72,7 @@ namespace Mix {
                                                           mDescriptorSets[currFrame],
                                                           nullptr);
 
-            std::vector<MeshRenderer*> renderers = Object::findObjectsOfType<MeshRenderer>();
+            std::vector<MeshRenderer*> renderers = Object::FindObjectsOfType<MeshRenderer>();
             for (MeshRenderer* renderer : renderers) {
                 RenderInfo info = renderer->getRenderInfo();
 
@@ -83,16 +85,20 @@ namespace Mix {
                 auto mesh = mMeshMgr->getMesh(info.meshRef.model, info.meshRef.mesh);
 
                 mCommandBuffers[currFrame].bindVertexBuffers(0,
-                                                             mesh->vertexBuffer,
+                                                             mesh.vertexBuffer,
                                                              { 0 });
 
-                mCommandBuffers[currFrame].bindIndexBuffer(mesh->indexBuffer, 0, vk::IndexType::eUint32);
+                mCommandBuffers[currFrame].bindIndexBuffer(mesh.indexBuffer, 0, vk::IndexType::eUint32);
 
-                mCommandBuffers[currFrame].drawIndexed(mesh->indexCount,
-                                                       1,
-                                                       mesh->firstIndex,
-                                                       mesh->firstVertex,
-                                                       0);
+                for (auto& subMesh : mesh.meshInfo.submeshes) {
+
+
+                    mCommandBuffers[currFrame].drawIndexed(subMesh.indexCount,
+                                                           1,
+                                                           subMesh.firstIndex,
+                                                           subMesh.firstVertex,
+                                                           0);
+                }
             }
             //end render pass
             mRenderPass->endRenderPass(mCommandBuffers[currFrame]);
@@ -101,17 +107,17 @@ namespace Mix {
             mCommandBuffers[currFrame].end();
         }
 
-        void Graphics::Graphics::updateUniformBuffer(float deltaTime) {
-            auto objects = Object::findObjectsOfType<MeshRenderer>();
+        void Vulkan::Vulkan::UpdateUniformBuffer(float _deltaTime) {
+            auto objects = Object::FindObjectsOfType<MeshRenderer>();
             for (auto obj : objects) {
                 auto buffer = obj->uniformBuffers(mSwapchain->currentFrame());
                 auto& uniform = obj->uniform();
-                buffer->copyTo(&uniform, sizeof(uniform));
+                buffer->CopyTo(&uniform, sizeof(uniform));
             }
 
             CameraUniform ubo;
             ubo.position = glm::vec4(0.0f, 0.0f, 3.0f, 1.0f);
-            glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
+            const glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
             ubo.forward = glm::vec4(glm::normalize(target - glm::vec3(ubo.position)), 0.0f);
             ubo.viewMat = glm::lookAt(glm::vec3(ubo.position),
                                       target,
@@ -122,154 +128,81 @@ namespace Mix {
                                            0.1f, 1000.0f);
             ubo.projMat[1][1] *= -1.0f;
 
-            uniforms[mSwapchain->currentFrame()]->copyTo(&ubo, sizeof(ubo));
+            uniforms[mSwapchain->currentFrame()]->CopyTo(&ubo, sizeof(ubo));
         }
 
-        void Graphics::destroy() {
-            mCore->device().waitIdle();
+        void Vulkan::Destroy() {
+            mCore->GetDevice().waitIdle();
 
-            mCore->device().destroyImageView(mDepthStencilView);
-            mCore->device().destroyImage(mDepthStencil.image);
-            mCore->device().freeMemory(mDepthStencil.memory);
+            mCore->GetDevice().destroyImageView(mDepthStencilView);
+            mCore->GetDevice().destroyImage(mDepthStencil.image);
+            mCore->GetDevice().freeMemory(mDepthStencil.memory);
 
-            mCore->device().destroyImageView(texImageView);
-            mCore->device().destroySampler(sampler);
+            mCore->GetDevice().destroyImageView(texImageView);
+            mCore->GetDevice().destroySampler(sampler);
 
             for (auto& buffer : uniforms) {
                 delete buffer;
             }
 
-            for (auto& framebuffer : mFramebuffers)
-                delete framebuffer;
+            for (auto& frameBuffer : mFramebuffers)
+                delete frameBuffer;
         }
 
-        GameObject* Graphics::createModelObj(const Utils::GLTFLoader::ModelData& modelData) {
-            // test
-            vk::DescriptorImageInfo imageInfo;
-            imageInfo.imageView = texImageView;
-            imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-            imageInfo.sampler = sampler;
 
-            auto cmd = mCommandMgr->allocCommandBuffer();
 
-            mMeshMgr->beginLoad(cmd);
-            auto idPair = std::move(mMeshMgr->loadModel(modelData));
-            mCommandMgr->freeCommandBuffers(cmd);
-            mMeshMgr->endLoad();
-
-            MeshFilter* filter;
-            Transform* transform;
-            MeshRenderer* render;
-
-            GameObject* obj = new GameObject();
-            for (size_t i = 0; i < modelData.meshes.size(); ++i) {
-                GameObject* child = new GameObject();
-
-                transform = child->getComponent<Transform>();
-                transform->position() = modelData.meshes[i].transform.translation;
-                transform->rotation() = modelData.meshes[i].transform.rotation;
-                transform->scale() = modelData.meshes[i].transform.scale;
-
-                filter = child->addComponent<MeshFilter>();
-                filter->setMeshRef(idPair.first, idPair.second[i]);
-
-                std::vector<std::shared_ptr<Buffer>> uniformBuffers;
-                std::vector<vk::DescriptorSet> descriptorSets;
-                uniformBuffers.reserve(mSwapchain->imageCount());
-
-                for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
-                    uniformBuffers.emplace_back(Buffer::createBuffer(mCore,
-                                                mAllocator,
-                                                vk::BufferUsageFlagBits::eUniformBuffer,
-                                                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                                                sizeof(MeshUniform)));
-                }
-
-                descriptorSets = mDescriptorPool->allocDescriptorSet(mDescriptorSetLayout["Object"]->get(), mSwapchain->imageCount());
-                for (size_t i = 0; i < descriptorSets.size(); ++i) {
-                    std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {};
-                    descriptorWrites[0].dstSet = descriptorSets[i]; //descriptor which will be write in
-                    descriptorWrites[0].dstBinding = 0; //destination binding
-                    descriptorWrites[0].dstArrayElement = 0;
-                    descriptorWrites[0].descriptorType = vk::DescriptorType::eUniformBuffer; //the type of the descriptor that will be wirte in
-                    descriptorWrites[0].descriptorCount = 1; //descriptor count
-                    descriptorWrites[0].pBufferInfo = &uniformBuffers[i]->descriptor; //descriptorBufferInfo
-                    descriptorWrites[0].pImageInfo = nullptr;
-                    descriptorWrites[0].pTexelBufferView = nullptr;
-
-                    descriptorWrites[1].dstSet = descriptorSets[i];
-                    descriptorWrites[1].dstBinding = 1;
-                    descriptorWrites[1].dstArrayElement = 0;
-                    descriptorWrites[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-                    descriptorWrites[1].descriptorCount = 1;
-                    descriptorWrites[1].pBufferInfo = nullptr;
-                    descriptorWrites[1].pImageInfo = &imageInfo;
-                    descriptorWrites[1].pTexelBufferView = nullptr;
-
-                    mCore->device().updateDescriptorSets(descriptorWrites, nullptr);
-                }
-
-                render = child->addComponent<MeshRenderer>(uniformBuffers, descriptorSets);
-
-                obj->addChild(child);
-            }
-
-            return obj;
+        void Vulkan::BuildCore() {
+            mCore->SetAppInfo("Demo", Mix::Version::makeVersion(0, 0, 1));
+            mCore->SetDebugMode(true);
+            mCore->SetTargetWindow(mWindow);
+            mCore->SetQueueFlags();
+            mCore->CreateInstance();
+            mCore->PickPhysicalDevice();
+            mCore->CreateLogicalDevice();
+            mCore->EndInit();
         }
 
-        void Graphics::buildCore() {
-            mCore->setAppInfo("Demo", Mix::Version::makeVersion(0, 0, 1));
-            mCore->setDebugMode(true);
-            mCore->setTargetWindow(mWindow);
-            mCore->setQueueFlags();
-            mCore->createInstance();
-            mCore->pickPhysicalDevice();
-            mCore->createLogicalDevice();
-            mCore->endInit();
-        }
-
-        void Graphics::buildDebugUtils() {
-            mDebug->init(mCore);
+        void Vulkan::BuildDebugUtils() {
+            mDebug->Init(mCore);
             mDebug->setDefaultCallback();
         }
 
-        void Graphics::buildSwapchain() {
-            // todo
-            mSwapchain->init(mCore);
+        void Vulkan::BuildSwapchain() {
+            mSwapchain->Init(mCore);
             mSwapchain->setImageCount(2);
             mSwapchain->create(mSwapchain->supportedFormat(),
                                { vk::PresentModeKHR::eFifo },
                                vk::Extent2D(640, 480));
         }
 
-        void Graphics::buildDepthStencil() {
+        void Vulkan::BuildDepthStencil() {
             mDepthStencil = Tools::createDepthStencil(*mCore,
                                                       mSwapchain->extent(),
                                                       mSettings.sampleCount);
 
-            mDepthStencilView = Tools::createImageView2D(mCore->device(),
+            mDepthStencilView = Tools::createImageView2D(mCore->GetDevice(),
                                                          mDepthStencil.image,
                                                          mDepthStencil.format,
                                                          vk::ImageAspectFlagBits::eDepth |
                                                          vk::ImageAspectFlagBits::eStencil);
         }
 
-        void Graphics::buildRenderPass() {
-            mRenderPass->init(mCore);
-            auto presentAttach = mRenderPass->addColorAttach(mSwapchain->surfaceFormat().format,
-                                                             mSettings.sampleCount,
-                                                             vk::AttachmentLoadOp::eClear,
-                                                             vk::AttachmentStoreOp::eStore,
-                                                             vk::ImageLayout::eUndefined,
-                                                             vk::ImageLayout::ePresentSrcKHR);
+        void Vulkan::BuildRenderPass() {
+            mRenderPass->Init(mCore);
+            const auto presentAttach = mRenderPass->addColorAttach(mSwapchain->surfaceFormat().format,
+                                                                   mSettings.sampleCount,
+                                                                   vk::AttachmentLoadOp::eClear,
+                                                                   vk::AttachmentStoreOp::eStore,
+                                                                   vk::ImageLayout::eUndefined,
+                                                                   vk::ImageLayout::ePresentSrcKHR);
 
-            auto presentAttahRef = mRenderPass->addColorAttachRef(presentAttach);
+            const auto presentAttahRef = mRenderPass->addColorAttachRef(presentAttach);
 
-            auto depthAttach = mRenderPass->addDepthStencilAttach(mDepthStencil.format, mSettings.sampleCount);
+            const auto depthAttach = mRenderPass->addDepthStencilAttach(mDepthStencil.format, mSettings.sampleCount);
 
-            auto depthAttachRef = mRenderPass->addDepthStencilAttachRef(depthAttach);
+            const auto depthAttachRef = mRenderPass->addDepthStencilAttachRef(depthAttach);
 
-            auto subpass = mRenderPass->addSubpass();
+            const auto subpass = mRenderPass->addSubpass();
             mRenderPass->addSubpassColorRef(subpass, presentAttahRef);
             mRenderPass->addSubpassDepthStencilRef(subpass, depthAttachRef);
 
@@ -283,14 +216,14 @@ namespace Mix {
             mRenderPass->create();
         }
 
-        void Graphics::buildDescriptorSetLayout() {
+        void Vulkan::BuildDescriptorSetLayout() {
             auto cameraLayout = std::make_shared<DescriptorSetLayout>();
-            cameraLayout->init(mCore);
+            cameraLayout->Init(mCore);
             cameraLayout->addBindings(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
             cameraLayout->create();
 
             auto objLayout = std::make_shared<DescriptorSetLayout>();
-            objLayout->init(mCore);
+            objLayout->Init(mCore);
             objLayout->addBindings(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
             objLayout->addBindings(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment);
             objLayout->create();
@@ -299,8 +232,8 @@ namespace Mix {
             mDescriptorSetLayout["Object"] = objLayout;
         }
 
-        void Graphics::buildShaders() {
-            mShaderMgr->init(mCore);
+        void Vulkan::BuildShaders() {
+            mShaderMgr->Init(mCore);
             std::ifstream inFile("Shaders/vShader.vert.spv", std::ios_base::ate | std::ios_base::binary);
             size_t fileSize = static_cast<uint32_t>(inFile.tellg());
             std::vector<char> shaderCode(fileSize);
@@ -318,8 +251,8 @@ namespace Mix {
             mShaderMgr->createShader("fShader", shaderCode.data(), shaderCode.size(), vk::ShaderStageFlagBits::eFragment);
         }
 
-        void Graphics::buildPipeline() {
-            mPipelineMgr->init(mCore);
+        void Vulkan::BuildPipeline() {
+            mPipelineMgr->Init(mCore);
             auto& pipeline = mPipelineMgr->createPipeline("pipeline", mRenderPass->get(), 0);
 
             auto& vertexShader = mShaderMgr->getModule("vShader");
@@ -328,7 +261,7 @@ namespace Mix {
             pipeline.addShader(vertexShader.stage, vertexShader.module);
             pipeline.addShader(fragShader.stage, fragShader.module);
 
-            pipeline.setVertexInput(Vertex::getBindingDescrip(), Vertex::getAttributeDescrip());
+            pipeline.setVertexInput(Vertex::GetBindingDescrip(), Vertex::GetAttributeDescrip());
             pipeline.setInputAssembly();
 
             vk::Viewport viewPort;
@@ -342,7 +275,7 @@ namespace Mix {
 
             vk::Rect2D scissor;
             scissor.extent = mSwapchain->extent();
-            scissor.offset = { 0,0 };
+            scissor.offset = vk::Offset2D(0, 0);
             pipeline.addScissor(scissor);
 
             pipeline.setRasterization(vk::PolygonMode::eFill,
@@ -364,19 +297,19 @@ namespace Mix {
             pipeline.create();
         }
 
-        void Graphics::buildCommandMgr() {
-            mCommandMgr->init(mCore);
+        void Vulkan::BuildCommandMgr() {
+            mCommandMgr->Init(mCore);
             mCommandMgr->create(vk::QueueFlagBits::eGraphics, vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
         }
 
-        void Graphics::buildFrameBuffers() {
+        void Vulkan::BuildFrameBuffers() {
 
 
             mFramebuffers.resize(mSwapchain->imageCount());
             for (uint32_t i = 0; i < mFramebuffers.size(); ++i) {
                 mFramebuffers[i] = new Framebuffer();
 
-                mFramebuffers[i]->init(mCore);
+                mFramebuffers[i]->Init(mCore);
                 mFramebuffers[i]->setExtent(mSwapchain->extent());
                 mFramebuffers[i]->setLayers(1);
                 mFramebuffers[i]->setTargetRenderPass(mRenderPass->get());
@@ -385,11 +318,11 @@ namespace Mix {
             }
         }
 
-        void Graphics::Graphics::buildUniformBuffers() {
+        void Vulkan::Vulkan::BuildUniformBuffers() {
             uniforms.resize(mSwapchain->imageCount());
 
             for (size_t i = 0; i < uniforms.size(); ++i) {
-                uniforms[i] = Buffer::createBuffer(mCore,
+                uniforms[i] = Buffer::CreateBuffer(mCore,
                                                    mAllocator,
                                                    vk::BufferUsageFlagBits::eUniformBuffer,
                                                    vk::MemoryPropertyFlagBits::eHostVisible |
@@ -398,18 +331,18 @@ namespace Mix {
             }
         }
 
-        void Graphics::Graphics::buildCommandBuffers() {
+        void Vulkan::Vulkan::BuildCommandBuffers() {
             mCommandBuffers = mCommandMgr->allocCommandBuffers(mSwapchain->imageCount(),
                                                                vk::CommandBufferLevel::ePrimary);
         }
 
-        void Graphics::Graphics::buildDescriptorSets() {
+        void Vulkan::Vulkan::BuildDescriptorSets() {
             //create descriptor pool
             mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBuffer, mSwapchain->imageCount() * 5);
             mDescriptorPool->addPoolSize(vk::DescriptorType::eCombinedImageSampler, mSwapchain->imageCount() * 5);
             mDescriptorPool->create(mSwapchain->imageCount() * 5);
 
-            // test allocate camera descriptor set
+            // test Allocate camera descriptor set
             mDescriptorSets = mDescriptorPool->allocDescriptorSet(mDescriptorSetLayout["Camera"]->get(), mSwapchain->imageCount());
 
             // update descriptor sets
@@ -424,11 +357,11 @@ namespace Mix {
                 descriptorWrites[0].pImageInfo = nullptr;
                 descriptorWrites[0].pTexelBufferView = nullptr;
 
-                mCore->device().updateDescriptorSets(descriptorWrites, nullptr);
+                mCore->GetDevice().updateDescriptorSets(descriptorWrites, nullptr);
             }
         }
 
-        void Graphics::Graphics::loadResource() {
+        void Vulkan::Vulkan::LoadResource() {
             mImageMgr->init(mCore, mAllocator);
             mMeshMgr->init(mCore, mAllocator);
 
@@ -449,7 +382,7 @@ namespace Mix {
             viewInfo.subresourceRange.layerCount = 1;
             viewInfo.image = mImageMgr->getImage("front").image;
 
-            texImageView = mCore->device().createImageView(viewInfo);
+            texImageView = mCore->GetDevice().createImageView(viewInfo);
 
             vk::SamplerCreateInfo samplerInfo;
             samplerInfo.magFilter = vk::Filter::eLinear;
@@ -459,19 +392,7 @@ namespace Mix {
             samplerInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
             samplerInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
 
-            sampler = mCore->device().createSampler(samplerInfo);
-
-            /*{
-                Utils::GLTFLoader loader;
-                loader.loadFromGLBStore("E:/Git/vulkan-learning-master/res/models/gltfSample/Duck/glTF-Binary/Duck.glb", "Duck");
-
-                auto cmd = mCommandMgr->allocCommandBuffer();
-                mMeshMgr->init(mCore, mAllocator);
-                mMeshMgr->beginLoad(cmd);
-                mMeshMgr->loadModel(loader.getModelData("Duck"));
-                mMeshMgr->endLoad();
-                mCommandMgr->freeCommandBuffers(cmd);
-            }*/
+            sampler = mCore->GetDevice().createSampler(samplerInfo);
         }
     }
 }

@@ -22,35 +22,23 @@ namespace Mix {
             vk::BufferUsageFlags usages;
             vk::MemoryPropertyFlags memoryProperty;
 
-            void init(std::shared_ptr<Core> core, std::shared_ptr<DeviceAllocator> allocator);
-            virtual ~Buffer() { destory(); }
+            void Init(std::shared_ptr<Core> _core, std::shared_ptr<DeviceAllocator> _allocator);
+            virtual ~Buffer() { Destory(); }
 
-            void setupDescriptor(const vk::DeviceSize size = VK_WHOLE_SIZE, const vk::DeviceSize offset = 0);
-            void copyTo(const void * data, const vk::DeviceSize size);
-            void flush(const vk::DeviceSize size = VK_WHOLE_SIZE, const vk::DeviceSize offset = 0);
-            void invalidate(const vk::DeviceSize size = VK_WHOLE_SIZE, const vk::DeviceSize offset = 0);
-            void destory();
+            void SetupDescriptor(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0);
+            void CopyTo(const void * _data, const vk::DeviceSize _size) const;
+            void Flush(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0) const;
+            void Invalidate(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0) const;
+            void Destory();
 
-            static Buffer* createBuffer(std::shared_ptr<Core> core,
-                                        std::shared_ptr<DeviceAllocator> allocator,
-                                        const vk::BufferUsageFlags usage,
-                                        const vk::MemoryPropertyFlags memoryProperty,
-                                        const vk::DeviceSize size,
-                                        const void * data = nullptr,
-                                        const vk::CommandBuffer& cmd = vk::CommandBuffer(),
-                                        const vk::SharingMode sharingMode = vk::SharingMode::eExclusive);
+            static std::shared_ptr<Buffer> CreateBuffer(std::shared_ptr<Core>            _core,
+                                                        std::shared_ptr<DeviceAllocator> _allocator,
+                                                        const vk::BufferUsageFlags&      _usage,
+                                                        const vk::MemoryPropertyFlags&   _memoryProperty,
+                                                        const vk::DeviceSize             _size,
+                                                        const vk::SharingMode            _sharingMode = vk::SharingMode::eExclusive,
+                                                        const void*                      _data = nullptr);
 
-            static void copyToDeviceBuffer(std::shared_ptr<Core> core,
-                                           std::shared_ptr<DeviceAllocator> allocator,
-                                           const vk::CommandBuffer& cmd,
-                                           const Buffer* dstBuffer,
-                                           const void* data);
-
-            static void copyToDeviceBuffer(std::shared_ptr<Core> core,
-                                           std::shared_ptr<DeviceAllocator> allocator,
-                                           const vk::CommandBuffer& cmd,
-                                           const std::unique_ptr<Buffer>& dstBuffer,
-                                           const void* data);
         private:
             std::shared_ptr<DeviceAllocator> mAllocator;
         };
@@ -58,7 +46,7 @@ namespace Mix {
 #ifdef BUFFER_MANAGER_ENABLE
 
         // buffer manager
-        // BufferManager will create a large buffer for one chunk and sub-allocate from it
+        // BufferManager will create a large buffer for one chunk and sub-Allocate from it
         namespace Test {
             struct BufferBlock {
                 vk::Buffer buffer = nullptr;
@@ -167,9 +155,9 @@ namespace Mix {
                 std::shared_ptr<DeviceAllocator> mAllocator;
             };
 
-            
+
             class UniformBufferManager :public AbstractBufferManager {
-                
+
             };
 
         }
