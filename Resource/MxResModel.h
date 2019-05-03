@@ -52,7 +52,7 @@ namespace Mix {
             vk::Buffer mIndexBuffer;
             uint32_t mIndexCount = 0;
 
-            std::unordered_map<MeshId, std::shared_ptr<Mesh>> mMeshes;
+            std::unordered_map<MeshId, ResourceRef> mMeshes;
         };
     }
 }

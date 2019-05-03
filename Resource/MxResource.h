@@ -2,7 +2,8 @@
 #include "../Mx/MxObject.h"
 #include "../MxVk/MxVkGraphics.h"
 #include "MxResourceBase.h"
-#include "MxResourceLoader.h"
+#include "MxResourceParser.h"
+#include "../Utils/MxReferenceMgr.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <filesystem>
@@ -86,7 +87,7 @@ namespace Mix {
 
         private:
             std::shared_ptr<LoaderRegister> mLoaderRegister;
-            std::unordered_map<Guid, std::shared_ptr<ResourceBase>> mResourceMap;
+            ResourceRefMgr mResourceMap;
 
             bool IsResourceAlreadyLoaded(const std::filesystem::path& _path) const;
             static std::filesystem::path GetGenericPath(const std::string& _file);

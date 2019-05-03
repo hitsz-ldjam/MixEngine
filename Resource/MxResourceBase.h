@@ -4,6 +4,7 @@
 
 #include <utility>
 #include "../Utils/MxUtils.h"
+#include "../Utils/MxReferenceMgr.h"
 
 namespace Mix {
     namespace Resource {
@@ -14,7 +15,6 @@ namespace Mix {
             PNG,
             JPG
         };
-
 
         class ResourceBase {
         public:
@@ -32,8 +32,6 @@ namespace Mix {
 
             virtual ~ResourceBase() = default;
 
-            virtual std::shared_ptr<Object> ToSceneObject() = 0;
-
             Guid GetGuid() const { return mGuid; }
 
             const std::string& FileName()const {
@@ -46,6 +44,9 @@ namespace Mix {
             std::filesystem::path mFilePath;
 
         };
+
+        typedef Utils::ReferenceMgr<Guid, std::shared_ptr<ResourceBase>> ResourceRefMgr;
+        typedef Utils::Reference<ResourceRefMgr> ResourceRef;
     }
 }
 

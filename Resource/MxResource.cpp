@@ -73,11 +73,11 @@ namespace Mix {
         }
 
         void Resources::UnloadAll() {
-            mResourceMap.clear();
+            mResourceMap.Clear();
         }
 
         bool Resources::IsResourceAlreadyLoaded(const std::filesystem::path& _path) const {
-            return mResourceMap.count(Utils::GuidGenerator::GetGuid(_path));
+            return mResourceMap.HasKey(Utils::GuidGenerator::GetGuid(_path));
         }
 
         std::filesystem::path Resources::GetGenericPath(const std::string& _file) {
