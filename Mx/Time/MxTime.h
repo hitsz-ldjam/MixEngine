@@ -6,8 +6,9 @@
 #include <chrono>
 
 namespace Mix {
+    /** @note deprecated */
     class Time {
-        friend class Application;
+        friend class MixEngine;
     public:
         static double getTime() { return time; };
         static double getDeltaTime() { return deltaTime; };

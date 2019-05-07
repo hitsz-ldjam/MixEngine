@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef _MX_EXCEPTION_HPP_
 #define _MX_EXCEPTION_HPP_
 

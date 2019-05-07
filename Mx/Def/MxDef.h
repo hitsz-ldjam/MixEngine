@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 
-#include <vulkan/vulkan.hpp>
+//#include <vulkan/vulkan.hpp>
 
 // include GLI
 #include <gli/gli.hpp>
@@ -42,10 +42,11 @@ namespace Mix {
     typedef uint32_t VersionInt;
     typedef uint32_t LayerIndex;
     typedef std::string Tag;
-    typedef vk::DeviceSize Id;
-    typedef vk::DeviceSize IdStep;
-    typedef Id MeshId;
-    typedef Id ModelId;
+    //typedef vk::DeviceSize Id;
+    //typedef vk::DeviceSize IdStep;
+    //typedef Id MeshId;
+    //typedef Id ModelId;
+    typedef long long Guid;
 
     namespace Version {
         static VersionInt makeVersion(uint32_t major, uint32_t minor, uint32_t patch) {
@@ -78,7 +79,7 @@ namespace Mix {
         constexpr float Pi = 3.141593f;
     }
 
-    enum class Space { World, Self };
+    enum class Space { WORLD, SELF };
 }
 
 #endif // !_MX_DEF_H_

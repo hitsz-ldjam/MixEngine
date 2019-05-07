@@ -1,28 +1,38 @@
-#pragma once
+﻿#pragma once
 
-#ifndef _MIX_ENGINE_H_
-#define _MIX_ENGINE_H_
+#ifndef _MIX_ENGINE_H
+#define _MIX_ENGINE_H
+
+#include <iostream>
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 
-// todo
-#include "Mx/MxDef.h"
+#include "Mx/Input/MxInput.h"
+#include "Mx/Hierarchy/MxHierarchy.h"
+#include "Mx/Window/MxWindow.h"
 
-#include "Mx/MxApplication.h"
-#include "Mx/MxAudioClip.h"
-#include "Mx/MxAudioManager.h"
-#include "Mx/MxBehaviour.h"
-#include "Mx/MxComponent.h"
-#include "Mx/MxGameObject.h"
-#include "Mx/MxTransform.h"
-#include "Mx/MxMesh.h"
-#include "Mx/MxInput.h"
-#include "Mx/MxObject.h"
-#include "Mx/MxTimer.h"
-#include "Mx/MxWindow.h"
-#include "Utils/MxUtils.h"
+// todo: replace with new timing interface
+#include "Mx/Time/MxTime.h"
 
-#include "MxVk/MxVkGraphics.h"
+namespace Mix {
+    class MixEngine {
+    public:
+        MixEngine(int argc = 0, char** argv = nullptr);
+        ~MixEngine();
+        void init();
+        int exec();
+
+    private:
+        bool quit;
+
+        // todo: replace with new timing interface
+        std::chrono::time_point<std::chrono::high_resolution_clock> start, lastFrame;
+
+        void process(const SDL_Event& event);
+        void update();
+        void lateUpdate();
+        void render();
+    };
+}
 
 #endif

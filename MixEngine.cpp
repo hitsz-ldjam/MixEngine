@@ -1,26 +1,36 @@
-#include "MxApplication.h"
+﻿#include "MixEngine.h"
 
 namespace Mix {
-    Application::Application(int argc, char** argv) {
-        // behaviours.reserve(capacity);
+    MixEngine::MixEngine(int argc, char** argv) {
         quit = false;
     }
 
-    Application::~Application() {
-        for(auto be : behaviours) delete be;
-        behaviours.clear();
-        IMG_Quit();
+    MixEngine::~MixEngine() {
         SDL_Quit();
     }
 
-    int Application::exec() {
+    void MixEngine::init() {
+        quit = false;
+
+        if(SDL_Init(SDL_INIT_VIDEO))
+            throw std::runtime_error("[ERROR] Failed to init SDL2");
+
+        Input::init();
+
+        // todo: replace with new timing interface
+        start = lastFrame = std::chrono::high_resolution_clock::now();
+
+        // todo: delete debug code
+        Hierarchy::init();
+    }
+
+    int MixEngine::exec() {
         try {
             init();
+            SDL_Event event;
             while(!quit) {
-                preEvent();
-                while(SDL_PollEvent(&event)) {
+                while(SDL_PollEvent(&event))
                     process(event);
-                }
                 update();
                 lateUpdate();
                 render();
@@ -33,33 +43,7 @@ namespace Mix {
         return EXIT_SUCCESS;
     }
 
-    void Application::init() {
-        if(SDL_Init(SDL_INIT_VIDEO) != 0)
-            throw std::runtime_error("Error: Failed to initialize SDL2");
-
-        if(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) == 0)
-            throw std::runtime_error("Error: Failed to initialize SDL_image");
-
-        // todo: initialize vulkan and other stuff
-
-        AudioManager::getInstance();
-        Input::keyboardState = SDL_GetKeyboardState(nullptr);
-
-        quit = false;
-        start = lastFrame = std::chrono::high_resolution_clock::now();
-
-        for(auto be : behaviours) be->init();
-    }
-
-    void Application::lateUpdate() {
-        for(auto be : behaviours) be->lateUpdate();
-        AudioManager::getInstance().update();
-    }
-
-    void Application::process(SDL_Event& event) {
-
-        // todo: handle and distribute events
-
+    void MixEngine::process(const SDL_Event& event) {
         switch(event.type) {
             case SDL_KEYDOWN:
             {
@@ -90,8 +74,7 @@ namespace Mix {
             }
             case SDL_MOUSEMOTION:
             {
-                // Use SDL_GetMouseState instead (?)
-                break;
+                break; // Use SDL_GetMouseState() for real-time info instead
             }
             case SDL_MOUSEWHEEL:
             {
@@ -103,9 +86,9 @@ namespace Mix {
             case SDL_QUIT:
             {
                 quit = true;
-                for(auto be : behaviours)
+                /*for(auto be : behaviours)
                     if(!be->onApplicationQuit())
-                        quit = false;
+                        quit = false;*/
                 break;
             }
             default:
@@ -113,24 +96,20 @@ namespace Mix {
         }
     }
 
-    void Application::render() {
-        preRender();
-        // todo: call vulkan
-        postRender();
+    void MixEngine::update() {
+        // todo: delete debug code
+        Hierarchy::update();
     }
 
-    void Application::postRender() {
-        for(auto be : behaviours) be->onPostRender();
-    }
+    void MixEngine::lateUpdate() {
+        Input::reset();
 
-    void Application::preEvent() {
+        // todo: replace with new timing interface
         Time::time = Time::getDuration(start);
         Time::deltaTime = Time::getDuration(lastFrame);
         lastFrame = std::chrono::high_resolution_clock::now();
-        Input::reset();
     }
 
-    void Application::preRender() {
-        for(auto be : behaviours) be->onPreRender();
-    }
+    // todo: call vulkan here
+    void MixEngine::render() {}
 }
