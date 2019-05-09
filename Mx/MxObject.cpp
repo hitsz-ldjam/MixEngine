@@ -1,4 +1,5 @@
 #include "MxObject.h"
+#include "MxException.hpp"
 
 namespace Mix {
 

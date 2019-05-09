@@ -16,27 +16,53 @@ namespace Mix {
         const Rtti* mpBase;
 
     public:
-        /** @param COF Unused. */
-        Rtti(const std::string& rttiName, const Rtti* pBase, createObjectFunc COF)
-            :mRttiName(rttiName),
-            mpBase(pBase) {
+        
+        /**
+         * \brief Create a Rtti instance
+         * \param _rttiName The name of class that owns this Rtti instance
+         * \param _pBase The Rtti of the base class
+         * \param COF Not used now
+         */
+        Rtti(const std::string& _rttiName, const Rtti* _pBase, createObjectFunc COF)
+            :mRttiName(_rttiName),
+            mpBase(_pBase) {
         };
 
         ~Rtti() = default;
 
-        const std::string& getName() const { return mRttiName; };
 
-        inline bool isSameType(const Rtti& type) const { return (&type == this); };
-        inline bool isSameType(const Rtti* type) const { return (type == this); };
+        /**
+         * \brief Get the name of the Class that owns this Rtti
+         * \return The name of the class
+         */
+        const std::string& GetName() const { return mRttiName; };
 
-        inline bool isDerived(const Rtti& type) const { isDerived(&type); };
-        bool isDerived(const Rtti* type) const {
+        /**
+         * \brief Check if two Rtti stands for the same type
+         * \param _type Another Rtti
+         */
+        bool IsSameType(const Rtti& _type) const { return (&_type == this); }
+
+        /**
+         * \brief Check if two Rtti stands for the same type
+         * \param _type Another Rtti
+         */
+        bool IsSameType(const Rtti* _type) const { return (_type == this); }
+
+        /**
+         * \brief Check if one Class is derived from another
+         * \param _type Rtti of another Class
+         * \return If this Class is derived from the Class that owns _type
+         */
+        bool IsDerivedFrom(const Rtti& _type) const { return IsDerivedFrom(&_type); }
+
+        bool IsDerivedFrom(const Rtti* _type) const {
             const Rtti* pTemp = this;
 
-            if (pTemp->isSameType(type))
+            if (pTemp->IsSameType(_type))
                 return false;
 
-            while (!pTemp->isSameType(type)) {
+            while (!pTemp->IsSameType(_type)) {
                 if (pTemp->mpBase) {
                     pTemp = mpBase;
                 } else {
@@ -46,7 +72,10 @@ namespace Mix {
             return true;
         }
 
-        inline const Rtti* getBase() const { return mpBase; };
+        /**
+         * \brief Get the base Class of this class, return nullptr if no base Class
+         */
+        const Rtti* GetBase() const { return mpBase; };
 
     };
 }
@@ -54,7 +83,7 @@ namespace Mix {
 #define MX_DECLARE_RTTI \
 public:\
     static Rtti msType;\
-    virtual Rtti& getType() const {return msType;};
+    virtual Rtti& GetType() const {return msType;};
 
 // todo
 //#define MX_IMPLEMENT_RTTI(className,baseClassName)\

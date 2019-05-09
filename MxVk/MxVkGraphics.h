@@ -132,7 +132,7 @@ namespace Mix {
                 int index;
             };
 
-            std::vector<Buffer*> uniforms;
+            std::vector<std::shared_ptr<Buffer>> uniforms;
             Settings mSettings;
         };
     }

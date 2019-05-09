@@ -11,16 +11,30 @@ namespace Mix {
         template<typename _Value>
         struct Referenced {
             size_t count;
-            _Value value;
+            std::shared_ptr<_Value> valuePtr;
 
-            Referenced() :count(0), value() {}
+            Referenced() :count(0), valuePtr() {}
 
-            Referenced(const size_t _count, const _Value& _value) :count(_count), value(_value) {}
+            Referenced(const size_t _count, const _Value& _value) :
+                count(_count),
+                valuePtr(std::make_shared<_Value>(_value)) {
+            }
 
-            Referenced(const size_t _count, _Value&& _value) :count(_count), value(std::move(_value)) {}
+            Referenced(const size_t _count, _Value&& _value) :
+                count(_count),
+                valuePtr(std::make_shared<_Value>(std::move(_value))) {
+            }
+
+            Referenced(const size_t _count, _Value* _ptr) :
+                count(_count),
+                valuePtr(_ptr) {
+            }
 
             template<typename... _Args>
-            explicit Referenced(const size_t _count, _Args&& ... _args) : count(_count), value(std::forward<_Args>(_args)...) {}
+            explicit Referenced(const size_t _count, _Args&& ... _args) :
+                count(_count),
+                valuePtr(std::make_shared<_Value>(std::forward<_Args>(_args)...)) {
+            }
         };
 
         template<typename _RefMgr>
@@ -47,18 +61,18 @@ namespace Mix {
 
             ReferenceMgr& operator=(ReferenceMgr&& _other) noexcept = default;
 
-            ReferenceType AddElement(const _Key& _key, const ValueType& _valuePtr) {
+            ReferenceType AddElement(const _Key& _key, const ValueType& _value) {
                 mMap.emplace(std::piecewise_construct,
                              std::forward_as_tuple(_key),
-                             std::forward_as_tuple(1, _valuePtr));
-                return ReferenceType(this, _key);
+                             std::forward_as_tuple(1, _value));
+                return ReferenceType(this, _key, mMap[_key].valuePtr);
             }
 
-            ReferenceType AddElement(const _Key& _key, ValueType&& _valuePtr) {
+            ReferenceType AddElement(const _Key& _key, ValueType&& _value) {
                 mMap.emplace(std::piecewise_construct,
                              std::forward_as_tuple(_key),
-                             std::forward_as_tuple(1, std::move(_valuePtr)));
-                return ReferenceType(this, _key);
+                             std::forward_as_tuple(1, std::move(_value)));
+                return ReferenceType(this, _key, mMap[_key].valuePtr);
             }
 
             template<typename... _Args>
@@ -66,7 +80,7 @@ namespace Mix {
                 mMap.emplace(std::piecewise_construct,
                              std::forward_as_tuple(_key),
                              std::forward_as_tuple(1, std::forward<_Args>(_args)...));
-                return ReferenceType(this, _key);
+                return ReferenceType(this, _key, mMap[_key].valuePtr);
             }
 
             bool HasKey(const _Key& _key) const {
@@ -79,17 +93,17 @@ namespace Mix {
                 return 0;
             }
 
-            ReferenceType GetRef(const _Key& _key) {
+            ReferenceType GetReference(const _Key& _key) {
                 if (mMap.count(_key)) {
                     ++mMap[_key].count;
-                    return ReferenceType(this, _key);
+                    return ReferenceType(this, _key, mMap[_key].valuePtr);
                 }
                 return nullptr;
             }
 
-            ValueType* GetRawPtr(const _Key& _key) {
+            std::shared_ptr<ValueType> GetPtr(const _Key& _key) {
                 if (mMap.count(_key))
-                    return &mMap[_key].value;
+                    return &mMap[_key].valuePtr;
                 return nullptr;
             }
 
@@ -116,19 +130,19 @@ namespace Mix {
 
         };
 
-        class NullRef :public std::exception {
+        class NullRef final :public std::exception {
         public:
             NullRef() :exception("Try to dereference a NULL Reference") {}
         };
 
         template<typename _RefMgr>
         class Reference {
+            friend _RefMgr;
         public:
             using KeyType = typename _RefMgr::KeyType;
             using ValueType = typename _RefMgr::ValueType;
 
-            Reference(_RefMgr* _mgr, const KeyType _key) :mMgr(_mgr), mKey(_key) {}
-            Reference(const std::nullptr_t&) :mMgr(nullptr), mKey() {}
+            Reference(const std::nullptr_t&) :mMgr(nullptr), mKey(), mPtr() {}
 
             Reference(const Reference& _other) {
                 *this = _other;
@@ -144,8 +158,11 @@ namespace Mix {
 
                 mMgr = _other.mMgr;
                 mKey = _other.mKey;
+                mPtr = _other.mPtr;
+
                 if (mMgr)
                     mMgr->AddRef(mKey);
+
                 return *this;
             }
 
@@ -174,25 +191,41 @@ namespace Mix {
 
             ValueType& operator*() {
                 if (mMgr)
-                    return *(mMgr->GetRawPtr(mKey));
+                    return *(mPtr.lock());
                 throw NullRef();
             }
 
             ValueType* operator->() {
                 if (mMgr)
-                    return mMgr->GetRawPtr(mKey);
+                    return mPtr.lock().get();
                 throw NullRef();
             }
 
             Reference& Swap(Reference& _other) {
                 std::swap(mMgr, _other.mMgr);
                 std::swap(mKey, _other.mKey);
+                mPtr.swap(_other.mPtr);
                 return *this;
             }
 
+            std::shared_ptr<ValueType> Get() const {
+                return mPtr.lock();
+            }
+
+            template<typename _Ty>
+            std::shared_ptr<_Ty> Get() const {
+                return std::dynamic_pointer_cast<_Ty>(mPtr.lock());
+            }
+
+
         private:
+            Reference(_RefMgr* _mgr, const KeyType& _key, std::shared_ptr<ValueType> _ptr) :
+                mMgr(_mgr), mKey(_key), mPtr(_ptr) {
+            }
+
             _RefMgr* mMgr;
             KeyType mKey;
+            std::weak_ptr<ValueType> mPtr;
         };
 
     }

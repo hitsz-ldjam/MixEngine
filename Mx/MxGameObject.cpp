@@ -6,7 +6,7 @@ namespace Mix {
 
     std::vector<GameObject*> GameObject::mGameObjList;
 
-    GameObject::GameObject(GameObject && _obj) {
+    GameObject::GameObject(GameObject && _obj) noexcept {
         *this = std::move(_obj);
     }
 
@@ -19,7 +19,7 @@ namespace Mix {
         mLayer = _obj.mLayer;
 
         for (auto child : mChildren) {
-            this->addChild(child);
+            this->AddChild(child);
         }
 
         for (auto comp : mComponents) {
@@ -39,8 +39,8 @@ namespace Mix {
         return _comp;
     }
 
-    void GameObject::removeComponent(Component * comp) {
-        auto it = std::find(mComponents.begin(), mComponents.end(), comp);
+    void GameObject::RemoveComponent(Component * _comp) {
+        auto it = std::find(mComponents.begin(), mComponents.end(), _comp);
         if (it != mComponents.end()) {
             mComponents.erase(it);
         }

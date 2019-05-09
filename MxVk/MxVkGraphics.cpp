@@ -141,9 +141,7 @@ namespace Mix {
             mCore->GetDevice().destroyImageView(texImageView);
             mCore->GetDevice().destroySampler(sampler);
 
-            for (auto& buffer : uniforms) {
-                delete buffer;
-            }
+            uniforms.clear();
 
             for (auto& frameBuffer : mFramebuffers)
                 delete frameBuffer;
@@ -318,7 +316,7 @@ namespace Mix {
             }
         }
 
-        void Vulkan::Vulkan::BuildUniformBuffers() {
+        void Vulkan::BuildUniformBuffers() {
             uniforms.resize(mSwapchain->imageCount());
 
             for (size_t i = 0; i < uniforms.size(); ++i) {

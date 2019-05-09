@@ -1,9 +1,8 @@
 #include "MxResourceParser.h"
-#include "MxResModel.h"
 
 namespace Mix {
     namespace Resource {
-        std::shared_ptr<ResourceBase> GltfParser::Load(const std::filesystem::path& _path, const ResourceType _type) {
+        std::shared_ptr<Object> GltfParser::Load(const std::filesystem::path& _path, const ResourceType _type) {
             Utils::GltfLoader::ModelData modelData;
             bool success = false;
             if (_type == ResourceType::GLTF_BIN)
@@ -14,10 +13,12 @@ namespace Mix {
             if (!success)
                 return nullptr;
 
-            return ParseModelData(modelData);
+            auto model = ParseModelData(_path, modelData);
+            mRefMgr->AddElement(model->GetGuid(), model);
+            return Parse(model->GetGuid());
         }
 
-        std::shared_ptr<ResourceBase> GltfParser::Load(const std::filesystem::path& _path, const std::string& _ext) {
+        std::shared_ptr<Object> GltfParser::Load(const std::filesystem::path& _path, const std::string& _ext) {
             Utils::GltfLoader::ModelData modelData;
             bool success = false;
             if (_ext == "glb")
@@ -28,75 +29,26 @@ namespace Mix {
             if (!success)
                 return nullptr;
 
-            return ParseModelData(modelData);
+            auto model = ParseModelData(_path, modelData);
+            mRefMgr->AddElement(model->GetGuid(), model);
+            return Parse(model->GetGuid());
         }
 
-        std::shared_ptr<ResourceBase> GltfParser::ParseModelData(const Utils::GltfLoader::ModelData& _modelData) {
-            auto vulkan = Object::FindObjectOfType<Graphics::Vulkan>();
-            auto vkAllocator = vulkan->GetAllocator();
-            auto cmd = vulkan->GetCommandMgr()->allocCommandBuffer();
+        std::shared_ptr<Object> GltfParser::Parse(const Guid& _key) {
+            auto ref = mRefMgr->GetReference(_key);
+            auto ptr = ref.Get<ResModel>();
 
-            // upload vertex data
-            vk::DeviceSize byteSize = _modelData.vertices.size() * sizeof(Graphics::Vertex);
-            const auto vertexStaging = Graphics::Buffer::CreateBuffer(vulkan->GetCore(),
-                                                                vkAllocator,
-                                                                vk::BufferUsageFlagBits::eTransferSrc,
-                                                                vk::MemoryPropertyFlagBits::eHostVisible |
-                                                                vk::MemoryPropertyFlagBits::eHostCoherent,
-                                                                byteSize,
-                                                                vk::SharingMode::eExclusive,
-                                                                _modelData.vertices.data());
-
-            const auto vertexBuffer = Graphics::Buffer::CreateBuffer(vulkan->GetCore(),
-                                                               vkAllocator,
-                                                               vk::BufferUsageFlagBits::eVertexBuffer |
-                                                               vk::BufferUsageFlagBits::eTransferDst,
-                                                               vk::MemoryPropertyFlagBits::eDeviceLocal,
-                                                               byteSize);
-
-            const vk::BufferCopy vertexBufferCopy(0, 0, byteSize);
-
-            // upload index data
-            byteSize = _modelData.indices.size() * sizeof(uint32_t);
-            const auto indexStaging = Graphics::Buffer::CreateBuffer(vulkan->GetCore(),
-                                                               vkAllocator,
-                                                               vk::BufferUsageFlagBits::eTransferSrc,
-                                                               vk::MemoryPropertyFlagBits::eHostVisible |
-                                                               vk::MemoryPropertyFlagBits::eHostCoherent,
-                                                               byteSize,
-                                                               vk::SharingMode::eExclusive,
-                                                               _modelData.indices.data());
-
-            const auto indexBuffer = Graphics::Buffer::CreateBuffer(vulkan->GetCore(),
-                                                              vkAllocator,
-                                                              vk::BufferUsageFlagBits::eTransferDst |
-                                                              vk::BufferUsageFlagBits::eIndexBuffer,
-                                                              vk::MemoryPropertyFlagBits::eDeviceLocal,
-                                                              byteSize);
-
-            const vk::BufferCopy indexBufferCopy(0, 0, byteSize);
-
-            cmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
-            cmd.copyBuffer(vertexStaging->buffer, vertexBuffer->buffer, vertexBufferCopy);
-            cmd.copyBuffer(indexStaging->buffer, indexBuffer->buffer, indexBufferCopy);
-            cmd.end();
-
-            vk::SubmitInfo submitInfo;
-            submitInfo.commandBufferCount = 1;
-            submitInfo.pCommandBuffers = &cmd;
-
-            vulkan->GetCore()->GetQueues().transfer.value().submit(submitInfo, mFence.get());
-            vulkan->GetLogicalDevice().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
-            vulkan->GetLogicalDevice().resetFences(mFence.get());
-
-            // todo complete this
-            auto model = std::make_shared<Model>();
-            for(auto& mesh:_modelData.meshes) {
-                
+            auto gameObject = std::shared_ptr<GameObject>();
+            gameObject->SetModelRef(ref);
+            for (auto& mesh : ptr->meshes) {
+                auto child = new GameObject();
+                auto filter = child->AddComponent<MeshFilter>();
+                filter->SetMesh(std::make_shared<Mesh>(mesh));
             }
-        }
 
-        //GameObject* Vulkan::CreateModelObj(const Utils::ModelData& _modelData) {
+            return gameObject;
+#pragma region TODO_IMPLEMENT
+            //GameObject* Vulkan::CreateModelObj(const Utils::ModelData& _modelData) {
         //    // test
         //    vk::DescriptorImageInfo imageInfo;
         //    imageInfo.imageView = texImageView;
@@ -169,5 +121,98 @@ namespace Mix {
 
         //    return obj;
         //}
+#pragma endregion
+        }
+
+        std::shared_ptr<ResModel> GltfParser::ParseModelData(const std::filesystem::path&        _path,
+                                                             const Utils::GltfLoader::ModelData& _modelData) {
+            const auto vulkan = Object::FindObjectOfType<Graphics::Vulkan>();
+            const auto vkAllocator = vulkan->GetAllocator();
+            auto cmd = vulkan->GetCommandMgr()->allocCommandBuffer();
+
+            // upload vertex data
+            vk::DeviceSize byteSize = _modelData.vertices.size() * sizeof(Graphics::Vertex);
+            const auto vertexStaging = Graphics::Buffer::CreateBuffer(vulkan->GetCore(),
+                                                                      vkAllocator,
+                                                                      vk::BufferUsageFlagBits::eTransferSrc,
+                                                                      vk::MemoryPropertyFlagBits::eHostVisible |
+                                                                      vk::MemoryPropertyFlagBits::eHostCoherent,
+                                                                      byteSize,
+                                                                      vk::SharingMode::eExclusive,
+                                                                      _modelData.vertices.data());
+
+            const auto vertexBuffer = Graphics::Buffer::CreateBuffer(vulkan->GetCore(),
+                                                                     vkAllocator,
+                                                                     vk::BufferUsageFlagBits::eVertexBuffer |
+                                                                     vk::BufferUsageFlagBits::eTransferDst,
+                                                                     vk::MemoryPropertyFlagBits::eDeviceLocal,
+                                                                     byteSize);
+
+            const vk::BufferCopy vertexBufferCopy(0, 0, byteSize);
+
+            // upload index data
+            byteSize = _modelData.indices.size() * sizeof(uint32_t);
+            const auto indexStaging = Graphics::Buffer::CreateBuffer(vulkan->GetCore(),
+                                                                     vkAllocator,
+                                                                     vk::BufferUsageFlagBits::eTransferSrc,
+                                                                     vk::MemoryPropertyFlagBits::eHostVisible |
+                                                                     vk::MemoryPropertyFlagBits::eHostCoherent,
+                                                                     byteSize,
+                                                                     vk::SharingMode::eExclusive,
+                                                                     _modelData.indices.data());
+
+            const auto indexBuffer = Graphics::Buffer::CreateBuffer(vulkan->GetCore(),
+                                                                    vkAllocator,
+                                                                    vk::BufferUsageFlagBits::eTransferDst |
+                                                                    vk::BufferUsageFlagBits::eIndexBuffer,
+                                                                    vk::MemoryPropertyFlagBits::eDeviceLocal,
+                                                                    byteSize);
+
+            const vk::BufferCopy indexBufferCopy(0, 0, byteSize);
+
+            cmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+            cmd.copyBuffer(vertexStaging->buffer, vertexBuffer->buffer, vertexBufferCopy);
+            cmd.copyBuffer(indexStaging->buffer, indexBuffer->buffer, indexBufferCopy);
+            cmd.end();
+
+            vk::SubmitInfo submitInfo;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &cmd;
+
+            vulkan->GetCore()->GetQueues().transfer.value().submit(submitInfo, mFence.get());
+            vulkan->GetLogicalDevice().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
+            vulkan->GetLogicalDevice().resetFences(mFence.get());
+
+            auto model = std::make_shared<ResModel>(Utils::GuidGenerator::GetGuid(_path),
+                                                    _path.filename().string(),
+                                                    _path);
+
+            model->meshes.reserve(_modelData.meshes.size());
+            model->vertexBuffer = vertexBuffer;
+            model->indexBuffer = indexBuffer;
+            model->vertexCount = _modelData.vertices.size();
+            model->indexCount = _modelData.indices.size();
+
+            for (auto& meshData : _modelData.meshes) {
+                auto mesh = std::make_shared<ResMesh>(Utils::GuidGenerator::GetGuid(_path.generic_string() + "/" + meshData.name),
+                                                      meshData.name,
+                                                      _path);
+
+                mesh->vertexBuffer = vertexBuffer;
+                mesh->indexBuffer = indexBuffer;
+
+                mesh->submeshes.reserve(meshData.primitives.size());
+                for (auto& submesh : meshData.primitives)
+                    mesh->submeshes.emplace_back(submesh.firstVertex,
+                                                 submesh.vertexCount,
+                                                 submesh.firstIndex,
+                                                 submesh.indexCount);
+
+                model->meshes.push_back(mRefMgr->AddElement(mesh->GetGuid(),
+                                        std::static_pointer_cast<ResourceBase>(mesh)));
+            }
+
+            return model;
+        }
     }
 }

@@ -5,10 +5,12 @@
 #include <set>
 #include <unordered_set>
 #include <boost/algorithm/string.hpp>
+#include "../Mx/MxGameObject.h"
 #include "MxResourceBase.h"
 #include "../MxVk/MxVkGraphics.h"
 #include "../Utils/MxReferenceMgr.h"
 #include "../Engine/MxLog.h"
+#include "MxResModel.h"
 
 namespace Mix {
     namespace Resource {
@@ -24,9 +26,11 @@ namespace Mix {
 
             ResourceParserBase& operator=(ResourceParserBase&& _other) noexcept = default;
 
-            virtual std::shared_ptr<ResourceBase> Load(const std::filesystem::path& _path, const ResourceType _type) = 0;
+            virtual std::shared_ptr<Object> Load(const std::filesystem::path& _path, const ResourceType _type) = 0;
 
-            virtual std::shared_ptr<ResourceBase> Load(const std::filesystem::path& _path, const std::string& _ext) = 0;
+            virtual std::shared_ptr<Object> Load(const std::filesystem::path& _path, const std::string& _ext) = 0;
+
+            virtual std::shared_ptr<Object> Parse(const Guid& _key) = 0;
 
             virtual ~ResourceParserBase() = default;
 
@@ -70,17 +74,19 @@ namespace Mix {
                 mSupportedExts.insert("glb");
             }
 
-            std::shared_ptr<ResourceBase> Load(const std::filesystem::path& _path, const ResourceType _type) override;
+            std::shared_ptr<Object> Load(const std::filesystem::path& _path, const ResourceType _type) override;
 
-            std::shared_ptr<ResourceBase> Load(const std::filesystem::path& _path, const std::string& _ext) override;
+            std::shared_ptr<Object> Load(const std::filesystem::path& _path, const std::string& _ext) override;
+
+            std::shared_ptr<Object> Parse(const Guid& _key) override;
         private:
             Utils::GltfLoader mLoader;
             Graphics::Fence mFence;
 
-            std::shared_ptr<ResourceBase> ParseModelData(const Utils::GltfLoader::ModelData& _modelData);
+            std::shared_ptr<ResModel> ParseModelData(const std::filesystem::path&        _path,
+                                                   const Utils::GltfLoader::ModelData& _modelData);
         };
     }
 }
 
 #endif // !MX_RESOURCE_LOADER_H_
-

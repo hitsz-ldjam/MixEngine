@@ -3,56 +3,67 @@
 #define MX_MODEL_H_
 
 #include "../Resource/MxResource.h"
+#include "../MxVk/MxVkAllocator.h"
+#include "../MxVk/MxVkBuffer.h"
 
 namespace Mix {
     namespace Resource {
-        class Mesh :public ResourceBase {
-            friend class ModelParseBase;
+        class ResMesh :public ResourceBase {
         public:
-
-
-            Mesh(const Guid _guid, const std::string& _fileName, std::filesystem::path& _filePath)
+            ResMesh(const Guid _guid, const std::string& _fileName, const std::filesystem::path& _filePath)
                 : ResourceBase(_guid, _fileName, _filePath) {
             }
 
-            size_t SubmeshCount() const {
-                return mSubmeshes.size();
-            }
-
             struct SubmeshInfo {
-                uint32_t firstVertex;
-                uint32_t vertexCount;
-                uint32_t firstIndex;
-                uint32_t indexCount;
+                uint32_t firstVertex = 0;
+                uint32_t vertexCount = 0;
+                uint32_t firstIndex = 0;
+                uint32_t indexCount = 0;
+
+                SubmeshInfo() = default;
+
+                SubmeshInfo(const uint32_t _firstVertex,
+                            const uint32_t _vertexCount,
+                            const uint32_t _firstIndex,
+                            const uint32_t _indexCount) :
+                    firstVertex(_firstVertex),
+                    vertexCount(_vertexCount),
+                    firstIndex(_firstIndex),
+                    indexCount(_indexCount) {
+                }
             };
 
-            std::vector<SubmeshInfo> mSubmeshes;
+            std::vector<SubmeshInfo> submeshes;
 
+            Graphics::MemoryBlock vertexMem;
+            std::shared_ptr<Graphics::Buffer> vertexBuffer;
+
+            Graphics::MemoryBlock indexMem;
+            std::shared_ptr<Graphics::Buffer> indexBuffer;
         };
 
 
-        class Model :public ResourceBase {
-            friend class ModelParseBase;
+        class ResModel :public ResourceBase {
         public:
-            const vk::Buffer& GetVertexBuffer() const { return mVertexBuffer; }
+            ResModel(const Guid _guid, const std::string& _fileName, const std::filesystem::path& _filePath)
+                : ResourceBase(_guid, _fileName, _filePath) {
+            }
 
-            const uint32_t& GetVertexCount()const { return mVertexCount; }
+            const vk::Buffer& GetVertexBuffer() const { return vertexBuffer->buffer; }
 
-            const uint32_t& GetIndexCount()const { return mIndexCount; }
+            const uint32_t& GetVertexCount()const { return vertexCount; }
 
-            const vk::Buffer& GetIndexBuffer() const { return mIndexBuffer; }
-        private:
+            const uint32_t& GetIndexCount()const { return indexCount; }
 
+            const vk::Buffer& GetIndexBuffer() const { return indexBuffer->buffer; }
 
-            Graphics::MemoryBlock mVertexMem;
-            vk::Buffer mVertexBuffer;
-            uint32_t mVertexCount = 0;
+            std::shared_ptr<Graphics::Buffer> vertexBuffer;
+            uint32_t vertexCount = 0;
 
-            Graphics::MemoryBlock mIndexMem;
-            vk::Buffer mIndexBuffer;
-            uint32_t mIndexCount = 0;
+            std::shared_ptr<Graphics::Buffer> indexBuffer;
+            uint32_t indexCount = 0;
 
-            std::unordered_map<MeshId, ResourceRef> mMeshes;
+            std::vector<ResourceRef> meshes;
         };
     }
 }

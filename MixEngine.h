@@ -15,7 +15,7 @@
 #include "Mx/MxComponent.h"
 #include "Mx/MxGameObject.h"
 #include "Mx/MxTransform.h"
-#include "Mx/MxMesh.h"
+#include "Mx/MxMeshFilter.h"
 #include "Mx/MxInput.h"
 #include "Mx/MxObject.h"
 #include "Mx/MxTimer.h"

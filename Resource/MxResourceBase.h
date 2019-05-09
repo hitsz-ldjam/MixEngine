@@ -16,10 +16,14 @@ namespace Mix {
             JPG
         };
 
+        class ResourceBase;
+        typedef Utils::ReferenceMgr<Guid, std::shared_ptr<ResourceBase>> ResourceRefMgr;
+        typedef Utils::Reference<ResourceRefMgr> ResourceRef;
+
         class ResourceBase {
         public:
-            ResourceBase(const Guid _guid, std::string _fileName, std::filesystem::path& _filePath) :
-                mGuid(_guid), mFileName(std::move(_fileName)), mFilePath(_filePath) {
+            ResourceBase(const Guid _guid, std::string _fileName, std::filesystem::path _filePath) :
+                mGuid(_guid), mFileName(std::move(_fileName)), mFilePath(std::move(_filePath)) {
             }
 
             ResourceBase(const ResourceBase& _other) = delete;
@@ -38,15 +42,13 @@ namespace Mix {
                 return mFileName;
             }
 
-        private:
+        protected:
             Guid mGuid = 0;
             std::string mFileName;
             std::filesystem::path mFilePath;
 
         };
 
-        typedef Utils::ReferenceMgr<Guid, std::shared_ptr<ResourceBase>> ResourceRefMgr;
-        typedef Utils::Reference<ResourceRefMgr> ResourceRef;
     }
 }
 

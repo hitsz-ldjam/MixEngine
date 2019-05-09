@@ -1,6 +1,4 @@
 #include "MxResource.h"
-#include <boost/format.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
 
 namespace Mix {
     namespace Resource {
@@ -39,9 +37,6 @@ namespace Mix {
             }
 
             // chech if file has already been loaded
-            if (IsResourceAlreadyLoaded(path))
-                return mResourceMap[Utils::GuidGenerator::GetGuid(path)]->ToSceneObject();
-
             const auto extension = path.extension().string().substr(1);
             const auto loader = mLoaderRegister->FindLoaderByExt(extension);
             if (loader == nullptr) {
@@ -49,8 +44,10 @@ namespace Mix {
                 return nullptr;
             }
 
-            mResourceMap[Utils::GuidGenerator::GetGuid(path)] = loader->Load(path, extension);
-            return mResourceMap[Utils::GuidGenerator::GetGuid(path)]->ToSceneObject();
+            if (IsResourceAlreadyLoaded(path))
+                return loader->Parse(Utils::GuidGenerator::GetGuid(path));
+
+            return loader->Load(path, extension);
         }
 
 
@@ -59,8 +56,11 @@ namespace Mix {
             const auto path = GetGenericPath(_file);
 
             // chech if file has already been loaded
-            if (IsResourceAlreadyLoaded(path))
-                return mResourceMap[Utils::GuidGenerator::GetGuid(path)]->ToSceneObject();
+            if (IsResourceAlreadyLoaded(path)) {
+
+                auto ref = mResourceRefMgr.GetReference(Utils::GuidGenerator::GetGuid(path));
+
+            }
 
             const auto loader = mLoaderRegister->FindLoaderByType(_type);
             if (loader == nullptr) {
@@ -68,16 +68,18 @@ namespace Mix {
                 return nullptr;
             }
 
-            mResourceMap[Utils::GuidGenerator::GetGuid(path)] = loader->Load(path, _type);
-            return mResourceMap[Utils::GuidGenerator::GetGuid(path)]->ToSceneObject();
+            if (IsResourceAlreadyLoaded(path))
+                return loader->Parse(Utils::GuidGenerator::GetGuid(path));
+
+            return loader->Load(path, _type);
         }
 
         void Resources::UnloadAll() {
-            mResourceMap.Clear();
+            mResourceRefMgr.Clear();
         }
 
         bool Resources::IsResourceAlreadyLoaded(const std::filesystem::path& _path) const {
-            return mResourceMap.HasKey(Utils::GuidGenerator::GetGuid(_path));
+            return mResourceRefMgr.HasKey(Utils::GuidGenerator::GetGuid(_path));
         }
 
         std::filesystem::path Resources::GetGenericPath(const std::string& _file) {

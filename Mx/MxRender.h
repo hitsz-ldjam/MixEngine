@@ -7,11 +7,6 @@
 #include "../MxVk/MxVkUniform.h"
 
 namespace Mix {
-    struct RenderInfo {
-        Mix::MeshFilter::MeshRef meshRef;
-        // material
-    };
-
     class MeshRenderer :public Component {
     public:
         MeshRenderer(std::vector<std::shared_ptr<Graphics::Buffer>> _buffers,

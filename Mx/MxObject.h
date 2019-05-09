@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 #define MX_DECLARE_CLASS_FACTORY \
 public:\
@@ -53,21 +54,58 @@ namespace Mix {
         Object() {
             AddObject(this);
         }
+
         virtual ~Object() = 0 {};
         
-    public:
-        bool IsSameType(const Rtti& _type) const { return(&getType() == &_type); }
-        bool IsSameType(const Rtti* _pType) const { return (&getType() == _pType); }
-        bool IsSameType(const Object& _object) const { return (&getType() == &_object.getType()); }
-        bool IsSameType(const Object* _pObject) const { return (&getType() == &_pObject->getType()); }
+        /**
+         * \brief Check if this is the same type as _type
+         */
+        bool IsSameType(const Rtti& _type) const { return(&GetType() == &_type); }
 
+        /**
+         * \brief Check if this is the same type as _type
+         */
+        bool IsSameType(const Rtti* _type) const { return (&GetType() == _type); }
+
+        /**
+         * \brief Check if this is the same type as _object
+         */
+        bool IsSameType(const Object& _object) const { return (&GetType() == &_object.GetType()); }
+
+        /**
+         * \brief Check if this is the same type as _object
+         */
+        bool IsSameType(const Object* _object) const { return (&GetType() == &_object->GetType()); }
+
+        /**
+         * \brief Check if this is derived from the Class that owns _type
+         */
         bool IsDerived(const Rtti& _type) const { return IsDerived(&_type); }
-        bool IsDerived(const Rtti* _pType) const { return getType().isDerived(_pType); }
+
+        /**
+         * \brief Check if this is derived from the Class that owns _type
+         */
+        bool IsDerived(const Rtti* _type) const { return GetType().IsDerivedFrom(_type); }
+
+        /**
+         * \brief Check if this is derived from _object
+         */
         bool IsDerived(const Object& _object) const { return IsDerived(&_object); }
-        bool IsDerived(const Object* _pObject) const { return getType().isDerived(&_pObject->getType()); }
 
-        const std::string& GetTypeName() const { return getType().getName(); }
+        /**
+         * \brief Check if this is derived from _object
+         */
+        bool IsDerived(const Object* _object) const { return GetType().IsDerivedFrom(&_object->GetType()); }
 
+
+        /**
+         * \brief Get the type name of this
+         */
+        const std::string& GetTypeName() const { return GetType().GetName(); }
+
+        /**
+         * \brief Get the name of this
+         */
         const std::string& GetName() const { return mName; }
 
     protected:
@@ -75,21 +113,39 @@ namespace Mix {
 
         //static
     public:
+
+        /**
+         * \brief Find an object of T type, return nullptr if there is no one exists
+         */
         template<typename T>
         static T* FindObjectOfType();
 
+        /**
+         * \brief Find all objects of T type
+         */
         template<typename T>
         static std::vector<T*> FindObjectsOfType();
 
     protected:
+        /**
+         * \brief Register factory function to global factory function map
+         * \note Not used now
+         */
         static bool RegisterFactoryFunc(const std::string& _typeName, FactoryFunction _func);
 
     private:
         static std::vector<Object*> mObjectList;
+
+        /**
+         * \brief Add an object to global Object list
+         */
         static void AddObject(Object* _obj) {
             mObjectList.push_back(_obj);
         }
 
+        /**
+         * \brief Remove an object from global Object list
+         */
         static void RemoveObject(Object* _obj) {
             const auto it = std::find(mObjectList.begin(), mObjectList.end(), _obj);
             if (it == mObjectList.end())

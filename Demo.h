@@ -57,7 +57,7 @@ public:
         mGraphics.Build();
 
         mObj = new Mix::GameObject();
-        mObj->addChild(mGraphics.CreateModelObj(mGltfLoader.LoadFromGlb(
+        mObj->AddChild(mGraphics.CreateModelObj(mGltfLoader.LoadFromGlb(
             ,
             "E:/Git/vulkan-learning-master/res/models/gltfSample/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", "DamagedHelmet")));
         mTimer.Start();

@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MX_VK_COMMAND_H_
-#define _MX_VK_COMMAND_H_
+#ifndef MX_VK_COMMAND_H_
+#define MX_VK_COMMAND_H_
 
 
 #include "MxVkCore.h"
@@ -36,4 +36,4 @@ namespace Mix {
         };
     }
 }
-#endif // !_MX_VK_COMMAND_H_
+#endif // !MX_VK_COMMAND_H_

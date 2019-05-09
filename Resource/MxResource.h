@@ -6,6 +6,8 @@
 #include "../Utils/MxReferenceMgr.h"
 #include <unordered_map>
 #include <unordered_set>
+#include <boost/format.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <filesystem>
 
 namespace Mix {
@@ -87,7 +89,7 @@ namespace Mix {
 
         private:
             std::shared_ptr<LoaderRegister> mLoaderRegister;
-            ResourceRefMgr mResourceMap;
+            ResourceRefMgr mResourceRefMgr;
 
             bool IsResourceAlreadyLoaded(const std::filesystem::path& _path) const;
             static std::filesystem::path GetGenericPath(const std::string& _file);

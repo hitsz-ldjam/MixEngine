@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MX_VK_BUFFER_H_
-#define _MX_VK_BUFFER_H_
+#ifndef MX_VK_BUFFER_H_
+#define MX_VK_BUFFER_H_
 
 #include <memory>
 #include "MxVkCore.h"
@@ -26,9 +26,13 @@ namespace Mix {
             virtual ~Buffer() { Destory(); }
 
             void SetupDescriptor(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0);
+
             void CopyTo(const void * _data, const vk::DeviceSize _size) const;
+
             void Flush(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0) const;
+
             void Invalidate(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0) const;
+
             void Destory();
 
             static std::shared_ptr<Buffer> CreateBuffer(std::shared_ptr<Core>            _core,
@@ -165,4 +169,4 @@ namespace Mix {
 #endif // BUFFER_MANAGER_ENABLE
     }
 }
-#endif // !_MX_VK_BUFFER_H_
+#endif // !MX_VK_BUFFER_H_
