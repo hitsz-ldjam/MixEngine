@@ -1,68 +1,136 @@
-﻿#include "MxGameObject.h"
+#include "MxGameObject.h"
+#include <utility>
 
 namespace Mix {
-    MX_IMPLEMENT_RTTI_NoCreateFunc(GameObject, Object);
-    MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(GameObject);
+    MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(GameObject, Object)
+    MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(GameObject)
 
-    std::vector<GameObject*> GameObject::mGameObjList;
+    std::vector<GameObject*> GameObject::sGameObjList;
 
-    GameObject::GameObject(GameObject && _obj) {
-        *this = std::move(_obj);
+    GameObject::GameObject(const std::string& _name, Tag _tag, const LayerIndex _layer, const bool _isStatic)
+        : mParent(nullptr),
+          mActiveInHierarchy(true),
+          mActiveSelf(true),
+          mIsStatic(_isStatic),
+          mLayer(_layer),
+          mTag(std::move(_tag)),
+          mTransform(nullptr) {
+        mName = _name;
+        AddGameObject(this);
+        mTransform = addComponent<Transform>();
+        setActive(mActiveSelf);
     }
 
-    GameObject & GameObject::operator=(GameObject && _obj) {
+    GameObject::GameObject(GameObject&& _obj): Object(std::move(_obj)) {
         mParent = _obj.mParent;
         mChildren = std::move(_obj.mChildren);
         mComponents = std::move(_obj.mComponents);
-        mActive = _obj.mActive;
-        mName = _obj.mName;
+        mActiveInHierarchy = _obj.mActiveInHierarchy;
+        mActiveSelf = _obj.mActiveSelf;
+        mIsStatic = _obj.mIsStatic;
         mLayer = _obj.mLayer;
+        mTag = std::move(_obj.mTag);
+        mTransform = getComponent<Transform>();
 
-        for (auto child : mChildren) {
+        for(auto child : mChildren) {
             this->addChild(child);
         }
 
-        for (auto comp : mComponents) {
-            comp->SetGameObj(this);
+        for(auto comp : mComponents) {
+            comp->setGameObject(this);
+        }
+    }
+
+    GameObject& GameObject::operator=(GameObject&& _obj) {
+        mParent = _obj.mParent;
+        mChildren = std::move(_obj.mChildren);
+        mComponents = std::move(_obj.mComponents);
+        mActiveInHierarchy = _obj.mActiveInHierarchy;
+        mActiveSelf = _obj.mActiveSelf;
+        mIsStatic = _obj.mIsStatic;
+        mLayer = _obj.mLayer;
+        mTag = std::move(_obj.mTag);
+        mTransform = getComponent<Transform>();
+
+        for(auto child : mChildren) {
+            this->addChild(child);
         }
 
-        _obj.mParent = nullptr;
+        for(auto comp : mComponents) {
+            comp->setGameObject(this);
+        }
+
+        Object::operator=(std::move(_obj));
+
         return *this;
     }
 
-    Component * GameObject::AddComponent(Component * _comp) {
-        if (!_comp)
+    GameObject::~GameObject() {
+        if(mParent)
+            mParent->removeChild(this);
+
+        for(auto it = mChildren.begin(); it != mChildren.end();)
+            delete (*it++);
+
+        for(auto comp : mComponents)
+            delete comp;
+
+        RemoveGameObject(this);
+    }
+
+    Component* GameObject::addComponent(Component* _comp) {
+        if(!_comp)
             return nullptr;
 
-        _comp->SetGameObj(this);
+        _comp->setGameObject(this);
         mComponents.insert(_comp);
         return _comp;
     }
 
-    void GameObject::removeComponent(Component * comp) {
-        auto it = std::find(mComponents.begin(), mComponents.end(), comp);
-        if (it != mComponents.end()) {
+    void GameObject::removeComponent(Component* _comp) {
+        auto it = std::find(mComponents.begin(), mComponents.end(), _comp);
+        if(it != mComponents.end()) {
             mComponents.erase(it);
         }
     }
 
-    GameObject * GameObject::Find(const std::string & _name) {
-        auto it = std::find_if(mGameObjList.begin(), mGameObjList.end(), [&](const GameObject* obj) ->bool {return obj->mName == _name; });
-        if (it == mGameObjList.end())
+    void GameObject::addChild(GameObject* _obj) {
+        if(_obj->mParent == this)
+            return;
+
+        if(_obj->mParent)
+            _obj->mParent->removeChild(_obj);
+
+        _obj->mParent = this;
+        _obj->setActive(_obj->mActiveSelf);
+        mChildren.insert(_obj);
+    }
+
+    void GameObject::removeChild(GameObject* _obj) {
+        if(_obj->mParent != this)
+            return;
+
+        _obj->mParent = nullptr;
+        mChildren.erase(std::find(mChildren.begin(), mChildren.end(), _obj));
+    }
+
+    GameObject* GameObject::Find(const std::string& _name) {
+        auto it = std::find_if(sGameObjList.begin(), sGameObjList.end(), [&](const GameObject* _obj) -> bool { return _obj->mName == _name; });
+        if(it == sGameObjList.end())
             return nullptr;
 
         return *it;
     }
 
-    std::vector<GameObject*> GameObject::FindGameObjsWithTag(const Tag & _tag) {
+    std::vector<GameObject*> GameObject::FindGameObjectsWithTag(const Tag& _tag) {
         std::vector<GameObject*> results;
-        std::for_each(mGameObjList.begin(), mGameObjList.end(), [&](GameObject* obj)mutable {if (obj->mTag == _tag)results.push_back(obj); });
+        std::for_each(sGameObjList.begin(), sGameObjList.end(), [&](GameObject* _obj)mutable { if(_obj->mTag == _tag)results.push_back(_obj); });
         return results;
     }
 
-    GameObject * GameObject::FindGameObjWithTag(const Tag & _tag) {
-        auto it = std::find_if(mGameObjList.begin(), mGameObjList.end(), [&](const GameObject* actor) ->bool {return actor->mTag == _tag; });
-        if (it == mGameObjList.end())
+    GameObject* GameObject::FindGameObjectWithTag(const Tag& _tag) {
+        auto it = std::find_if(sGameObjList.begin(), sGameObjList.end(), [&](const GameObject* _obj) -> bool { return _obj->mTag == _tag; });
+        if(it == sGameObjList.end())
             return nullptr;
 
         return *it;

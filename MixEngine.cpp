@@ -1,4 +1,4 @@
-﻿#include "MixEngine.h"
+#include "MixEngine.h"
 
 namespace Mix {
     MixEngine::MixEngine(int argc, char** argv) {
@@ -7,21 +7,6 @@ namespace Mix {
 
     MixEngine::~MixEngine() {
         SDL_Quit();
-    }
-
-    void MixEngine::init() {
-        quit = false;
-
-        if(SDL_Init(SDL_INIT_VIDEO))
-            throw std::runtime_error("[ERROR] Failed to init SDL2");
-
-        Input::init();
-
-        // todo: replace with new timing interface
-        start = lastFrame = std::chrono::high_resolution_clock::now();
-
-        // todo: delete debug code
-        Hierarchy::init();
     }
 
     int MixEngine::exec() {
@@ -41,6 +26,21 @@ namespace Mix {
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
+    }
+
+    void MixEngine::init() {
+        quit = false;
+
+        if(SDL_Init(SDL_INIT_VIDEO))
+            throw std::runtime_error("[ERROR] Failed to init SDL2");
+
+        Input::Init();
+
+        // todo: replace with new timing interface
+        start = lastFrame = std::chrono::high_resolution_clock::now();
+
+        // todo: delete debug code
+        hierarchy.init();
     }
 
     void MixEngine::process(const SDL_Event& event) {
@@ -98,11 +98,11 @@ namespace Mix {
 
     void MixEngine::update() {
         // todo: delete debug code
-        Hierarchy::update();
+        hierarchy.update();
     }
 
     void MixEngine::lateUpdate() {
-        Input::reset();
+        Input::Reset();
 
         // todo: replace with new timing interface
         Time::time = Time::getDuration(start);

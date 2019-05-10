@@ -1,19 +1,19 @@
-﻿#pragma once
+#pragma once
 
-#ifndef _MX_INPUT_H
-#define _MX_INPUT_H
+#ifndef MX_INPUT_H
+#define MX_INPUT_H
 
 #include <string>
 
 #include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
 
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_mouse.h>
 
 namespace Mix {
 
-    /** @note This class considers multiple events in a single event loop as one.\n
+    /** 
+     *  @note This class considers multiple events in a single event loop as one.\n
      *  On an AZERTY keyboard, pressing 'A' will emit\n
      *  a 'Q' scancode (representing the physical location) and an 'A' keycode.
      */
@@ -97,18 +97,21 @@ namespace Mix {
 
         // ----- Mouse -----
 
-        /** @return The z axis indicates current button state, which can be tested using the @code SDL_BUTTON(X) @endcode macros. */
-        static glm::ivec3 MousePosition() {
-            glm::ivec3 position;
-            position.z = SDL_GetMouseState(&position.x, &position.y);
+        static glm::ivec2 MousePosition() {
+            glm::ivec2 position;
+            SDL_GetMouseState(&position.x, &position.y);
             return position;
         }
 
-        /** @return The z axis indicates current button state, which can be tested using the @code SDL_BUTTON(X) @endcode macros. */
-        static glm::ivec3 MousePositionDelta() {
-            glm::ivec3 delta;
-            delta.z = SDL_GetRelativeMouseState(&delta.x, &delta.y);
+        static glm::ivec2 MousePositionDelta() {
+            glm::ivec2 delta;
+            SDL_GetRelativeMouseState(&delta.x, &delta.y);
             return delta;
+        }
+
+        /** @return Button state. Can be tested using the @code SDL_BUTTON_MASK @endcode macros. */
+        static Uint32 MouseButtonState() {
+            return SDL_GetMouseState(nullptr, nullptr);
         }
 
         /** @return Positive for upwards, negative for downwards. */
@@ -116,14 +119,14 @@ namespace Mix {
             return mouseScrollDelta;
         }
 
-        /** @param _button One of the @code SDL_BUTTON(X) @endcode macros. */
-        static bool GetMouseButtonDown(const uint8_t _button) {
-            return mouseButtonEvent[static_cast<Uint8>(_button) - 1] & FIRST_PRESSED_MASK;
+        /** @param _button One of the @code SDL_BUTTON_ @endcode macros. */
+        static bool GetMouseButtonDown(const Uint8 _button) {
+            return mouseButtonEvent[_button - 1] & FIRST_PRESSED_MASK;
         }
 
-        /** @param _button One of the @code SDL_BUTTON(X) @endcode macros. */
-        static bool GetMouseButtonUp(const uint8_t _button) {
-            return mouseButtonEvent[static_cast<Uint8>(_button) - 1] & RELEASED_MASK;
+        /** @param _button One of the @code SDL_BUTTON_ @endcode macros. */
+        static bool GetMouseButtonUp(const Uint8 _button) {
+            return mouseButtonEvent[_button - 1] & RELEASED_MASK;
         }
 
     private:
@@ -141,11 +144,9 @@ namespace Mix {
         // FIRST_PRESSED | PRESSED | RELEASED
         static Uint8 mouseButtonEvent[SDL_BUTTON_X2];
 
-        static void init() {
-            keyboardState = SDL_GetKeyboardState(nullptr);
-        }
+        static void Init();
 
-        static void reset();
+        static void Reset();
     };
 }
 

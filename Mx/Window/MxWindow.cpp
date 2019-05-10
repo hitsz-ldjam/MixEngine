@@ -1,7 +1,7 @@
-﻿#include "MxWindow.h"
+#include "MxWindow.h"
 
 namespace Mix {
-    Window::Window(const std::string& _title, const glm::ivec2& _size, const uint32_t _flags) {
+    Window::Window(const std::string& _title, const glm::ivec2& _size, const Uint32 _flags) {
         mWindow = nullptr;
         create(_title, _size, _flags);
     }
@@ -12,7 +12,7 @@ namespace Mix {
         mWindow = nullptr;
     }
 
-    void Window::create(const std::string& _title, const glm::ivec2& _size, const uint32_t _flags) {
+    void Window::create(const std::string& _title, const glm::ivec2& _size, const Uint32 _flags) {
         if(mWindow)
             return;
         mWindow = SDL_CreateWindow(_title.c_str(),
@@ -20,31 +20,32 @@ namespace Mix {
                                    SDL_WINDOWPOS_CENTERED,
                                    _size.x,
                                    _size.y,
-                                   static_cast<Uint32>(_flags) | SDL_WINDOW_SHOWN /*| SDL_WINDOW_VULKAN*/);
+                                   _flags | SDL_WINDOW_SHOWN /*| SDL_WINDOW_VULKAN*/);
         if(!mWindow)
-            throw std::runtime_error("[ERROR] Failed to create window");
+            throw WindowCreationError();
     }
 
     void Window::setIcon(const std::filesystem::path& _path) {
         const int format = STBI_rgb_alpha;
-        glm::ivec3 info;
+        int channels;
+        glm::ivec2 size;
         auto data = static_cast<unsigned char*>(stbi_load(_path.string().c_str(),
-                                                          &info.x,
-                                                          &info.y,
-                                                          &info.z,
+                                                          &size.x,
+                                                          &size.y,
+                                                          &channels,
                                                           format));
         if(!data)
-            throw std::runtime_error("[ERROR] Failed to load icon image");
+            throw WindowIconLoadingError();
 
         SDL_Surface* icon = SDL_CreateRGBSurfaceWithFormatFrom(data,
-                                                               info.x,
-                                                               info.y,
+                                                               size.x,
+                                                               size.y,
                                                                32,
-                                                               4 * info.x,
+                                                               4 * size.x,
                                                                SDL_PIXELFORMAT_RGBA32);
         if(!icon) {
             stbi_image_free(data);
-            throw std::runtime_error("[ERROR] Failed to create icon surface");
+            throw WindowIconLoadingError();
         }
 
         SDL_SetWindowIcon(mWindow, icon);

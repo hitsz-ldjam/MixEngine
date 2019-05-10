@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #ifndef _MX_HIERARCHY_H
 #define _MX_HIERARCHY_H
@@ -11,11 +11,11 @@ namespace Mix {
     // todo: load hierarchy from XML file
     class Hierarchy {
     public:
-        static void init();
-        static void update();
+        void init();
+        void update();
 
     private:
-        static Window fuckGarbageCPPWindow;
+        Window fuckGarbageCPPWindow;
     };
 }
 

@@ -1,4 +1,4 @@
-﻿#include "MxInput.h"
+#include "MxInput.h"
 
 namespace Mix {
     const Uint8* Input::keyboardState = nullptr;
@@ -8,7 +8,11 @@ namespace Mix {
     glm::ivec2 Input::mouseScrollDelta = {0, 0};
     Uint8 Input::mouseButtonEvent[SDL_BUTTON_X2] = {0};
 
-    void Input::reset() {
+    void Input::Init() {
+        keyboardState = SDL_GetKeyboardState(nullptr);
+    }
+
+    void Input::Reset() {
         std::memset(keyEvent, 0, SDL_NUM_SCANCODES * sizeof(*keyEvent));
         anyKey = false;
         anyKeyDown = false;
