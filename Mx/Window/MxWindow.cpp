@@ -1,5 +1,9 @@
 #include "MxWindow.h"
 
+#include "../Exceptions/MxExceptions.hpp"
+
+#include <stb_image/stb_image.h>
+
 namespace Mix {
     Window::Window(const std::string& _title, const glm::ivec2& _size, const Uint32 _flags) {
         mWindow = nullptr;
@@ -53,7 +57,7 @@ namespace Mix {
         stbi_image_free(data);
     }
 
-    glm::ivec2 Window::drawableSize() {
+    glm::ivec2 Window::drawableSize() const {
         glm::ivec2 size = {0, 0};
         if(mWindow)
             SDL_GL_GetDrawableSize(mWindow, &size.x, &size.y);

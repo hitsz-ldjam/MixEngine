@@ -1,26 +1,27 @@
 #pragma once
 
-#ifndef MX_INPUT_H
-#define MX_INPUT_H
-
-#include <string>
-
-#include <glm/vec2.hpp>
+#ifndef MX_INPUT_H_
+#define MX_INPUT_H_
 
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_mouse.h>
+#include <glm/vec2.hpp>
+
+#include <string>
 
 namespace Mix {
 
     /** 
      *  @note This class considers multiple events in a single event loop as one.\n
-     *  On an AZERTY keyboard, pressing 'A' will emit\n
-     *  a 'Q' scancode (representing the physical location) and an 'A' keycode.
+     *  On an AZERTY keyboard, pressing 'A' will emit a 'Q' scancode 
+     *  (which represents the physical location) and an 'A' keycode.
      */
-    class Input {
+    class Input final {
         friend class MixEngine;
 
     public:
+        Input() = delete;
+
         // ----- Keyboard -----
 
         static bool AnyKey() {

@@ -105,8 +105,8 @@ namespace Mix {
         Input::Reset();
 
         // todo: replace with new timing interface
-        Time::time = Time::getDuration(start);
-        Time::deltaTime = Time::getDuration(lastFrame);
+        Time::mTime = Time::getDuration(start);
+        Time::mDeltaTime = Time::getDuration(lastFrame);
         lastFrame = std::chrono::high_resolution_clock::now();
     }
 

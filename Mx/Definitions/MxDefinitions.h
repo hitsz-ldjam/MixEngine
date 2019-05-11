@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef MX_DEFINITIONS_H
-#define MX_DEFINITIONS_H
+#ifndef MX_DEFINITIONS_H_
+#define MX_DEFINITIONS_H_
 
 #include <cstdint>
 #include <string>

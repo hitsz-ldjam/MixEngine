@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef MX_COMPONENT_H
-#define MX_COMPONENT_H
+#ifndef MX_COMPONENT_H_
+#define MX_COMPONENT_H_
 
 #include "../Object/MxObject.h"
 

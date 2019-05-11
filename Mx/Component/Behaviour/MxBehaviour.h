@@ -1,12 +1,12 @@
 #pragma once
 
-#ifndef MX_BEHAVIOUR_H
-#define MX_BEHAVIOUR_H
+#ifndef MX_BEHAVIOUR_H_
+#define MX_BEHAVIOUR_H_
 
-#include "../Object/MxObject.h"
+#include "../MxComponent.h"
 
 namespace Mix {
-    class Behaviour : public Object {
+    class Behaviour : public Component {
     MX_DECLARE_RTTI
     MX_DECLARE_NO_CLASS_FACTORY
 
@@ -17,7 +17,7 @@ namespace Mix {
         virtual void init() {}
         virtual void update() {}
 
-        // todo
+        // todo: fixedUpdate()
         //virtual void fixedUpdate() {}
     };
 }

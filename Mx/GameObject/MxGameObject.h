@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef MX_GAME_OBJECT_H
-#define MX_GAME_OBJECT_H
+#ifndef MX_GAME_OBJECT_H_
+#define MX_GAME_OBJECT_H_
 
 #include <algorithm>
 #include <set>
@@ -106,37 +106,10 @@ namespace Mix {
             return mActiveSelf;
         }
 
-        // todo: move imple to .cpp
         /**
          *  @brief Activates/Deactivates the GameObject, depending on the given true or false value.
          */
-        void setActive(const bool _active) {
-            mActiveSelf = _active;
-            const bool activedInHierarchy = mActiveInHierarchy;
-            if(mActiveSelf) {
-                mActiveInHierarchy = mParent ? mParent->mActiveInHierarchy : true;
-
-                if(mActiveInHierarchy == activedInHierarchy)
-                    return;
-
-                for(auto child : mChildren)
-                    child->setActive(child->mActiveSelf);
-
-                // todo: call OnEnable() of Scripts
-            }
-            else {
-                mActiveInHierarchy = false;
-
-                if(mActiveInHierarchy == activedInHierarchy)
-                    return;
-
-                for(auto child : mChildren)
-                    child->setActive(child->mActiveSelf);
-
-                // todo: call OnDisable() of Scripts
-                // todo: disable Update() of Scripts
-            }
-        }
+        void setActive(const bool _active);
 
         /**
          *  @note There is not getter of this field because altering this will affect its physics.

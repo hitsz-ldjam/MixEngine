@@ -1,19 +1,19 @@
 #pragma once
 
-#ifndef MX_EXCEPTION_HPP
-#define MX_EXCEPTION_HPP
+#ifndef MX_EXCEPTION_HPP_
+#define MX_EXCEPTION_HPP_
 
-#include <string>
 #include <stdexcept>
+#include <string>
 
 #define MX_DECLARE_RUNTIME_ERROR(errorName, errorMsg) \
 class errorName : public std::runtime_error {\
 public:\
-    errorName() : std::runtime_error(#errorMsg) {}\
+    explicit errorName() : std::runtime_error(#errorMsg) {}\
 };
 
 namespace Mix {
-    class FactoryFunctionRepetitionException final : public std::exception {
+    class FactoryFunctionRepetitionException : public std::exception {
     public:
         explicit FactoryFunctionRepetitionException(const std::string& _className) {
             mWhat = "[ERROR] Attempting to re-register factory function of type [" + _className + "]";
@@ -33,13 +33,17 @@ namespace Mix {
 
     MX_DECLARE_RUNTIME_ERROR(ComponentCastingError, [ERROR] Cannot cast type to Component)
 
-    MX_DECLARE_RUNTIME_ERROR(SDLInitializationError, [ERROR] Failed to initialize SDL)
+    MX_DECLARE_RUNTIME_ERROR(IndependentComponentError, [ERROR] Component not attached to a GameObject)
+
+    MX_DECLARE_RUNTIME_ERROR(SdlInitializationError, [ERROR] Failed to initialize SDL)
 
     MX_DECLARE_RUNTIME_ERROR(WindowCreationError, [ERROR] Failed to create window)
 
     MX_DECLARE_RUNTIME_ERROR(WindowIconLoadingError, [ERROR] Failed to load icon image)
 
-    MX_DECLARE_RUNTIME_ERROR(FMODInitializationError, [ERROR] Failed to initialize FMOD)
+    MX_DECLARE_RUNTIME_ERROR(FmodInitializationError, [ERROR] Failed to initialize FMOD)
+
+    MX_DECLARE_RUNTIME_ERROR(AudioManagerNotInitializedError, [ERROR] AudioManager not initialized)
 }
 
 #endif

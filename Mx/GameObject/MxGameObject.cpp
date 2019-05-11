@@ -39,6 +39,8 @@ namespace Mix {
         for(auto comp : mComponents) {
             comp->setGameObject(this);
         }
+
+        setActive(mActiveSelf);
     }
 
     GameObject& GameObject::operator=(GameObject&& _obj) {
@@ -61,6 +63,8 @@ namespace Mix {
         }
 
         Object::operator=(std::move(_obj));
+
+        setActive(mActiveSelf);
 
         return *this;
     }
@@ -112,6 +116,30 @@ namespace Mix {
 
         _obj->mParent = nullptr;
         mChildren.erase(std::find(mChildren.begin(), mChildren.end(), _obj));
+    }
+
+    void GameObject::setActive(const bool _active) {
+        mActiveSelf = _active;
+        const bool activedInHierarchy = mActiveInHierarchy;
+
+        if(mActiveSelf && mParent)
+            mActiveInHierarchy = mParent->mActiveInHierarchy;
+        else
+            mActiveInHierarchy = mActiveSelf;
+
+        if(mActiveInHierarchy == activedInHierarchy)
+            return;
+
+        for(auto child : mChildren)
+            child->setActive(child->mActiveSelf);
+
+        if(mActiveSelf) {
+            // todo: call OnEnable() of Scripts
+        }
+        else {
+            // todo: call OnDisable() of Scripts
+            // todo: disable Update() of Scripts
+        }
     }
 
     GameObject* GameObject::Find(const std::string& _name) {

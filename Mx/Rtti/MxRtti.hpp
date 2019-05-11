@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef MX_RTTI_HPP
-#define MX_RTTI_HPP
+#ifndef MX_RTTI_HPP_
+#define MX_RTTI_HPP_
 
 #include <string>
 #include <utility>

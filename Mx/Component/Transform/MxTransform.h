@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef MX_TRANSFORM_H
-#define MX_TRANSFORM_H
+#ifndef MX_TRANSFORM_H_
+#define MX_TRANSFORM_H_
 
 #include "../../Definitions/MxDefinitions.h"
 #include "../MxComponent.h"

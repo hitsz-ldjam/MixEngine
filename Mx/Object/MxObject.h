@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef MX_OBJECT_H
-#define MX_OBJECT_H
+#ifndef MX_OBJECT_H_
+#define MX_OBJECT_H_
 
 #include <map>
 #include <memory>
@@ -22,11 +22,11 @@ public:\
     static const bool msClassFactoryRegistered = false;
 
 #define MX_IMPLEMENT_CLASS_FACTORY(className)\
-    const bool className::msClassFactoryRegistered=\
+    const bool className::msClassFactoryRegistered =\
         className::RegisterFactoryFunc(#className, className::FactoryFunction);
 
 #define MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(className)\
-Object* className::FactoryFunction(){\
+Object* className::FactoryFunction() {\
     return new className();\
 }\
 MX_IMPLEMENT_CLASS_FACTORY(className)

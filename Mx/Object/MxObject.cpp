@@ -1,7 +1,7 @@
 #include "MxObject.h"
 
 namespace Mix {
-    MX_IMPLEMENT_RTTI_NO_PARENT_NO_CREATE_FUNC(Object);
+    MX_IMPLEMENT_RTTI_NO_PARENT_NO_CREATE_FUNC(Object)
 
     std::vector<Object*> Object::sObjectList;
 
