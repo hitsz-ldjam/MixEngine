@@ -11,6 +11,7 @@ namespace Mix {
     public:
         static double getTime() { return time; };
         static double getDeltaTime() { return deltaTime; };
+		static double totalTime();
 
 		static void reset();
 		static void start();
@@ -22,6 +23,7 @@ namespace Mix {
 		using Clock = std::chrono::steady_clock;
 
 		static double mDeltaTime;
+		static bool mPaused;
 
 		static TimePoint mStartTp;
 		static TimePoint mStopTp;
