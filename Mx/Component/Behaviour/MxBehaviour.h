@@ -10,15 +10,18 @@ namespace Mix {
     MX_DECLARE_RTTI
     MX_DECLARE_NO_CLASS_FACTORY
 
+        friend class MixEngine;
+
     public:
         Behaviour() = default;
         virtual ~Behaviour() = 0 {}
 
+    private:
         virtual void init() {}
         virtual void update() {}
-
         // todo: fixedUpdate()
-        //virtual void fixedUpdate() {}
+        virtual void fixedUpdate() {}
+        virtual void lateUpdate() {}
     };
 }
 

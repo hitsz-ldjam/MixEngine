@@ -4,6 +4,5 @@
 #include <stb_image/stb_image.h>
 
 int main(int argc, char** argv) {
-    Mix::MixEngine engine(argc, argv);
-    return engine.exec();
+    return Mix::MixEngine::Instance(argc, argv).exec();
 }

@@ -1,15 +1,13 @@
 #pragma once
 
-#ifndef _MX_HIERARCHY_H
-#define _MX_HIERARCHY_H
+#ifndef MX_SCENE_H_
+#define MX_SCENE_H_
 
-#include <iostream>
-#include "../Input/MxInput.h"
 #include "../Window/MxWindow.h"
 
 namespace Mix {
-    // todo: load hierarchy from XML file
-    class Hierarchy {
+    // todo: temp scene
+    class Scene {
     public:
         void init();
         void update();

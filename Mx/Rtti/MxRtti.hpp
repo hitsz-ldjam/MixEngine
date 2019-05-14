@@ -17,7 +17,7 @@ namespace Mix {
          *  @brief Create a rtti instance
          *  @param _rttiName The name of class that owns this Rtti instance
          *  @param _pBase The rtti of the base class
-         *  @param _COF Unused parameter
+         *  @param _COF Deprecated parameter
          */
         Rtti(std::string _rttiName, const Rtti* _pBase, createObjectFunc _COF): mRttiName(std::move(_rttiName)),
                                                                                 mpBase(_pBase) {}
@@ -82,14 +82,14 @@ public:\
     static Rtti msType;\
     virtual Rtti& getType() const { return msType; }
 
-// deprecated
+// Obsolete
 //#define MX_IMPLEMENT_RTTI(className,baseClassName)\
 //Rtti className::msType(#className, &baseClassName::msType, className::factoryFunc);
 
 #define MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(className, baseClassName)\
 Rtti className::msType(#className, &baseClassName::msType, nullptr);
 
-// deprecated
+// Obsolete
 //#define MX_IMPLEMENT_RTTI_NoParent(className)\
 //Rtti className::msType(#className, nullptr, className::factoryFunc);
 

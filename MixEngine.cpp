@@ -1,11 +1,22 @@
 #include "MixEngine.h"
 
+#include "Mx/Exceptions/MxExceptions.hpp"
+#include "Mx/Input/MxInput.h"
+#include "Mx/Time/MxTime.h"
+
+#include <iostream>
+
 namespace Mix {
-    MixEngine::MixEngine(int argc, char** argv) {
-        quit = false;
+    MixEngine::MixEngine(int _argc, char** _argv) {
+        mQuit = false;
+        mFmodCore = nullptr;
     }
 
     MixEngine::~MixEngine() {
+        if(mFmodCore)
+            mFmodCore->release();
+        mFmodCore = nullptr;
+
         SDL_Quit();
     }
 
@@ -13,7 +24,7 @@ namespace Mix {
         try {
             init();
             SDL_Event event;
-            while(!quit) {
+            while(!mQuit) {
                 while(SDL_PollEvent(&event))
                     process(event);
                 update();
@@ -29,10 +40,20 @@ namespace Mix {
     }
 
     void MixEngine::init() {
-        quit = false;
+        mQuit = false;
 
+        // initialize sdl
         if(SDL_Init(SDL_INIT_VIDEO))
-            throw std::runtime_error("[ERROR] Failed to init SDL2");
+            throw SdlInitializationError();
+
+        // initialize fmod
+        auto result = FMOD::System_Create(&mFmodCore);
+        if(result != FMOD_OK)
+            throw FmodInitializationError();
+
+        result = mFmodCore->init(512, FMOD_INIT_NORMAL, nullptr);
+        if(result != FMOD_OK)
+            throw FmodInitializationError();
 
         Input::Init();
 
@@ -40,17 +61,17 @@ namespace Mix {
         start = lastFrame = std::chrono::high_resolution_clock::now();
 
         // todo: delete debug code
-        hierarchy.init();
+        mScene.init();
     }
 
-    void MixEngine::process(const SDL_Event& event) {
-        switch(event.type) {
+    void MixEngine::process(const SDL_Event& _event) {
+        switch(_event.type) {
             case SDL_KEYDOWN:
             {
-                SDL_Scancode code = event.key.keysym.scancode;
+                SDL_Scancode code = _event.key.keysym.scancode;
                 Input::anyKey = true;
                 Input::keyEvent[code] |= Input::PRESSED_MASK;
-                if(!event.key.repeat) {
+                if(!_event.key.repeat) {
                     Input::anyKeyDown = true;
                     Input::keyEvent[code] |= Input::FIRST_PRESSED_MASK;
                 }
@@ -58,18 +79,18 @@ namespace Mix {
             }
             case SDL_KEYUP:
             {
-                Input::keyEvent[event.key.keysym.scancode] |= Input::RELEASED_MASK;
+                Input::keyEvent[_event.key.keysym.scancode] |= Input::RELEASED_MASK;
                 break;
             }
             case SDL_MOUSEBUTTONDOWN:
             {
                 // if(event.button.clicks == 1)
-                Input::mouseButtonEvent[event.button.button - 1] |= Input::FIRST_PRESSED_MASK;
+                Input::mouseButtonEvent[_event.button.button - 1] |= Input::FIRST_PRESSED_MASK;
                 break;
             }
             case SDL_MOUSEBUTTONUP:
             {
-                Input::mouseButtonEvent[event.button.button - 1] |= Input::RELEASED_MASK;
+                Input::mouseButtonEvent[_event.button.button - 1] |= Input::RELEASED_MASK;
                 break;
             }
             case SDL_MOUSEMOTION:
@@ -78,17 +99,17 @@ namespace Mix {
             }
             case SDL_MOUSEWHEEL:
             {
-                int deltaY = event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1;
-                deltaY *= event.wheel.y;
-                Input::mouseScrollDelta += glm::ivec2(event.wheel.x, deltaY);
+                int deltaY = _event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1;
+                deltaY *= _event.wheel.y;
+                Input::mouseScrollDelta += glm::ivec2(_event.wheel.x, deltaY);
                 break;
             }
             case SDL_QUIT:
             {
-                quit = true;
+                mQuit = true;
                 /*for(auto be : behaviours)
                     if(!be->onApplicationQuit())
-                        quit = false;*/
+                        mQuit = false;*/
                 break;
             }
             default:
@@ -98,7 +119,7 @@ namespace Mix {
 
     void MixEngine::update() {
         // todo: delete debug code
-        hierarchy.update();
+        mScene.update();
     }
 
     void MixEngine::lateUpdate() {
@@ -108,6 +129,9 @@ namespace Mix {
         Time::mTime = Time::getDuration(start);
         Time::mDeltaTime = Time::getDuration(lastFrame);
         lastFrame = std::chrono::high_resolution_clock::now();
+
+        // update fmod
+        mFmodCore->update();
     }
 
     // todo: call vulkan here

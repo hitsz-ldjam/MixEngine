@@ -1,37 +1,45 @@
 #pragma once
 
-#ifndef _MIX_ENGINE_H
-#define _MIX_ENGINE_H
+#ifndef MIX_ENGINE_H_
+#define MIX_ENGINE_H_
 
-#include <iostream>
+#include "Mx/Definitions/MxAudio.h"
+#include "Mx/Scene/MxScene.h"
 
+#include <fmod/fmod.hpp>
 #include <SDL2/SDL.h>
-
-#include "Mx/Input/MxInput.h"
-#include "Mx/Hierarchy/MxHierarchy.h"
-#include "Mx/Window/MxWindow.h"
-
-// todo: replace with new timing interface
-#include "Mx/Time/MxTime.h"
 
 namespace Mix {
     class MixEngine {
+        friend static FMOD::System* Audio::Core();
+
     public:
-        MixEngine(int argc = 0, char** argv = nullptr);
         ~MixEngine();
         int exec();
 
+        static MixEngine& Instance(int _argc = 0, char** _argv = nullptr) {
+            static MixEngine instance(_argc, _argv);
+            return instance;
+        }
+
+        MixEngine(const MixEngine&) = delete;
+        void operator=(const MixEngine&) = delete;
+
     private:
-        bool quit;
 
         // todo: delete debug code
-        Hierarchy hierarchy;
+        Scene mScene;
 
         // todo: replace with new timing interface
         std::chrono::time_point<std::chrono::high_resolution_clock> start, lastFrame;
 
+        MixEngine(int _argc = 0, char** _argv = nullptr);
+
+        bool mQuit;
+        FMOD::System* mFmodCore;
+
         void init();
-        void process(const SDL_Event& event);
+        void process(const SDL_Event& _event);
         void update();
         void lateUpdate();
         void render();

@@ -7,7 +7,7 @@
 #include <string>
 
 #define MX_DECLARE_RUNTIME_ERROR(errorName, errorMsg) \
-class errorName : public std::runtime_error {\
+class errorName final : public std::runtime_error {\
 public:\
     explicit errorName() : std::runtime_error(#errorMsg) {}\
 };
@@ -35,7 +35,7 @@ namespace Mix {
 
     MX_DECLARE_RUNTIME_ERROR(IndependentComponentError, [ERROR] Component not attached to a GameObject)
 
-    MX_DECLARE_RUNTIME_ERROR(SdlInitializationError, [ERROR] Failed to initialize SDL)
+    MX_DECLARE_RUNTIME_ERROR(SdlInitializationError, [ERROR] Failed to initialize SDL2)
 
     MX_DECLARE_RUNTIME_ERROR(WindowCreationError, [ERROR] Failed to create window)
 
@@ -44,6 +44,11 @@ namespace Mix {
     MX_DECLARE_RUNTIME_ERROR(FmodInitializationError, [ERROR] Failed to initialize FMOD)
 
     MX_DECLARE_RUNTIME_ERROR(AudioManagerNotInitializedError, [ERROR] AudioManager not initialized)
+
+    class FileLoadingError final : public std::runtime_error {
+    public:
+        explicit FileLoadingError(const std::string& _path) : std::runtime_error("[ERROR] Cannot load file [" + _path + "]") {}
+    };
 }
 
 #endif
