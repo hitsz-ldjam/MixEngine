@@ -33,7 +33,10 @@ namespace Mix {
 
     MX_DECLARE_RUNTIME_ERROR(ComponentCastingError, [ERROR] Cannot cast type to Component)
 
-    MX_DECLARE_RUNTIME_ERROR(IndependentComponentError, [ERROR] Component not attached to a GameObject)
+    class IndependentComponentError final : public std::runtime_error {
+    public:
+        explicit IndependentComponentError(const std::string& _name) : std::runtime_error("[ERROR] Component [" + _name + "] not attached to a GameObject") {}
+    };
 
     MX_DECLARE_RUNTIME_ERROR(SdlInitializationError, [ERROR] Failed to initialize SDL2)
 
@@ -49,6 +52,7 @@ namespace Mix {
     public:
         explicit FileLoadingError(const std::string& _path) : std::runtime_error("[ERROR] Cannot load file [" + _path + "]") {}
     };
+
 }
 
 #endif
