@@ -1,7 +1,7 @@
 #include "MxApplication.h"
 
 namespace Mix {
-    Application::Application(int argc, char** argv) {
+    Application::Application(int _argc, char** _argv) {
         // behaviours.reserve(capacity);
         quit = false;
     }

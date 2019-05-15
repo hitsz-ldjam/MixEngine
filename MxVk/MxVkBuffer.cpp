@@ -10,80 +10,80 @@ namespace Mix {
                                                      const vk::SharingMode            _sharingMode,
                                                      const void*                      _data) {
             auto buffer = std::make_shared<Buffer>();
-            buffer->Init(_core, _allocator);
+            buffer->init(_core, _allocator);
 
             vk::BufferCreateInfo createInfo;
             createInfo.size = _size;
             createInfo.usage = _usage;
             createInfo.sharingMode = _sharingMode;
 
-            buffer->buffer = _core->GetDevice().createBuffer(createInfo);
+            buffer->buffer = _core->getDevice().createBuffer(createInfo);
 
             vk::MemoryRequirements memRequirements;
-            buffer->memory = _allocator->Allocate(buffer->buffer, _memoryProperty, &memRequirements);
+            buffer->memory = _allocator->allocate(buffer->buffer, _memoryProperty, &memRequirements);
 
             buffer->alignment = memRequirements.alignment;
             buffer->size = _size;
             buffer->usages = _usage;
             buffer->memoryProperty = _memoryProperty;
 
-            buffer->SetupDescriptor(_size, 0);
+            buffer->setupDescriptor(_size, 0);
 
             // copy data to the buffer
             if (_data) {
                 if (_memoryProperty & vk::MemoryPropertyFlagBits::eHostVisible) {
-                    buffer->CopyTo(_data, _size);
+                    buffer->copyTo(_data, _size);
 
                     //if not HOST_COHERENT then need to be flushed
                     if (!(_memoryProperty & vk::MemoryPropertyFlagBits::eHostCoherent))
-                        buffer->Flush();
+                        buffer->flush();
                 }
             }
 
             return buffer;
         }
 
-        void Buffer::Init(std::shared_ptr<Core> _core, std::shared_ptr<DeviceAllocator> _allocator) {
+        void Buffer::init(std::shared_ptr<Core> _core, std::shared_ptr<DeviceAllocator> _allocator) {
             mCore = _core;
             mAllocator = _allocator;
         }
 
-        void Buffer::SetupDescriptor(const vk::DeviceSize _size, const vk::DeviceSize _offset) {
+        void Buffer::setupDescriptor(const vk::DeviceSize _size, const vk::DeviceSize _offset) {
             descriptor.offset = _offset;
             descriptor.buffer = buffer;
             descriptor.range = _size;
         }
 
-        void Buffer::CopyTo(const void * _data, const vk::DeviceSize _size) const {
+        void Buffer::copyTo(const void * _data, const vk::DeviceSize _size) const {
             assert(_data);
             memcpy(memory.ptr, _data, static_cast<size_t>(_size));
         }
 
-        void Buffer::Flush(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
+        void Buffer::flush(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
             vk::MappedMemoryRange mappedRange;
             mappedRange.memory = memory.memory;
             mappedRange.offset = _offset;
             mappedRange.size = _size;
-            mCore->GetDevice().flushMappedMemoryRanges(mappedRange);
+            mCore->getDevice().flushMappedMemoryRanges(mappedRange);
         }
 
-        void Buffer::Invalidate(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
+        void Buffer::invalidate(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
             vk::MappedMemoryRange mappedRange = {};
             mappedRange.memory = memory.memory;
             mappedRange.offset = _offset;
             mappedRange.size = _size;
-            mCore->GetDevice().invalidateMappedMemoryRanges(mappedRange);
+            mCore->getDevice().invalidateMappedMemoryRanges(mappedRange);
         }
 
-        void Buffer::Destory() {
+        void Buffer::destory() {
             if (!mCore)
                 return;
 
             if (buffer) {
-                mCore->GetDevice().destroyBuffer(buffer);
+                mCore->getDevice().destroyBuffer(buffer);
                 buffer = nullptr;
 
-                mAllocator->Deallocate(memory);
+                mAllocator->deallocate(memory);
                 memory = MemoryBlock();
             }
 

@@ -1,28 +1,17 @@
 #include "MxResource.h"
+#include <boost/algorithm/string.hpp>
+#include "Model/MxGltfParser.h"
 
 namespace Mix {
     namespace Resource {
-        std::shared_ptr<ResourceParserBase> LoaderRegister::FindLoaderByType(const ResourceType _type) {
-            for (auto& loader : mLoaders) {
-                if (loader->IsSupport(_type))
-                    return loader;
-            }
-            return nullptr;
+        void Resources::init() {
+            mLoaderRegister = std::make_shared<ParserRegister>();
+            mLoaderRegister->registerParser(std::make_shared<GltfParser>(&mResourceRefMgr));
+
+            mResourceRefMgr.setRemoveOp([](ResourceBase* _r) {delete _r; });
         }
 
-        std::shared_ptr<ResourceParserBase> LoaderRegister::FindLoaderByExt(const std::string& _ext) {
-            for (auto& loader : mLoaders) {
-                if (loader->IsSupport(_ext))
-                    return loader;
-            }
-            return nullptr;
-        }
-
-        void Resources::Initialize() {
-            mLoaderRegister = std::make_shared<LoaderRegister>();
-        }
-
-        std::shared_ptr<Object> Resources::Load(const std::string& _file) {
+        std::shared_ptr<Object> Resources::load(const std::string& _file) {
             // get lower case absolute file path
             const auto path = GetGenericPath(_file);
 
@@ -38,48 +27,48 @@ namespace Mix {
 
             // chech if file has already been loaded
             const auto extension = path.extension().string().substr(1);
-            const auto loader = mLoaderRegister->FindLoaderByExt(extension);
+            const auto loader = mLoaderRegister->findLoaderByExt(extension);
             if (loader == nullptr) {
                 Debug::Log::Warning("%s: No loader support extenxion [ %s ].", __FUNCTION__, extension.c_str());
                 return nullptr;
             }
 
-            if (IsResourceAlreadyLoaded(path))
-                return loader->Parse(Utils::GuidGenerator::GetGuid(path));
+            if (isResourceAlreadyLoaded(path))
+                return loader->parse(Utils::GuidGenerator::GetGuid(path));
 
-            return loader->Load(path, extension);
+            return loader->load(path, extension);
         }
 
 
-        std::shared_ptr<Object> Resources::Load(const std::string& _file, const ResourceType _type) {
+        std::shared_ptr<Object> Resources::load(const std::string& _file, const ResourceType _type) {
             // get lower case absolute file path
             const auto path = GetGenericPath(_file);
 
             // chech if file has already been loaded
-            if (IsResourceAlreadyLoaded(path)) {
+            if (isResourceAlreadyLoaded(path)) {
 
-                auto ref = mResourceRefMgr.GetReference(Utils::GuidGenerator::GetGuid(path));
+                auto ref = mResourceRefMgr.getReference(Utils::GuidGenerator::GetGuid(path));
 
             }
 
-            const auto loader = mLoaderRegister->FindLoaderByType(_type);
+            const auto loader = mLoaderRegister->findLoaderByType(_type);
             if (loader == nullptr) {
                 Debug::Log::Warning("%s: No loader support extenxion [ %d ].", __FUNCTION__, _type);
                 return nullptr;
             }
 
-            if (IsResourceAlreadyLoaded(path))
-                return loader->Parse(Utils::GuidGenerator::GetGuid(path));
+            if (isResourceAlreadyLoaded(path))
+                return loader->parse(Utils::GuidGenerator::GetGuid(path));
 
-            return loader->Load(path, _type);
+            return loader->load(path, _type);
         }
 
-        void Resources::UnloadAll() {
-            mResourceRefMgr.Clear();
+        void Resources::unloadAll() {
+            mResourceRefMgr.clear();
         }
 
-        bool Resources::IsResourceAlreadyLoaded(const std::filesystem::path& _path) const {
-            return mResourceRefMgr.HasKey(Utils::GuidGenerator::GetGuid(_path));
+        bool Resources::isResourceAlreadyLoaded(const std::filesystem::path& _path) const {
+            return mResourceRefMgr.hasKey(Utils::GuidGenerator::GetGuid(_path));
         }
 
         std::filesystem::path Resources::GetGenericPath(const std::string& _file) {

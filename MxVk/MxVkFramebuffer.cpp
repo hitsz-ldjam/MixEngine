@@ -6,8 +6,8 @@ namespace Mix {
             mAttachments.clear();
         }
 
-        void Framebuffer::addAttachments(const std::vector<vk::ImageView>& attachments) {
-            mAttachments.insert(mAttachments.end(), attachments.cbegin(), attachments.cend());
+        void Framebuffer::addAttachments(const std::vector<vk::ImageView>& _attachments) {
+            mAttachments.insert(mAttachments.end(), _attachments.cbegin(), _attachments.cend());
         }
 
         void Framebuffer::create() {
@@ -19,19 +19,19 @@ namespace Mix {
             createInfo.height = mExtent.height;
             createInfo.layers = mLayers;
 
-            mFramebuffer = mCore->GetDevice().createFramebuffer(createInfo);
+            mFramebuffer = mCore->getDevice().createFramebuffer(createInfo);
         }
 
         void Framebuffer::destroy() {
             if (!mCore)
                 return;
 
-            mCore->GetDevice().destroyFramebuffer(mFramebuffer);
+            mCore->getDevice().destroyFramebuffer(mFramebuffer);
             mCore = nullptr;
             mAttachments.clear();
             mRenderPass = nullptr;
             mFramebuffer = nullptr;
-            mExtent = {  };
+            mExtent = vk::Extent2D();
             mLayers = 0;
         }
     }

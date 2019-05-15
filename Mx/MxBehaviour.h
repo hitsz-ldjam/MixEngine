@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _MX_BEHAVIOUR_H_
-#define _MX_BEHAVIOUR_H_
+#ifndef MX_BEHAVIOUR_H_
+#define MX_BEHAVIOUR_H_
 
 #include "MxComponent.h"
 

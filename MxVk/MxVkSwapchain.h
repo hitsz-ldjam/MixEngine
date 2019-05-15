@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MX_VK_SWAPCHAIN_H_
-#define _MX_VK_SWAPCHAIN_H_
+#ifndef MX_VK_SWAPCHAIN_H_
+#define MX_VK_SWAPCHAIN_H_
 
 #include "MxVkExcept.hpp"
 #include "MxVkCore.h"
@@ -17,18 +17,18 @@ namespace Mix {
                 destroy();
             }
 
-            void Init(std::shared_ptr<Core>& core) override;
+            void init(const std::shared_ptr<Core>& _core);
 
-            void setImageCount(const uint32_t count) {
-                mImageCount = mSupportDetails.capabilities.minImageCount < count ? count : mSupportDetails.capabilities.minImageCount;
+            void setImageCount(const uint32_t _count) {
+                mImageCount = mSupportDetails.capabilities.minImageCount < _count ? _count : mSupportDetails.capabilities.minImageCount;
                 mImageCount = mImageCount < mSupportDetails.capabilities.maxImageCount ? mImageCount : mSupportDetails.capabilities.maxImageCount;
             }
 
             void destroy();
 
-            void create(const std::vector<vk::SurfaceFormatKHR>& rqFormats,
-                        const std::vector<vk::PresentModeKHR>& rqPresentMode,
-                        const vk::Extent2D& rqExtent);
+            void create(const std::vector<vk::SurfaceFormatKHR>& _rqFormats,
+                        const std::vector<vk::PresentModeKHR>& _rqPresentMode,
+                        const vk::Extent2D& _rqExtent);
 
             const std::vector<vk::SurfaceFormatKHR>& supportedFormat() const {
                 return mSupportDetails.formats;
@@ -52,7 +52,7 @@ namespace Mix {
 
             const std::vector<vk::ImageView>& imageViews() const { return mImageViews; }
 
-            void present(vk::CommandBuffer& cmdBuffer);
+            void present(vk::CommandBuffer& _cmdBuffer);
 
         private:
             vk::SwapchainKHR mSwapchain;
@@ -72,11 +72,15 @@ namespace Mix {
 
             SwapchainSupportDetails mSupportDetails;
 
-            vk::Extent2D chooseExtent(const vk::Extent2D& rqExtent);
-            bool choosePresentMode(const std::vector<vk::PresentModeKHR>& rqPresentModes, vk::PresentModeKHR& presentMode);
-            bool chooseFormat(const std::vector<vk::SurfaceFormatKHR>& rqFormats, VkSurfaceFormatKHR& format);
+            vk::Extent2D chooseExtent(const vk::Extent2D& _rqExtent);
+
+            bool choosePresentMode(const std::vector<vk::PresentModeKHR>& _rqPresentModes, 
+                                   vk::PresentModeKHR& _presentMode);
+
+            bool chooseFormat(const std::vector<vk::SurfaceFormatKHR>& _rqFormats, VkSurfaceFormatKHR& _format);
+
             void createSwapchainImageView();
         };
     }
 }
-#endif // !_MX_VK_SWAPCHAIN_H_
+#endif // !MX_VK_SWAPCHAIN_H_

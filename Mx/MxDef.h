@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MX_DEF_H_
-#define _MX_DEF_H_
+#ifndef MX_DEF_H_
+#define MX_DEF_H_
 
 #include <cstdint>
 #include <string>
@@ -82,4 +82,4 @@ namespace Mix {
     enum class Space { WORLD, SELF };
 }
 
-#endif // !_MX_DEF_H_
+#endif // !MX_DEF_H_

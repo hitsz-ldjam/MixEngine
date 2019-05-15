@@ -10,17 +10,27 @@ namespace Mix {
     namespace Graphics {
         class CommandMgr :public GraphicsComponent {
         public:
-            virtual ~CommandMgr() { destroy(); }
-            void create(const vk::QueueFlagBits queueType,
-                        const vk::CommandPoolCreateFlags& flags = vk::CommandPoolCreateFlags());
+            ~CommandMgr() { destroy(); }
 
-            std::vector<vk::CommandBuffer> allocCommandBuffers(uint32_t count, vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary);
-            vk::CommandBuffer allocCommandBuffer(vk::CommandBufferLevel level = vk::CommandBufferLevel::ePrimary);
-            void freeCommandBuffers(const std::vector<vk::CommandBuffer>& commandBuffers);
-            void freeCommandBuffers(const vk::CommandBuffer commandBuffer);
+            void init(const std::shared_ptr<Core>& _core) {
+                setCore(_core);
+            }
+
+            void create(const vk::QueueFlagBits _queueType,
+                        const vk::CommandPoolCreateFlags& _flags = vk::CommandPoolCreateFlags());
+
+            std::vector<vk::CommandBuffer> allocCommandBuffers(uint32_t _count, 
+                                                               vk::CommandBufferLevel _level = vk::CommandBufferLevel::ePrimary);
+
+            vk::CommandBuffer allocCommandBuffer(vk::CommandBufferLevel _level = vk::CommandBufferLevel::ePrimary);
+
+            void freeCommandBuffers(const std::vector<vk::CommandBuffer>& _commandBuffers) const;
+
+            void freeCommandBuffers(const vk::CommandBuffer& _commandBuffer);
+
             vk::CommandBuffer beginTempCommandBuffer();
 
-            void endTempCommandBuffer(vk::CommandBuffer commandBuffer);
+            void endTempCommandBuffer(const vk::CommandBuffer& _commandBuffer) const;
 
             void destroy();
 
@@ -30,9 +40,9 @@ namespace Mix {
             vk::CommandPool mCommandPool;
             std::vector<vk::CommandBuffer> mCommandBuffers;
 
-            static vk::CommandBufferAllocateInfo sTempBufferAllocInfo;
-            static vk::CommandBufferBeginInfo sTempBufferBeginInfo;
-            static vk::SubmitInfo sTempBufferSubmitInfo;
+            static vk::CommandBufferAllocateInfo TempBufferAllocInfo;
+            static vk::CommandBufferBeginInfo TempBufferBeginInfo;
+            static vk::SubmitInfo TempBufferSubmitInfo;
         };
     }
 }

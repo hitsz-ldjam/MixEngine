@@ -3,13 +3,13 @@
 
 namespace Mix {
 
-    MX_IMPLEMENT_RTTI_NoParent_NoCreateFunc(Object);
+    MX_IMPLEMENT_RTTI_NO_PARENT_NO_CREATE_FUNC(Object);
 
-    std::vector<Object*> Object::mObjectList;
+    std::vector<Object*> Object::sObjectList;
 
     bool Object::RegisterFactoryFunc(const std::string & _typeName, FactoryFunction _func) {
 
-        auto funcMap = GlobalClassFactoryFuncMap::getInstance().lock();
+        auto funcMap = GlobalClassFactoryFuncMap::GetInstance().lock();
 
         if (funcMap->count(_typeName) != 0)
             throw RepeatFactoryFuncExcep(_typeName);

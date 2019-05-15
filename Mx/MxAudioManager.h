@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _MX_AUDIO_MANAGER_H_
-#define _MX_AUDIO_MANAGER_H_
+#ifndef MX_AUDIO_MANAGER_H_
+#define MX_AUDIO_MANAGER_H_
 
 #include <fmod/fmod_studio.hpp>
 

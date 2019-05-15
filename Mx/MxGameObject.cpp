@@ -1,45 +1,62 @@
 #include "MxGameObject.h"
 
 namespace Mix {
-    MX_IMPLEMENT_RTTI_NoCreateFunc(GameObject, Object);
+    MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(GameObject, Object);
     MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(GameObject);
 
     std::vector<GameObject*> GameObject::mGameObjList;
 
-    GameObject::GameObject(GameObject && _obj) noexcept {
-        *this = std::move(_obj);
-    }
-
-    GameObject & GameObject::operator=(GameObject && _obj) {
-        mParent = _obj.mParent;
-        mChildren = std::move(_obj.mChildren);
-        mComponents = std::move(_obj.mComponents);
-        mActive = _obj.mActive;
-        mName = _obj.mName;
-        mLayer = _obj.mLayer;
+    GameObject::GameObject(GameObject && _other)noexcept :Base(std::move(_other)) {
+        mParent = _other.mParent;
+        mChildren = std::move(_other.mChildren);
+        mComponents = std::move(_other.mComponents);
+        mActive = _other.mActive;
+        mLayer = _other.mLayer;
+        mTag = std::move(_other.mTag);
 
         for (auto child : mChildren) {
-            this->AddChild(child);
+            this->addChild(child);
         }
 
         for (auto comp : mComponents) {
-            comp->SetGameObj(this);
+            comp->setGameObj(this);
         }
 
-        _obj.mParent = nullptr;
+        _other.mParent = nullptr;
+    }
+
+    GameObject & GameObject::operator=(GameObject && _other) noexcept {
+        mParent = _other.mParent;
+        mChildren = std::move(_other.mChildren);
+        mComponents = std::move(_other.mComponents);
+        mActive = _other.mActive;
+        mLayer = _other.mLayer;
+        mTag = std::move(_other.mTag);
+
+        for (auto child : mChildren) {
+            this->addChild(child);
+        }
+
+        for (auto comp : mComponents) {
+            comp->setGameObj(this);
+        }
+
+        _other.mParent = nullptr;
+        Base::operator=(std::move(_other));
+
         return *this;
     }
 
-    Component * GameObject::AddComponent(Component * _comp) {
+    Component * GameObject::addComponent(Component * _comp) {
         if (!_comp)
             return nullptr;
 
-        _comp->SetGameObj(this);
+        _comp->setGameObj(this);
         mComponents.insert(_comp);
         return _comp;
     }
 
-    void GameObject::RemoveComponent(Component * _comp) {
+    void GameObject::removeComponent(Component * _comp) {
         auto it = std::find(mComponents.begin(), mComponents.end(), _comp);
         if (it != mComponents.end()) {
             mComponents.erase(it);

@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MX_VK_EXCEPT_HPP_
-#define _MX_VK_EXCEPT_HPP_
+#ifndef MX_VK_EXCEPT_HPP_
+#define MX_VK_EXCEPT_HPP_
 
 #include <stdexcept>
 
@@ -24,7 +24,7 @@ namespace Mix {
 
         class ShaderAlreadyExist :public std::runtime_error {
         public:
-            ShaderAlreadyExist(const std::string& name) :runtime_error("") {
+            explicit ShaderAlreadyExist(const std::string& name) :runtime_error("") {
                 mWhat = "Error : Shader [" + name + "] already exists";
             }
 
@@ -38,8 +38,8 @@ namespace Mix {
 
         class ShaderNotFound :public std::runtime_error {
         public:
-            ShaderNotFound(const std::string& name) :runtime_error("") {
-                mWhat = "Error : Shader [" + name + "] not found";
+            explicit ShaderNotFound(const std::string& _name) :runtime_error("") {
+                mWhat = "Error : Shader [" + _name + "] not found";
             }
 
             const char* what() const override {
@@ -57,8 +57,8 @@ namespace Mix {
 
         class PipelineAlreadyExist :public std::runtime_error {
         public:
-            PipelineAlreadyExist(const std::string& name) :runtime_error("") {
-                mWhat = "Error : Pipeline [" + name + "] already exists";
+            explicit PipelineAlreadyExist(const std::string& _name) :runtime_error("") {
+                mWhat = "Error : Pipeline [" + _name + "] already exists";
             }
 
             const char* what() const override {
@@ -71,8 +71,8 @@ namespace Mix {
 
         class PipelineNotFound :public std::runtime_error {
         public:
-            PipelineNotFound(const std::string& name) :runtime_error("") {
-                mWhat = "Error : Pipeline [" + name + "] not found";
+            explicit PipelineNotFound(const std::string& _name) :runtime_error("") {
+                mWhat = "Error : Pipeline [" + _name + "] not found";
             }
 
             const char* what() const override {
@@ -90,4 +90,4 @@ namespace Mix {
         };
     }
 }
-#endif // !_MX_VK_EXCEPT_HPP_
+#endif // !MX_VK_EXCEPT_HPP_

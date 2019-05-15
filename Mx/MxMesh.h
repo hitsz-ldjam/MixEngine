@@ -4,8 +4,7 @@
 
 #include "MxGameObject.h"
 #include "MxComponent.h"
-#include "../Resource/MxResModel.h"
-#include <string>
+#include "../Resource/Model/MxResModel.h"
 
 namespace Mix {
     class Mesh {
@@ -14,8 +13,8 @@ namespace Mix {
 
         explicit Mesh(Resource::ResourceRef _ref) :mMeshRef(std::move(_ref)) {}
 
-        uint32_t SubmeshCount() const {
-            return mMeshRef.Get<Resource::ResMesh>()->submeshes.size();
+        uint32_t submeshCount() const {
+            return mMeshRef.dynamicCast<Resource::ResMesh*>()->submeshes.size();
         }
 
     private:
@@ -28,11 +27,11 @@ namespace Mix {
     public:
         MeshFilter() = default;
 
-        void SetMesh(std::shared_ptr<Mesh> _mesh) {
+        void setMesh(const std::shared_ptr<Mesh>& _mesh) {
             mMesh = _mesh;
         }
 
-        std::shared_ptr<Mesh> GetMesh() const {
+        std::shared_ptr<Mesh> getMesh() const {
             return mMesh;
         }
 

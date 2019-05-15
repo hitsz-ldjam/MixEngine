@@ -22,18 +22,19 @@ namespace Mix {
             vk::BufferUsageFlags usages;
             vk::MemoryPropertyFlags memoryProperty;
 
-            void Init(std::shared_ptr<Core> _core, std::shared_ptr<DeviceAllocator> _allocator);
-            virtual ~Buffer() { Destory(); }
+            void init(std::shared_ptr<Core> _core, std::shared_ptr<DeviceAllocator> _allocator);
 
-            void SetupDescriptor(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0);
+            virtual ~Buffer() { destory(); }
 
-            void CopyTo(const void * _data, const vk::DeviceSize _size) const;
+            void setupDescriptor(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0);
 
-            void Flush(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0) const;
+            void copyTo(const void * _data, const vk::DeviceSize _size) const;
 
-            void Invalidate(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0) const;
+            void flush(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0) const;
 
-            void Destory();
+            void invalidate(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0) const;
+
+            void destory();
 
             static std::shared_ptr<Buffer> CreateBuffer(std::shared_ptr<Core>            _core,
                                                         std::shared_ptr<DeviceAllocator> _allocator,

@@ -7,7 +7,7 @@ namespace Mix {
             mInitInfo = new InitInfo();
         }
 
-        void Core::CreateInstance() {
+        void Core::createInstance() {
             // setup application info
             vk::ApplicationInfo appInfo(mAppName.c_str(),
                                         mAppVersion,
@@ -23,8 +23,7 @@ namespace Mix {
             if (mInitInfo->debugMode) {
                 createInfo.enabledLayerCount = static_cast<uint32_t>(mInitInfo->validationLayers.size());
                 createInfo.ppEnabledLayerNames = mInitInfo->validationLayers.data();
-            }
-            else {
+            } else {
                 createInfo.enabledLayerCount = 0;
                 createInfo.ppEnabledLayerNames = nullptr;
             }
@@ -50,20 +49,20 @@ namespace Mix {
                 info.features = physicalDevice.getFeatures();
                 info.extensions = physicalDevice.enumerateDeviceExtensionProperties();
                 info.queueFamilies = physicalDevice.getQueueFamilyProperties();
-                info.familyIndexSet = GetQueueFamilyIndexSet(info);
+                info.familyIndexSet = getQueueFamilyIndexSet(info);
                 info.memoryProperties = physicalDevice.getMemoryProperties();
 
                 mAllPhysicalDevices.push_back(std::move(info));
             }
         }
 
-        void Core::PickPhysicalDevice(const std::function<uint32_t(const PhysicalDeviceInfo&)>& marker) {
+        void Core::pickPhysicalDevice(const std::function<uint32_t(const PhysicalDeviceInfo&)>& marker) {
             const PhysicalDeviceInfo* top = nullptr;
             uint32_t topScore = 0;
 
             for (auto& deviceInfo : mAllPhysicalDevices) {
                 // pick the physical device with the highest score
-                const auto score = marker ? marker(deviceInfo) : EvaluatePhysicalDevice(deviceInfo);
+                const auto score = marker ? marker(deviceInfo) : evaluatePhysicalDevice(deviceInfo);
                 if (topScore <= score) {
                     topScore = score;
                     top = &deviceInfo;
@@ -77,7 +76,7 @@ namespace Mix {
 
         }
 
-        void Core::CreateLogicalDevice() {
+        void Core::createLogicalDevice() {
             auto& physicalDevice = mPhysicalDeviceInfo.physicalDevice;
             auto physicalDeviceInfo = std::find_if(mAllPhysicalDevices.begin(),
                                                    mAllPhysicalDevices.end(),
@@ -117,8 +116,7 @@ namespace Mix {
             if (mInitInfo->debugMode) {
                 createInfo.enabledLayerCount = static_cast<uint32_t>(mInitInfo->validationLayers.size());
                 createInfo.ppEnabledLayerNames = mInitInfo->validationLayers.data();
-            }
-            else {
+            } else {
                 createInfo.ppEnabledLayerNames = nullptr;
                 createInfo.enabledLayerCount = 0;
             }
@@ -134,7 +132,7 @@ namespace Mix {
                 mQueueSet.transfer = mLogicalDevice.getQueue(physicalDeviceInfo->familyIndexSet.transfer.value(), 0);
         }
 
-        void Core::EndInit() {
+        void Core::endInit() {
             //clear mInitInfo, it won't be used anymore
             MX_FREE_POINTER(mInitInfo);
             mInitInfo = nullptr;
@@ -147,7 +145,7 @@ namespace Mix {
             mSyncObjMgr.init(mLogicalDevice);
         }
 
-        void Core::Destroy() {
+        void Core::destroy() {
             mSyncObjMgr.destroy();
             mLogicalDevice.destroy();
             mInstance.destroy(mSurface);
@@ -156,7 +154,7 @@ namespace Mix {
             mInstance = nullptr;
         }
 
-        void Core::SetDebugMode(const bool _on) const {
+        void Core::setDebugMode(const bool _on) const {
             mInitInfo->debugMode = _on;
             if (mInitInfo->debugMode) {
                 mInitInfo->instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -164,7 +162,7 @@ namespace Mix {
             }
         }
 
-        void Core::SetTargetWindow(Window* _window) {
+        void Core::setTargetWindow(Window* _window) {
             mWindow = _window;
             unsigned int count;
             SDL_Vulkan_GetInstanceExtensions(_window->getWindowPtr(), &count, nullptr);
@@ -174,7 +172,7 @@ namespace Mix {
                                                  extensions.end());
         }
 
-        uint32_t Core::GetMemoryTypeIndex(const uint32_t _type, const vk::MemoryPropertyFlags& _properties) const {
+        uint32_t Core::getMemoryTypeIndex(const uint32_t _type, const vk::MemoryPropertyFlags& _properties) const {
             for (uint32_t i = 0; i < mPhysicalDeviceInfo.memoryProperties.memoryTypeCount; ++i) {
                 if (_type & (1 << i) && mPhysicalDeviceInfo.memoryProperties.memoryTypes[i].propertyFlags & _properties)
                     return i;
@@ -182,7 +180,7 @@ namespace Mix {
             return ~0U;
         }
 
-        bool Core::CheckFormatFeatureSupport(const vk::Format _format, const vk::ImageTiling _tiling,
+        bool Core::checkFormatFeatureSupport(const vk::Format _format, const vk::ImageTiling _tiling,
                                              const vk::FormatFeatureFlags& _features) const {
             const auto prop = mPhysicalDeviceInfo.physicalDevice.getFormatProperties(_format);
 
@@ -193,7 +191,7 @@ namespace Mix {
             return false;
         }
 
-        uint32_t Core::EvaluatePhysicalDevice(const PhysicalDeviceInfo& _info) const {
+        uint32_t Core::evaluatePhysicalDevice(const PhysicalDeviceInfo& _info) const {
             // todo complete this in later update
             // divide required extensions into two parts
             // [must supported]: if not score is zero
@@ -239,8 +237,7 @@ namespace Mix {
 
             return score;
         }
-
-        QueueFamilyIndexSet Core::GetQueueFamilyIndexSet(const PhysicalDeviceInfo& _info) {
+        QueueFamilyIndexSet Core::getQueueFamilyIndexSet(const PhysicalDeviceInfo& _info) const {
             QueueFamilyIndexSet indexSet;
             for (QueueFamilyIndex i = 0; i < _info.queueFamilies.size(); ++i) {
                 if (_info.queueFamilies[i].queueCount == 0) {
@@ -260,6 +257,9 @@ namespace Mix {
                     indexSet.present = i;
             }
             return indexSet;
+        }
+
+        GraphicsComponent::~GraphicsComponent() {
         }
     }
 }

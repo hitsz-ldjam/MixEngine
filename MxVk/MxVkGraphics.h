@@ -1,11 +1,10 @@
 #pragma once
-#ifndef _MX_VK_GRAPHICS_H_
-#define _MX_VK_GRAPHICS_H_
+#ifndef MX_VK_GRAPHICS_H_
+#define MX_VK_GRAPHICS_H_
 
 #include "../Mx/MxWindow.h"
 #include "../Utils/MxUtils.h"
 #include "../Mx/MxObject.h"
-#include "../Mx/MxMesh.h"
 
 #include "MxVkDef.h"
 #include "MxVkCore.h"
@@ -29,72 +28,74 @@
 
 namespace Mix {
     namespace Graphics {
-        class Vulkan {
+        class Vulkan :public Object {
+            MX_DECLARE_RTTI;
+            MX_DECLARE_NO_CLASS_FACTORY;
         public:
             Vulkan() {};
             ~Vulkan() {
-                Destroy();
+                destroy();
             }
 
-            void Init();
+            void init();
 
-            void SetTargetWindow(Window* _window) {
+            void setTargetWindow(Window* _window) {
                 mWindow = _window;
             }
 
-            void Build();
+            void build();
 
-            void Update(float _deltaTime);
+            void update(float _deltaTime);
 
-            void Destroy();
+            void destroy();
 
             struct Settings {
                 vk::SampleCountFlagBits sampleCount = vk::SampleCountFlagBits::e1;
             };
 
-            const vk::Device& GetLogicalDevice() const {
-                return mCore->GetDevice();
+            const vk::Device& getLogicalDevice() const {
+                return mCore->getDevice();
             }
 
-            const vk::PhysicalDevice& GetPhysicalDevice() const {
-                return mCore->GetPhysicalDevice();
+            const vk::PhysicalDevice& getPhysicalDevice() const {
+                return mCore->getPhysicalDevice();
             }
 
-            std::shared_ptr<Core> GetCore() const {
+            std::shared_ptr<Core> getCore() const {
                 return mCore;
             }
 
-            std::shared_ptr<DeviceAllocator> GetAllocator() const {
+            std::shared_ptr<DeviceAllocator> getAllocator() const {
                 return mAllocator;
             }
 
-            std::shared_ptr<CommandMgr> GetCommandMgr() const {
+            std::shared_ptr<CommandMgr> getCommandMgr() const {
                 return mCommandMgr;
             }
 
         private:
-            void BuildCore();
-            void BuildDebugUtils();
-            void BuildSwapchain();
-            void BuildDepthStencil();
-            void BuildRenderPass();
-            void BuildDescriptorSetLayout();
-            void BuildShaders();
-            void BuildPipeline();
-            void BuildCommandMgr();
-            void BuildFrameBuffers();
+            void buildCore();
+            void buildDebugUtils();
+            void buildSwapchain();
+            void buildDepthStencil();
+            void buildRenderPass();
+            void buildDescriptorSetLayout();
+            void buildShaders();
+            void buildPipeline();
+            void buildCommandMgr();
+            void buildFrameBuffers();
 
-            void BuildUniformBuffers();
-            void BuildCommandBuffers();
-            void BuildDescriptorSets();
+            void buildUniformBuffers();
+            void buildCommandBuffers();
+            void buildDescriptorSets();
 
             // test
             // build utils to load resources
-            void LoadResource();
+            void loadResource();
 
         private:
-            void UpdateCmdBuffer(float _deltaTime);
-            void UpdateUniformBuffer(float _deltaTime);
+            void updateCmdBuffer(float _deltaTime);
+            void updateUniformBuffer(float _deltaTime);
 
         private:
             Window*                 mWindow = nullptr;
@@ -113,7 +114,7 @@ namespace Mix {
             std::shared_ptr<CommandMgr>             mCommandMgr;
 
             std::shared_ptr<ImageMgr>               mImageMgr;
-            std::shared_ptr<gltf::MeshMgr>          mMeshMgr;
+            // std::shared_ptr<gltf::MeshMgr>          mMeshMgr;
 
             std::vector<Framebuffer*>       mFramebuffers;
             Image                           mDepthStencil;
@@ -138,4 +139,4 @@ namespace Mix {
     }
 }
 
-#endif // !_MX_VK_GRAPHICS_H_
+#endif // !MX_VK_GRAPHICS_H_

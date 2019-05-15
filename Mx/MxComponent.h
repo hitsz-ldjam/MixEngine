@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MX_COMPONENT_H_
-#define _MX_COMPONENT_H_
+#ifndef MX_COMPONENT_H_
+#define MX_COMPONENT_H_
 
 
 #include "MxObject.h"
@@ -17,11 +17,11 @@ namespace Mix {
         Component() :mGameObj(nullptr) {};
         virtual ~Component() = 0 {};
 
-        void SetGameObj(GameObject* _gameObj) {
+        void setGameObj(GameObject* _gameObj) {
             mGameObj = _gameObj;
         }
 
-        GameObject* GetGameObj() const {
+        GameObject* getGameObj() const {
             return mGameObj;
         }
 

@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MX_OBJECT_H_
-#define _MX_OBJECT_H_
+#ifndef MX_OBJECT_H_
+#define MX_OBJECT_H_
 
 #include "MxDef.h"
 #include "MxRtti.hpp"
@@ -36,7 +36,7 @@ namespace Mix {
 
     struct GlobalClassFactoryFuncMap {
 
-        static std::weak_ptr <std::map<std::string, FactoryFunction>> getInstance() {
+        static std::weak_ptr <std::map<std::string, FactoryFunction>> GetInstance() {
             static std::shared_ptr<std::map<std::string, FactoryFunction>> instance = nullptr;
 
             if (!instance)
@@ -55,58 +55,68 @@ namespace Mix {
             AddObject(this);
         }
 
-        virtual ~Object() = 0 {};
-        
-        /**
-         * \brief Check if this is the same type as _type
-         */
-        bool IsSameType(const Rtti& _type) const { return(&GetType() == &_type); }
+        virtual ~Object() = 0 {
+            RemoveObject(this);
+        };
+
+        Object(const Object& _other) = default;
+
+        Object(Object&& _other) noexcept = default;
+
+        Object& operator=(const Object& _other) = default;
+
+        Object& operator=(Object&& _other) noexcept = default;
 
         /**
          * \brief Check if this is the same type as _type
          */
-        bool IsSameType(const Rtti* _type) const { return (&GetType() == _type); }
+        bool isSameType(const Rtti& _type) const { return(&GetType() == &_type); }
+
+        /**
+         * \brief Check if this is the same type as _type
+         */
+        bool isSameType(const Rtti* _type) const { return (&GetType() == _type); }
 
         /**
          * \brief Check if this is the same type as _object
          */
-        bool IsSameType(const Object& _object) const { return (&GetType() == &_object.GetType()); }
+        bool isSameType(const Object& _object) const { return (&GetType() == &_object.GetType()); }
 
         /**
          * \brief Check if this is the same type as _object
          */
-        bool IsSameType(const Object* _object) const { return (&GetType() == &_object->GetType()); }
+        bool isSameType(const Object* _object) const { return (&GetType() == &_object->GetType()); }
 
         /**
          * \brief Check if this is derived from the Class that owns _type
          */
-        bool IsDerived(const Rtti& _type) const { return IsDerived(&_type); }
+        bool isDerived(const Rtti& _type) const { return isDerived(&_type); }
 
         /**
          * \brief Check if this is derived from the Class that owns _type
          */
-        bool IsDerived(const Rtti* _type) const { return GetType().IsDerivedFrom(_type); }
+        bool isDerived(const Rtti* _type) const { return GetType().isDerivedFrom(_type); }
 
         /**
          * \brief Check if this is derived from _object
          */
-        bool IsDerived(const Object& _object) const { return IsDerived(&_object); }
+        bool isDerived(const Object& _object) const { return isDerived(&_object); }
 
         /**
          * \brief Check if this is derived from _object
          */
-        bool IsDerived(const Object* _object) const { return GetType().IsDerivedFrom(&_object->GetType()); }
+        bool isDerived(const Object* _object) const { return GetType().isDerivedFrom(&_object->GetType()); }
 
 
         /**
          * \brief Get the type name of this
          */
-        const std::string& GetTypeName() const { return GetType().GetName(); }
+        const std::string& getTypeName() const { return GetType().getName(); }
 
         /**
          * \brief Get the name of this
          */
-        const std::string& GetName() const { return mName; }
+        const std::string& getName() const { return mName; }
 
     protected:
         std::string mName;
@@ -117,14 +127,14 @@ namespace Mix {
         /**
          * \brief Find an object of T type, return nullptr if there is no one exists
          */
-        template<typename T>
-        static T* FindObjectOfType();
+        template<typename _Ty>
+        static _Ty* FindObjectOfType();
 
         /**
          * \brief Find all objects of T type
          */
-        template<typename T>
-        static std::vector<T*> FindObjectsOfType();
+        template<typename _Ty>
+        static std::vector<_Ty*> FindObjectsOfType();
 
     protected:
         /**
@@ -134,47 +144,47 @@ namespace Mix {
         static bool RegisterFactoryFunc(const std::string& _typeName, FactoryFunction _func);
 
     private:
-        static std::vector<Object*> mObjectList;
+        static std::vector<Object*> sObjectList;
 
         /**
          * \brief Add an object to global Object list
          */
         static void AddObject(Object* _obj) {
-            mObjectList.push_back(_obj);
+            sObjectList.push_back(_obj);
         }
 
         /**
          * \brief Remove an object from global Object list
          */
         static void RemoveObject(Object* _obj) {
-            const auto it = std::find(mObjectList.begin(), mObjectList.end(), _obj);
-            if (it == mObjectList.end())
+            const auto it = std::find(sObjectList.begin(), sObjectList.end(), _obj);
+            if (it == sObjectList.end())
                 return;
-            mObjectList.erase(it);
+            sObjectList.erase(it);
         }
     };
 
-    template<typename T>
-    T * Object::FindObjectOfType() {
-        T* ptr;
+    template<typename _Ty>
+    _Ty * Object::FindObjectOfType() {
+        _Ty* ptr;
 
-        for (auto obj : mObjectList) {
+        for (auto obj : sObjectList) {
             // check the type of Object
-            if (ptr = dynamic_cast<T*>(obj))
+            if ((ptr = dynamic_cast<_Ty*>(obj)))
                 return ptr;
         }
 
         return nullptr;
     }
 
-    template<typename T>
-    inline std::vector<T*> Object::FindObjectsOfType() {
-        std::vector<T*> results;
-        T* ptr;
+    template<typename _Ty>
+    std::vector<_Ty*> Object::FindObjectsOfType() {
+        std::vector<_Ty*> results;
+        _Ty* ptr;
 
-        for (auto obj : mObjectList) {
+        for (auto obj : sObjectList) {
             // check the type of comp
-            if (ptr = dynamic_cast<T*>(obj))
+            if ((ptr = dynamic_cast<_Ty*>(obj)))
                 results.push_back(ptr);
         }
 
@@ -182,4 +192,4 @@ namespace Mix {
     }
 }
 
-#endif // !_MX_OBJECT_H_
+#endif // !MX_OBJECT_H_

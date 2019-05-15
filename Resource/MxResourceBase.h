@@ -2,9 +2,9 @@
 #ifndef MX_RESOURCEBASE_H_
 #define MX_RESOURCEBASE_H_
 
-#include <utility>
-#include "../Utils/MxUtils.h"
+#include <filesystem>
 #include "../Utils/MxReferenceMgr.h"
+#include "../Utils/MxUtils.h"
 
 namespace Mix {
     namespace Resource {
@@ -17,7 +17,7 @@ namespace Mix {
         };
 
         class ResourceBase;
-        typedef Utils::ReferenceMgr<Guid, std::shared_ptr<ResourceBase>> ResourceRefMgr;
+        typedef Utils::ReferenceMgr<Guid, ResourceBase*> ResourceRefMgr;
         typedef Utils::Reference<ResourceRefMgr> ResourceRef;
 
         class ResourceBase {
@@ -36,9 +36,9 @@ namespace Mix {
 
             virtual ~ResourceBase() = default;
 
-            Guid GetGuid() const { return mGuid; }
+            Guid getGuid() const { return mGuid; }
 
-            const std::string& FileName()const {
+            const std::string& fileName()const {
                 return mFileName;
             }
 

@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MX_VK_SYNCOBJMGR_H_
-#define _MX_VK_SYNCOBJMGR_H_
+#ifndef MX_VK_SYNCOBJMGR_H_
+#define MX_VK_SYNCOBJMGR_H_
 
 
 #include "MxVkDef.h"
@@ -14,21 +14,21 @@ namespace Mix {
 
         class SyncObjectMgr{
         public:
-            void init(const vk::Device& device) {
-                mDevice = device;
+            void init(const vk::Device& _device) {
+                mDevice = _device;
             }
 
-            virtual ~SyncObjectMgr() {
+            ~SyncObjectMgr() {
                 destroy();
             }
 
-            Fence createFence(const vk::FenceCreateFlags flags = vk::FenceCreateFlagBits::eSignaled);
+            Fence createFence(const vk::FenceCreateFlags _flags = vk::FenceCreateFlagBits::eSignaled);
 
-            void destroyFence(const vk::Fence fence);
+            void destroyFence(const vk::Fence _fence);
 
             Semaphore createSemaphore();
 
-            void destroySemaphore(const vk::Semaphore semaphore);
+            void destroySemaphore(const vk::Semaphore _semaphore);
 
             void destroy();
         private:
@@ -37,33 +37,31 @@ namespace Mix {
             std::vector<vk::Semaphore> mSemaphores;
         };
 
-        // todo
-
         class Semaphore {
         public:
             Semaphore() :mMgr(nullptr), mSemaphore(nullptr) {};
 
-            Semaphore(SyncObjectMgr* mgr, const vk::Semaphore& sph) :mMgr(mgr), mSemaphore(sph) {
+            Semaphore(SyncObjectMgr* _mgr, const vk::Semaphore& _sph) :mMgr(_mgr), mSemaphore(_sph) {
             }
 
-            Semaphore(const Semaphore& sph) = delete;
+            Semaphore(const Semaphore& _other) = delete;
 
-            Semaphore(Semaphore&& sph) noexcept {
-                mSemaphore = sph.mSemaphore;
-                mMgr = sph.mMgr;
+            Semaphore(Semaphore&& _other) noexcept {
+                mSemaphore = _other.mSemaphore;
+                mMgr = _other.mMgr;
 
-                sph.mSemaphore = nullptr;
-                sph.mMgr = nullptr;
+                _other.mSemaphore = nullptr;
+                _other.mMgr = nullptr;
             }
 
-            Semaphore& operator=(const Semaphore& sph) = delete;
+            Semaphore& operator=(const Semaphore& _other) = delete;
 
-            Semaphore& operator=(Semaphore&& sph) noexcept {
-                mSemaphore = sph.mSemaphore;
-                mMgr = sph.mMgr;
+            Semaphore& operator=(Semaphore&& _other) noexcept {
+                mSemaphore = _other.mSemaphore;
+                mMgr = _other.mMgr;
 
-                sph.mSemaphore = nullptr;
-                sph.mMgr = nullptr;
+                _other.mSemaphore = nullptr;
+                _other.mMgr = nullptr;
                 return *this;
             }
 
@@ -93,27 +91,27 @@ namespace Mix {
         public:
             Fence() :mMgr(nullptr), mFence(nullptr) {};
 
-            Fence(SyncObjectMgr* mgr, const vk::Fence& sph) :mMgr(mgr), mFence(sph) {
+            Fence(SyncObjectMgr* _mgr, const vk::Fence& _fence) :mMgr(_mgr), mFence(_fence) {
             }
 
-            Fence(const Fence& sph) = delete;
+            Fence(const Fence& _other) = delete;
 
-            Fence(Fence&& sph) noexcept {
-                mFence = sph.mFence;
-                mMgr = sph.mMgr;
+            Fence(Fence&& _other) noexcept {
+                mFence = _other.mFence;
+                mMgr = _other.mMgr;
 
-                sph.mFence = nullptr;
-                sph.mMgr = nullptr;
+                _other.mFence = nullptr;
+                _other.mMgr = nullptr;
             }
 
-            Fence& operator=(const Fence& sph) = delete;
+            Fence& operator=(const Fence& _fence) = delete;
 
-            Fence& operator=(Fence&& sph) noexcept {
-                mFence = sph.mFence;
-                mMgr = sph.mMgr;
+            Fence& operator=(Fence&& _other) noexcept {
+                mFence = _other.mFence;
+                mMgr = _other.mMgr;
 
-                sph.mFence = nullptr;
-                sph.mMgr = nullptr;
+                _other.mFence = nullptr;
+                _other.mMgr = nullptr;
                 return *this;
             }
 
@@ -140,4 +138,4 @@ namespace Mix {
         };
     }
 }
-#endif // !_MX_VK_SYNCOBJMGR_H_
+#endif // !MX_VK_SYNCOBJMGR_H_

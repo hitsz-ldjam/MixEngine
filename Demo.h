@@ -46,42 +46,45 @@ public:
 
         SDL_SetRelativeMouseMode(SDL_FALSE);
 
-        clip = Mix::AudioClip::Open("Media/test.mp3", // Pass audio path here
+        clip = Mix::AudioClip::Open("TestResources/Media/test.mp3", // Pass audio path here
                                     Mix::AudioClipLoadType::DecompressOnLoad
                                     | Mix::AudioClipLoadType::ThreeD
                                     | Mix::AudioClipLoadType::Loop);
-        clip->Init(false);
+        clip->init(false);
 
-        mGraphics.Init();
-        mGraphics.SetTargetWindow(&mWindow);
-        mGraphics.Build();
+        mVulkan.init();
+        mVulkan.setTargetWindow(&mWindow);
+        mVulkan.build();
+
+        auto v = FindObjectOfType<Mix::Graphics::Vulkan>();
+
+        mResources.init();
+        auto tempObj = mResources.load("E:/Git/vulkan-learning-master/res/models/cube.gltf");
+
 
         mObj = new Mix::GameObject();
-        mObj->AddChild(mGraphics.CreateModelObj(mGltfLoader.LoadFromGlb(
-            ,
-            "E:/Git/vulkan-learning-master/res/models/gltfSample/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", "DamagedHelmet")));
         mTimer.Start();
     }
 
     void update() override {
         mTimer.Tick();
 
-        auto tran = mObj->GetComponent<Mix::Transform>();
+        auto tran = mObj->getComponent<Mix::Transform>();
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_W))
-            tran->translate(Mix::Axis::worldForward, Mix::Space::WORLD);
+            tran->translate(Mix::Axis::WorldForward, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_S))
-            tran->translate(-Mix::Axis::worldForward, Mix::Space::WORLD);
+            tran->translate(-Mix::Axis::WorldForward, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_D))
-            tran->translate(Mix::Axis::worldRight, Mix::Space::WORLD);
+            tran->translate(Mix::Axis::WorldRight, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_A))
-            tran->translate(-Mix::Axis::worldRight, Mix::Space::WORLD);
+            tran->translate(-Mix::Axis::WorldRight, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_SPACE))
-            tran->translate(Mix::Axis::worldUp, Mix::Space::WORLD);
+            tran->translate(Mix::Axis::WorldUp, Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_LCTRL))
-            tran->translate(-Mix::Axis::worldUp, Mix::Space::WORLD);
-        clip->Set3DAttributes(&tran->position());
+            tran->translate(-Mix::Axis::WorldUp, Mix::Space::WORLD);
+        clip->set3DAttributes(&tran->position());
 
-        mGraphics.Update(static_cast<float>(mTimer.DeltaTime()));
+        mVulkan.update(static_cast<float>(mTimer.DeltaTime()));
     }
 
 private:
@@ -90,12 +93,11 @@ private:
     Mix::AudioClip* clip = nullptr;
 
 
-    Mix::Graphics::Vulkan mGraphics;
+    Mix::Graphics::Vulkan mVulkan;
     Mix::Timer              mTimer;
 
     Mix::GameObject* mObj = nullptr;
-    Mix::Utils::GltfLoader mGltfLoader;
-
+    Mix::Resource::Resources mResources;
 };
 
 #endif

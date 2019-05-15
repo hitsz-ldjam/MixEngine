@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _MX_AUDIO_CLIP_H_
-#define _MX_AUDIO_CLIP_H_
+#ifndef MX_AUDIO_CLIP_H_
+#define MX_AUDIO_CLIP_H_
 
 #include <glm/vec3.hpp>
 
@@ -18,12 +18,12 @@ namespace Mix {
         LoadInBackground = FMOD_NONBLOCKING,
     };
 
-    inline AudioClipLoadType operator& (AudioClipLoadType a, AudioClipLoadType b) {
-        return static_cast<AudioClipLoadType>(static_cast<unsigned>(a) & static_cast<unsigned>(b));
+    inline AudioClipLoadType operator& (AudioClipLoadType _a, AudioClipLoadType _b) {
+        return static_cast<AudioClipLoadType>(static_cast<unsigned>(_a) & static_cast<unsigned>(_b));
     }
 
-    inline AudioClipLoadType operator| (AudioClipLoadType a, AudioClipLoadType b) {
-        return static_cast<AudioClipLoadType>(static_cast<unsigned>(a) | static_cast<unsigned>(b));
+    inline AudioClipLoadType operator| (AudioClipLoadType _a, AudioClipLoadType _b) {
+        return static_cast<AudioClipLoadType>(static_cast<unsigned>(_a) | static_cast<unsigned>(_b));
     }
     
     class AudioClip {
@@ -31,29 +31,29 @@ namespace Mix {
         static AudioClip* Open(const std::string& _filename,
                                const AudioClipLoadType _type = AudioClipLoadType::DecompressOnLoad) {
             return new AudioClip(_filename, _type);
-        };
+        }
 
         explicit AudioClip(const std::string& _name, const AudioClipLoadType _type = AudioClipLoadType::DecompressOnLoad);
         ~AudioClip();
         /** @return The channel that the audio is played on. */
-        FMOD::Channel* Init(const bool _playOnInit = true, FMOD::ChannelGroup* _channelGroup = nullptr);
+        FMOD::Channel* init(const bool _playOnInit = true, FMOD::ChannelGroup* _channelGroup = nullptr);
 
-        FMOD_OPENSTATE GetLoadState();
-        bool GetMute();
-        bool GetPaused();
-        float GetVolume();
-        void Pause() const { if(channel) channel->setPaused(true); }
-        void Play() const { if(channel) channel->setPaused(false); }
-        void SetMute(const bool _mute = true) const { if(channel) channel->setMute(_mute); }
+        FMOD_OPENSTATE getLoadState();
+        bool getMute();
+        bool getPaused();
+        float getVolume();
+        void pause() const { if(mChannel) mChannel->setPaused(true); }
+        void play() const { if(mChannel) mChannel->setPaused(false); }
+        void setMute(const bool _mute = true) const { if(mChannel) mChannel->setMute(_mute); }
         /**
          * @param _volume Linear volume level. Can be below 0 to invert a signal and above 1 to amplify the signal.
          * @note Increasing the signal level too far may cause audible distortion.
          */
-        void SetVolume(const float _volume) const;
-        void Stop() const { if(channel) channel->stop(); }
+        void setVolume(const float _volume) const;
+        void stop() const { if(mChannel) mChannel->stop(); }
 
-        FMOD::Sound* GetSound() const { return sound; }
-        FMOD::Channel* GetChannel() const { return channel; }
+        FMOD::Sound* getSound() const { return mSound; }
+        FMOD::Channel* getChannel() const { return mChannel; }
 
         // todo: add more interfaces
 
@@ -63,13 +63,13 @@ namespace Mix {
          * @param _position Pass nullptr to ignore.
          * @param _velocity Pass nullptr to ignore.
          */
-        void Set3DAttributes(const glm::vec3* _position = nullptr, const glm::vec3* _velocity = nullptr);
+        void set3DAttributes(const glm::vec3* _position = nullptr, const glm::vec3* _velocity = nullptr);
 
     private:
-        static FMOD::Studio::System* system;
-        static FMOD::System* lowLevelSystem;
-        FMOD::Sound* sound = nullptr;
-        FMOD::Channel* channel = nullptr;
+        static FMOD::Studio::System* System;
+        static FMOD::System* LowLevelSystem;
+        FMOD::Sound* mSound = nullptr;
+        FMOD::Channel* mChannel = nullptr;
     };
 }
 

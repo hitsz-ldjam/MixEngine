@@ -14,19 +14,19 @@ namespace Mix {
             block.free = true;
             block.offset = 0;
             block.size = _size;
-            mMem = block.memory = mCore->GetDevice().allocateMemory(allocInfo);
+            mMem = block.memory = mCore->getDevice().allocateMemory(allocInfo);
 
-            if ((mCore->GetPhysicalDevice().getMemoryProperties().memoryTypes[mMemTypeIndex].propertyFlags & vk::MemoryPropertyFlagBits::eHostVisible) == vk::MemoryPropertyFlagBits::eHostVisible)
-                mPtr = mCore->GetDevice().mapMemory(mMem, 0, VK_WHOLE_SIZE);
+            if ((mCore->getPhysicalDevice().getMemoryProperties().memoryTypes[mMemTypeIndex].propertyFlags & vk::MemoryPropertyFlagBits::eHostVisible) == vk::MemoryPropertyFlagBits::eHostVisible)
+                mPtr = mCore->getDevice().mapMemory(mMem, 0, VK_WHOLE_SIZE);
 
             mBlocks.emplace_back(block);
         }
 
-        Chunk::Chunk(Chunk && _chunk) {
+        Chunk::Chunk(Chunk && _chunk) noexcept {
             *this = std::move(_chunk);
         }
 
-        Chunk & Chunk::operator=(Chunk && _chunk) {
+        Chunk & Chunk::operator=(Chunk && _chunk) noexcept {
             mCore = _chunk.mCore;
             mMem = _chunk.mMem;
             mSize = _chunk.mSize;
@@ -41,10 +41,10 @@ namespace Mix {
 
         Chunk::~Chunk() {
             if (mMem)
-                mCore->GetDevice().freeMemory(mMem);
+                mCore->getDevice().freeMemory(mMem);
         }
 
-        bool Chunk::Allocate(vk::DeviceSize _size, vk::DeviceSize _alignment, MemoryBlock & _block) {
+        bool Chunk::allocate(vk::DeviceSize _size, vk::DeviceSize _alignment, MemoryBlock & _block) {
             if (_size > mSize)
                 return false;
 
@@ -94,76 +94,76 @@ namespace Mix {
             return false;
         }
 
-        void Chunk::Deallocate(const MemoryBlock & _block) {
+        void Chunk::deallocate(const MemoryBlock & _block) {
             auto it = std::find(mBlocks.begin(), mBlocks.end(), _block);
             assert(it != mBlocks.end());
 
             it->free = true;
 
             if ((++mOperationCount) >= MaxOperationCount)
-                SortOut();
+                sortOut();
         }
 
-        void Chunk::SortOut() {
+        void Chunk::sortOut() {
             // todo
             mOperationCount = 0;
         }
 
-        std::unique_ptr<Chunk> ChunkFactory::GetChunk(vk::DeviceSize _size, uint32_t _memTypeIndex) {
+        std::unique_ptr<Chunk> ChunkFactory::getChunk(vk::DeviceSize _size, uint32_t _memTypeIndex) {
             _size = (mMinChunkSize < _size) ? Utils::NextPowerOf2(_size) : mMinChunkSize;
 
             return std::make_unique<Chunk>(mCore, _size, _memTypeIndex);
         }
 
-        void DeviceAllocator::Init(std::shared_ptr<Core> & _core) {
+        void DeviceAllocator::init(std::shared_ptr<Core> & _core) {
             mCore = _core;
-            mChunkFactory.Init(_core);
+            mChunkFactory.init(_core);
         }
 
-        MemoryBlock DeviceAllocator::Allocate(vk::DeviceSize _size, vk::DeviceSize _alignment, uint32_t _memoryTypeIndex) {
+        MemoryBlock DeviceAllocator::allocate(vk::DeviceSize _size, vk::DeviceSize _alignment, uint32_t _memoryTypeIndex) {
             MemoryBlock block;
             // search for a suitable chunk
             for (auto& chunk : mChunks)
-                if (chunk->MemoryTypeIndex() == _memoryTypeIndex)
-                    if (chunk->Allocate(_size, _alignment, block))
+                if (chunk->memoryTypeIndex() == _memoryTypeIndex)
+                    if (chunk->allocate(_size, _alignment, block))
                         return block;
 
             // no suitable chunk exist, create one
-            mChunks.emplace_back(mChunkFactory.GetChunk(_size, _memoryTypeIndex));
-            assert(mChunks.back()->Allocate(_size, _alignment, block));
+            mChunks.emplace_back(mChunkFactory.getChunk(_size, _memoryTypeIndex));
+            assert(mChunks.back()->allocate(_size, _alignment, block));
             return block;
         }
 
-        MemoryBlock DeviceAllocator::Allocate(const vk::Image & _image,
+        MemoryBlock DeviceAllocator::allocate(const vk::Image & _image,
                                               const vk::MemoryPropertyFlags & _properties,
-                                              vk::MemoryRequirements* memReq) {
-            auto memoryReq = mCore->GetDevice().getImageMemoryRequirements(_image);
-            MemoryBlock block = Allocate(memoryReq.size, memoryReq.alignment, mCore->GetMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
-            mCore->GetDevice().bindImageMemory(_image, block.memory, block.offset);
+                                              vk::MemoryRequirements* _memReq) {
+            auto memoryReq = mCore->getDevice().getImageMemoryRequirements(_image);
+            MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment, mCore->getMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
+            mCore->getDevice().bindImageMemory(_image, block.memory, block.offset);
 
-            if (memReq)
-                *memReq = memoryReq;
+            if (_memReq)
+                *_memReq = memoryReq;
 
             return block;
         }
 
-        MemoryBlock DeviceAllocator::Allocate(const vk::Buffer & _buffer,
+        MemoryBlock DeviceAllocator::allocate(const vk::Buffer & _buffer,
                                               const vk::MemoryPropertyFlags & _properties,
-                                              vk::MemoryRequirements* memReq) {
-            auto memoryReq = mCore->GetDevice().getBufferMemoryRequirements(_buffer);
-            MemoryBlock block = Allocate(memoryReq.size, memoryReq.alignment, mCore->GetMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
-            mCore->GetDevice().bindBufferMemory(_buffer, block.memory, block.offset);
+                                              vk::MemoryRequirements* _memReq) {
+            auto memoryReq = mCore->getDevice().getBufferMemoryRequirements(_buffer);
+            MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment, mCore->getMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
+            mCore->getDevice().bindBufferMemory(_buffer, block.memory, block.offset);
 
-            if (memReq)
-                *memReq = memoryReq;
+            if (_memReq)
+                *_memReq = memoryReq;
 
             return block;
         }
 
-        void DeviceAllocator::Deallocate(MemoryBlock & _block) {
+        void DeviceAllocator::deallocate(MemoryBlock & _block) {
             for (auto& chunk : mChunks) {
-                if (chunk->IsIn(_block)) {
-                    chunk->Deallocate(_block);
+                if (chunk->isIn(_block)) {
+                    chunk->deallocate(_block);
                     return;
                 }
             }

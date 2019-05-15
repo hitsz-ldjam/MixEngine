@@ -47,7 +47,7 @@ namespace Mix {
 
             modelData.meshes.reserve(_model.meshes.size());
             for (auto i : scene.nodes) {
-                const tinygltf::Node& node = _model.nodes[scene.nodes[i]];
+                const tinygltf::Node& node = _model.nodes[i];
                 ProcessNode(_model, trans, &node, modelData);
             }
 
@@ -270,7 +270,7 @@ namespace Mix {
             // set transform
             TransformData localTrans;
             if (_node->translation.size() == 3) {
-                localTrans.translation = glm::make_vec3(_node->scale.data());
+                localTrans.translation = glm::make_vec3(_node->translation.data());
             }
 
             if (_node->rotation.size() == 4) {
@@ -285,10 +285,10 @@ namespace Mix {
                 localTrans.matrix = glm::make_mat4x4(_node->matrix.data());
             }
 
-            _trans.translation = _trans.translation + localTrans.translation;
-            _trans.rotation = _trans.rotation * localTrans.rotation;
-            _trans.scale = _trans.scale*localTrans.scale;
-            _trans.matrix = _trans.matrix*localTrans.matrix;
+            localTrans.translation = _trans.translation + localTrans.translation;
+            localTrans.rotation = _trans.rotation * localTrans.rotation;
+            localTrans.scale = _trans.scale*localTrans.scale;
+            localTrans.matrix = _trans.matrix*localTrans.matrix;
 
             if (_node->mesh > -1) {
                 MeshData meshData;
@@ -387,11 +387,11 @@ namespace Mix {
                 }
 
                 _modelData.meshes.push_back(std::move(meshData));
+            }
 
-                if (!_node->children.empty()) {
-                    for (auto i : _node->children) {
-                        ProcessNode(_gltfModel, _trans, &_gltfModel.nodes[i], _modelData);
-                    }
+            if (!_node->children.empty()) {
+                for (auto i : _node->children) {
+                    ProcessNode(_gltfModel, localTrans, &_gltfModel.nodes[i], _modelData);
                 }
             }
         }

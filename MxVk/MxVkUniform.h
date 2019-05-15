@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _MX_VK_RENDER_H_
-#define _MX_VK_RENDER_H_
+#ifndef MX_VK_RENDER_H_
+#define MX_VK_RENDER_H_
 
 #include <map>
 #include <memory>
@@ -14,12 +14,13 @@ namespace Mix {
     namespace Graphics {
         struct AbstractUniform {
         protected:
-            AbstractUniform() {}
+            AbstractUniform() = default;
         };
 
         struct AbstractLightUniform :public AbstractUniform {
-        protected:
             glm::vec4 color;
+        protected:
+            AbstractLightUniform() :color() {}
         };
 
         struct AbstractCameraUniform :public AbstractUniform {
@@ -28,7 +29,8 @@ namespace Mix {
             glm::mat4 viewMat;
             glm::mat4 projMat;
         protected:
-            AbstractCameraUniform() {}
+            AbstractCameraUniform() : position(), forward(), viewMat(), projMat() {
+            }
         };
 
         struct MeshUniform :public AbstractUniform {
@@ -59,7 +61,7 @@ namespace Mix {
         };
 
         struct CameraUniform :public AbstractCameraUniform {
-            //
+            CameraUniform() = default;
         };
 
 
@@ -106,4 +108,4 @@ namespace Mix {
     }
 }
 
-#endif // !_MX_VK_RENDER_H_
+#endif // !MX_VK_RENDER_H_

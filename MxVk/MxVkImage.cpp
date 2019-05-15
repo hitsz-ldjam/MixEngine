@@ -4,60 +4,60 @@
 namespace Mix {
     namespace Graphics {
         namespace Tools {
-            vk::Image createImage2D(Core & core, const vk::Extent2D & extent, const vk::Format format, const vk::ImageUsageFlags & usage, const uint32_t mipLevels, const uint32_t arrayLayers, const vk::SampleCountFlagBits sampleCount, const vk::ImageLayout initialLayout, const vk::ImageTiling tiling, const vk::SharingMode sharingMode) {
+            vk::Image CreateImage2D(Core & _core, const vk::Extent2D & _extent, const vk::Format _format, const vk::ImageUsageFlags & _usage, const uint32_t _mipLevels, const uint32_t _arrayLayers, const vk::SampleCountFlagBits _sampleCount, const vk::ImageLayout _initialLayout, const vk::ImageTiling _tiling, const vk::SharingMode _sharingMode) {
                 vk::ImageCreateInfo createInfo;
                 createInfo.imageType = vk::ImageType::e2D;
-                createInfo.extent = vk::Extent3D(extent, 1);
-                createInfo.mipLevels = mipLevels;
-                createInfo.arrayLayers = arrayLayers;
-                createInfo.format = format;
-                createInfo.tiling = tiling;
-                createInfo.initialLayout = initialLayout;
-                createInfo.usage = usage;
-                createInfo.sharingMode = sharingMode;
-                createInfo.samples = sampleCount;
+                createInfo.extent = vk::Extent3D(_extent, 1);
+                createInfo.mipLevels = _mipLevels;
+                createInfo.arrayLayers = _arrayLayers;
+                createInfo.format = _format;
+                createInfo.tiling = _tiling;
+                createInfo.initialLayout = _initialLayout;
+                createInfo.usage = _usage;
+                createInfo.sharingMode = _sharingMode;
+                createInfo.samples = _sampleCount;
 
-                return core.GetDevice().createImage(createInfo);
+                return _core.getDevice().createImage(createInfo);
             }
 
-            vk::ImageView createImageView2D(const vk::Device & device, const vk::Image & image, const vk::Format format, const vk::ImageAspectFlags & aspectFlags, const uint32_t baseMipLevel, const uint32_t levelCount, const uint32_t baseLayer, const uint32_t layerCount) {
+            vk::ImageView CreateImageView2D(const vk::Device & _device, const vk::Image & _image, const vk::Format _format, const vk::ImageAspectFlags & _aspectFlags, const uint32_t _baseMipLevel, const uint32_t _levelCount, const uint32_t _baseLayer, const uint32_t _layerCount) {
                 vk::ImageViewCreateInfo createInfo;
-                createInfo.image = image;
-                createInfo.format = format;
+                createInfo.image = _image;
+                createInfo.format = _format;
                 createInfo.viewType = vk::ImageViewType::e2D;
-                createInfo.subresourceRange.aspectMask = aspectFlags;
-                createInfo.subresourceRange.baseArrayLayer = baseLayer;
-                createInfo.subresourceRange.layerCount = layerCount;
-                createInfo.subresourceRange.baseMipLevel = baseMipLevel;
-                createInfo.subresourceRange.levelCount = levelCount;
+                createInfo.subresourceRange.aspectMask = _aspectFlags;
+                createInfo.subresourceRange.baseArrayLayer = _baseLayer;
+                createInfo.subresourceRange.layerCount = _layerCount;
+                createInfo.subresourceRange.baseMipLevel = _baseMipLevel;
+                createInfo.subresourceRange.levelCount = _levelCount;
 
-                return device.createImageView(createInfo);
+                return _device.createImageView(createInfo);
             }
 
-            vk::DeviceMemory allocateImageMemory(Core & core, const vk::Image & image, const vk::MemoryPropertyFlags & properties) {
-                vk::MemoryRequirements memRq = core.GetDevice().getImageMemoryRequirements(image);
+            vk::DeviceMemory AllocateImageMemory(Core & _core, const vk::Image & _image, const vk::MemoryPropertyFlags & _properties) {
+                vk::MemoryRequirements memRq = _core.getDevice().getImageMemoryRequirements(_image);
 
                 vk::MemoryAllocateInfo allocInfo;
                 allocInfo.allocationSize = memRq.size;
-                allocInfo.memoryTypeIndex = core.GetMemoryTypeIndex(memRq.memoryTypeBits, properties);
+                allocInfo.memoryTypeIndex = _core.getMemoryTypeIndex(memRq.memoryTypeBits, _properties);
 
-                return core.GetDevice().allocateMemory(allocInfo);
+                return _core.getDevice().allocateMemory(allocInfo);
             }
 
-            void transferImageLayout(const vk::CommandBuffer & cmdbuffer, vk::Image image, vk::ImageLayout oldImageLayout, vk::ImageLayout newImageLayout, const vk::ImageSubresourceRange & subresourceRange, vk::PipelineStageFlags srcStageMask, vk::PipelineStageFlags dstStageMask) {
+            void TransferImageLayout(const vk::CommandBuffer & _cmdbuffer, vk::Image _image, vk::ImageLayout _oldImageLayout, vk::ImageLayout _newImageLayout, const vk::ImageSubresourceRange & _subresourceRange, vk::PipelineStageFlags _srcStageMask, vk::PipelineStageFlags _dstStageMask) {
                 // Create an image barrier object
                 vk::ImageMemoryBarrier imageMemoryBarrier;
-                imageMemoryBarrier.oldLayout = oldImageLayout; //旧的布局
-                imageMemoryBarrier.newLayout = newImageLayout; //新的布局
+                imageMemoryBarrier.oldLayout = _oldImageLayout; //旧的布局
+                imageMemoryBarrier.newLayout = _newImageLayout; //新的布局
                 imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED; //当需要转移所有权(属于哪个队列簇)的时候
                 imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED; //填入队列簇的索引
-                imageMemoryBarrier.image = image;
-                imageMemoryBarrier.subresourceRange = subresourceRange;
+                imageMemoryBarrier.image = _image;
+                imageMemoryBarrier.subresourceRange = _subresourceRange;
 
                 // Source layouts (old)
                 // Source access mask controls actions that have to be finished on the old layout
                 // before it will be transitioned to the new layout
-                switch (oldImageLayout) {
+                switch (_oldImageLayout) {
                 case vk::ImageLayout::eUndefined:
                     // Image layout is undefined (or does not matter)
                     // Only valid as initial layout
@@ -108,7 +108,7 @@ namespace Mix {
 
                 // Target layouts (new)
                 // Destination access mask controls the dependency for the new image layout
-                switch (newImageLayout) {
+                switch (_newImageLayout) {
                 case vk::ImageLayout::eTransferDstOptimal:
                     // Image will be used as a transfer destination
                     // Make sure any writes to the image have been finished
@@ -147,15 +147,15 @@ namespace Mix {
                 }
 
                 // Put barrier inside setup command buffer
-                cmdbuffer.pipelineBarrier(srcStageMask,
-                                          dstStageMask,
+                _cmdbuffer.pipelineBarrier(_srcStageMask,
+                                          _dstStageMask,
                                           vk::DependencyFlags(),
                                           {},
                                           {},
                                           imageMemoryBarrier);
             }
 
-            Image createDepthStencil(Core & core, const vk::Extent2D & extent, const vk::SampleCountFlagBits sampleCount) {
+            Image CreateDepthStencil(Core & _core, const vk::Extent2D & _extent, const vk::SampleCountFlagBits _sampleCount) {
                 static vk::Format candidates[] = {
                     vk::Format::eD32SfloatS8Uint,
                     vk::Format::eD24UnormS8Uint,
@@ -163,9 +163,8 @@ namespace Mix {
                 };
 
                 vk::Format format;
-                vk::FormatProperties prop;
                 for (auto candidate : candidates) {
-                    if (core.CheckFormatFeatureSupport(candidate,
+                    if (_core.checkFormatFeatureSupport(candidate,
                                                        vk::ImageTiling::eOptimal,
                                                        vk::FormatFeatureFlagBits::eDepthStencilAttachment)) {
 
@@ -175,14 +174,14 @@ namespace Mix {
                 }
 
                 Image image;
-                image.image = createImage2D(core,
-                                            extent,
+                image.image = CreateImage2D(_core,
+                                            _extent,
                                             format,
                                             vk::ImageUsageFlagBits::eDepthStencilAttachment);
 
-                image.memory = allocateImageMemory(core, image.image, vk::MemoryPropertyFlagBits::eDeviceLocal);
-                core.GetDevice().bindImageMemory(image.image, image.memory, 0);
-                image.extent = vk::Extent3D(extent, 1);
+                image.memory = AllocateImageMemory(_core, image.image, vk::MemoryPropertyFlagBits::eDeviceLocal);
+                _core.getDevice().bindImageMemory(image.image, image.memory, 0);
+                image.extent = vk::Extent3D(_extent, 1);
                 image.format = format;
 
                 return image;
@@ -191,39 +190,39 @@ namespace Mix {
 
 #pragma region MyRegion
 
-        void ImageMgr::init(std::shared_ptr<Core> & core, std::shared_ptr<DeviceAllocator>& allocator) {
-            GraphicsComponent::Init(core);
-            mpAllocator = allocator;
+        void ImageMgr::init(std::shared_ptr<Core> & _core, std::shared_ptr<DeviceAllocator>& _allocator) {
+            setCore(_core);
+            mpAllocator = _allocator;
 
             vk::BufferCreateInfo createInfo;
             createInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
             createInfo.size = mBufferSize;
             createInfo.sharingMode = vk::SharingMode::eExclusive;
 
-            mStagingBuffer = mCore->GetDevice().createBuffer(createInfo);
+            mStagingBuffer = mCore->getDevice().createBuffer(createInfo);
 
-            mMemReq = mCore->GetDevice().getBufferMemoryRequirements(mStagingBuffer);
+            mMemReq = mCore->getDevice().getBufferMemoryRequirements(mStagingBuffer);
 
-            mMemBlock = mpAllocator->Allocate(mMemReq.size, mMemReq.alignment, mCore->GetMemoryTypeIndex(mMemReq.memoryTypeBits,
+            mMemBlock = mpAllocator->allocate(mMemReq.size, mMemReq.alignment, mCore->getMemoryTypeIndex(mMemReq.memoryTypeBits,
                                                                                                          vk::MemoryPropertyFlagBits::eHostVisible |
                                                                                                          vk::MemoryPropertyFlagBits::eHostCoherent));
 
-            mCore->GetDevice().bindBufferMemory(mStagingBuffer, mMemBlock.memory, mMemBlock.offset);
+            mCore->getDevice().bindBufferMemory(mStagingBuffer, mMemBlock.memory, mMemBlock.offset);
 
-            mFence = mCore->GetSyncObjMgr().createFence();
-            mCore->GetDevice().resetFences(mFence.get());
+            mFence = mCore->getSyncObjMgr().createFence();
+            mCore->getDevice().resetFences(mFence.get());
         }
 
-        void ImageMgr::beginLoad(const vk::CommandBuffer & cmd) {
+        void ImageMgr::beginLoad(const vk::CommandBuffer & _cmd) {
             if (!mBegin) {
                 mBegin = true;
-                mCmd = cmd;
+                mCmd = _cmd;
             }
         }
 
-        vk::Format ImageMgr::gliToVulkanFormat(gli::format format) {
+        vk::Format ImageMgr::GliToVulkanFormat(const gli::format _format) {
             vk::Format result;
-            switch (format) {
+            switch (_format) {
             case gli::FORMAT_RGBA8_UNORM_PACK8:
             case gli::FORMAT_RGBA8_UNORM_PACK32:
                 result = vk::Format::eR8G8B8A8Unorm;
@@ -238,16 +237,16 @@ namespace Mix {
             return result;
         }
 
-        void ImageMgr::loadImage2D(const std::string & name, const gli::texture& texture) {
+        void ImageMgr::loadImage2D(const std::string & _name, const gli::texture& _texture) {
             // check if current size exceeds limits
-            if (mCurrSize && (mCurrSize + Utils::Align(texture.size(), mMemReq.alignment)) >= mMemReq.size)
+            if (mCurrSize && (mCurrSize + Utils::Align(_texture.size(), mMemReq.alignment)) >= mMemReq.size)
                 flush();
 
             ImageInfo info;
             info.type = vk::ImageType::e2D;
-            info.format = gliToVulkanFormat(texture.format());
-            info.extent = vk::Extent3D(texture.extent().x, texture.extent().y, 1);
-            info.size = texture.size();
+            info.format = GliToVulkanFormat(_texture.format());
+            info.extent = vk::Extent3D(_texture.extent().x, _texture.extent().y, 1);
+            info.size = _texture.size();
             info.mipLevels = 1;
             info.arrayLevels = 1;
 
@@ -263,13 +262,13 @@ namespace Mix {
             createInfo.sharingMode = vk::SharingMode::eExclusive;
             createInfo.samples = vk::SampleCountFlagBits::e1;
 
-            info.image = mCore->GetDevice().createImage(createInfo);
-            mDatas.emplace_back(name, info, static_cast<const char*>(texture.data()));
+            info.image = mCore->getDevice().createImage(createInfo);
+            mDatas.emplace_back(_name, info, static_cast<const char*>(_texture.data()));
 
             mCurrSize += Utils::Align(info.size, mMemReq.alignment);
         }
 
-        void ImageMgr::loadTexture(const std::string & name, const gli::texture & texture) {
+        void ImageMgr::loadTexture(const std::string & _name, const gli::texture & _texture) {
             // check if mCmd is begin
             if (!mCmdBegin) {
                 mCmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eSimultaneousUse));
@@ -277,13 +276,13 @@ namespace Mix {
             }
 
             // todo implement this function to load texture of all types
-            switch (texture.target()) {
+            switch (_texture.target()) {
             /*case gli::target::TARGET_1D:
                 break;
             case gli::target::TARGET_1D_ARRAY:
                 break;*/
             case gli::target::TARGET_2D:
-                loadImage2D(name, texture);
+                loadImage2D(_name, _texture);
                 break;
             /*case gli::target::TARGET_2D_ARRAY:
                 break;
@@ -310,12 +309,12 @@ namespace Mix {
                 return;
 
             for (auto& imageInfo : mImageInfos) {
-                mCore->GetDevice().destroyImage(imageInfo.second.first.image);
-                mpAllocator->Deallocate(imageInfo.second.second);
+                mCore->getDevice().destroyImage(imageInfo.second.first.image);
+                mpAllocator->deallocate(imageInfo.second.second);
             }
             mImageInfos.clear();
-            mCore->GetDevice().destroyBuffer(mStagingBuffer);
-            mpAllocator->Deallocate(mMemBlock);
+            mCore->getDevice().destroyBuffer(mStagingBuffer);
+            mpAllocator->deallocate(mMemBlock);
 
             mCore = nullptr;
             mpAllocator = nullptr;
@@ -336,7 +335,7 @@ namespace Mix {
             offset = 0;
             for (auto& data : mDatas) {
                 auto& imageInfo = data.imageInfo;
-                MemoryBlock block = mpAllocator->Allocate(imageInfo.image, vk::MemoryPropertyFlagBits::eDeviceLocal);
+                MemoryBlock block = mpAllocator->allocate(imageInfo.image, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
                 vk::BufferImageCopy bufferCopyRegion;
                 bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -355,7 +354,7 @@ namespace Mix {
                 subresourceRange.baseArrayLayer = 0;
                 subresourceRange.layerCount = 1;
 
-                Tools::transferImageLayout(mCmd,
+                Tools::TransferImageLayout(mCmd,
                                            imageInfo.image,
                                            vk::ImageLayout::eUndefined,
                                            vk::ImageLayout::eTransferDstOptimal,
@@ -368,7 +367,7 @@ namespace Mix {
                                        vk::ImageLayout::eTransferDstOptimal,
                                        bufferCopyRegion);
 
-                Tools::transferImageLayout(mCmd,
+                Tools::TransferImageLayout(mCmd,
                                            imageInfo.image,
                                            vk::ImageLayout::eTransferDstOptimal,
                                            vk::ImageLayout::eShaderReadOnlyOptimal,
@@ -386,9 +385,9 @@ namespace Mix {
             submitInfo.commandBufferCount = 1;
             submitInfo.pCommandBuffers = &mCmd;
 
-            mCore->GetQueues().transfer.value().submit(submitInfo, mFence.get());
-            mCore->GetDevice().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
-            mCore->GetDevice().resetFences(mFence.get());
+            mCore->getQueues().transfer.value().submit(submitInfo, mFence.get());
+            mCore->getDevice().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
+            mCore->getDevice().resetFences(mFence.get());
 
             // clear all stored info waiting for next flush()
             mCurrSize = 0;

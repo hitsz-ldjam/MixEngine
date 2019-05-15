@@ -1,7 +1,6 @@
 #pragma once
-#ifndef _MX_VK_PIPELINE_H_
-#define _MX_VK_PIPELINE_H_
-
+#ifndef MX_VK_PIPELINE_H_
+#define MX_VK_PIPELINE_H_
 
 #include "MxVkCore.h"
 
@@ -12,69 +11,87 @@ namespace Mix {
         public:
             void destroy();
 
-            virtual ~Pipeline() { destroy(); }
+            ~Pipeline() { destroy(); }
 
-            Pipeline & operator=(Pipeline && pipeline);
+            Pipeline & operator=(Pipeline && _pipeline) noexcept;
 
-            virtual void Init(std::shared_ptr<Core>& core) override;
+            void init(const std::shared_ptr<Core>& _core);
 
-            void setTargetRenderPass(const vk::RenderPass renderPass, const uint32_t subpassIndex);
+            void setTargetRenderPass(const vk::RenderPass _renderPass, const uint32_t _subpassIndex);
 
-            void addShader(const vk::ShaderStageFlagBits stage,
-                           const vk::ShaderModule shader,
-                           const vk::SpecializationInfo* specInfo = nullptr);
+            void addShader(const vk::ShaderStageFlagBits _stage,
+                           const vk::ShaderModule _shader,
+                           const vk::SpecializationInfo* _specInfo = nullptr) const;
 
-            void setVertexInput(const std::vector<vk::VertexInputBindingDescription>& bindingDescri,
-                                const std::vector<vk::VertexInputAttributeDescription>& attriDescri);
+            void setVertexInput(const std::vector<vk::VertexInputBindingDescription>& _bindingDescri,
+                                const std::vector<vk::VertexInputAttributeDescription>& _attriDescri) const;
 
-            void setInputAssembly(const vk::PrimitiveTopology topology = vk::PrimitiveTopology::eTriangleList,
-                                  const bool primitiveRestart = false);
+            void setInputAssembly(const vk::PrimitiveTopology _topology = vk::PrimitiveTopology::eTriangleList,
+                                  const bool _primitiveRestart = false) const;
 
-            void addViewport(const std::vector<vk::Viewport>& viewports);
-            void addViewport(const vk::Viewport& viewport);
-            void addScissor(const std::vector<vk::Rect2D>& scissors);
-            void addScissor(const vk::Rect2D& scissors);
+            void addViewport(const std::vector<vk::Viewport>& _viewports) const;
 
-            void setRasterization(const vk::PolygonMode polygonMode, const vk::CullModeFlags cullMode, const vk::FrontFace frontFace,
-                                  const float lineWidth = 1.0f,
-                                  const bool depthClampEnable = false, const bool rasterizerDiscardEnable = false);
+            void addViewport(const vk::Viewport& _viewport) const;
 
-            void setDepthBias(const bool enable,
-                              const float constantFactor = 0.0f,
-                              const float slopeFactor = 0.0f,
-                              const float clamp = 0.0f);
+            void addScissor(const std::vector<vk::Rect2D>& _scissors) const;
 
-            void setMultiSample(const vk::SampleCountFlagBits samples = vk::SampleCountFlagBits::e1,
-                                const bool sampleShading = false, const float minSampleShading = 0.0f,
-                                const vk::SampleMask* sampleMask = nullptr,
-                                const bool alphaToCoverageEnable = false, const bool alphaToOneEnable = false);
+            void addScissor(const vk::Rect2D& _scissors) const;
 
-            void setDepthTest(const bool depthTestEnable,
-                              const bool depthWriteEnable = true,
-                              const vk::CompareOp depthCompareOp = vk::CompareOp::eLess);
+            void setRasterization(const vk::PolygonMode _polygonMode, 
+                                  const vk::CullModeFlags _cullMode, 
+                                  const vk::FrontFace _frontFace,
+                                  const float _lineWidth = 1.0f,
+                                  const bool _depthClampEnable = false,
+                                  const bool _rasterizerDiscardEnable = false) const;
 
-            void setDepthBoundsTest(const bool enable, const float minBounds = 0.0f, const float maxBounds = 0.0f);
+            void setDepthBias(const bool _enable,
+                              const float _constantFactor = 0.0f,
+                              const float _slopeFactor = 0.0f,
+                              const float _clamp = 0.0f) const;
 
-            void setStencilTest(const bool enable,
-                                const vk::StencilOpState& front = {}, const vk::StencilOpState& back = {});
+            void setMultiSample(const vk::SampleCountFlagBits _samples = vk::SampleCountFlagBits::e1,
+                                const bool _sampleShading = false, 
+                                const float _minSampleShading = 0.0f,
+                                const vk::SampleMask* _sampleMask = nullptr,
+                                const bool _alphaToCoverageEnable = false,
+                                const bool _alphaToOneEnable = false) const;
 
-            void addDefaultBlendAttachments();
-            void addBlendAttachments(const vk::PipelineColorBlendAttachmentState& attachment);
-            void addBlendAttachments(const std::vector<vk::PipelineColorBlendAttachmentState>& attachments);
+            void setDepthTest(const bool _depthTestEnable,
+                              const bool _depthWriteEnable = true,
+                              const vk::CompareOp _depthCompareOp = vk::CompareOp::eLess) const;
 
-            void setBlend(const bool logicalOpEnable = false, const vk::LogicOp logicOp = vk::LogicOp::eCopy,
-                          const float constantR = 0.0, const float constantG = 0.0,
-                          const float constantB = 0.0, const float constantA = 0.0);
+            void setDepthBoundsTest(const bool _enable, const float _minBounds = 0.0f, const float _maxBounds = 0.0f) const;
 
-            void addDynamicState(const vk::DynamicState dynamicState);
-            void addDynamicState(const std::vector<vk::DynamicState>& dynamicStates);
+            void setStencilTest(const bool _enable,
+                                const vk::StencilOpState& _front = {}, 
+                                const vk::StencilOpState& _back = {}) const;
 
-            void addDescriptorSetLayout(const vk::DescriptorSetLayout setLayout);
-            void addDescriptorSetLayout(const std::vector<vk::DescriptorSetLayout>& setLayouts);
+            void addDefaultBlendAttachments() const;
 
-            void addPushConstantRange(vk::ShaderStageFlags stageFlags, uint32_t offset, uint32_t size);
-            void addPushConstantRange(const vk::PushConstantRange& range);
-            void addPushConstantRanges(const std::vector<vk::PushConstantRange>& ranges = std::vector<vk::PushConstantRange>());
+            void addBlendAttachments(const vk::PipelineColorBlendAttachmentState& _attachment) const;
+
+            void addBlendAttachments(const std::vector<vk::PipelineColorBlendAttachmentState>& _attachments) const;
+
+            void setBlend(const bool _logicalOpEnable = false, 
+                          const vk::LogicOp _logicOp = vk::LogicOp::eCopy,
+                          const float _constantR = 0.0, 
+                          const float _constantG = 0.0,
+                          const float _constantB = 0.0, 
+                          const float _constantA = 0.0) const;
+
+            void addDynamicState(const vk::DynamicState _dynamicState) const;
+
+            void addDynamicState(const std::vector<vk::DynamicState>& _dynamicStates) const;
+
+            void addDescriptorSetLayout(const vk::DescriptorSetLayout _setLayout) const;
+
+            void addDescriptorSetLayout(const std::vector<vk::DescriptorSetLayout>& _setLayouts) const;
+
+            void addPushConstantRange(vk::ShaderStageFlags _stageFlags, uint32_t _offset, uint32_t _size) const;
+
+            void addPushConstantRange(const vk::PushConstantRange& _range) const;
+
+            void addPushConstantRanges(const std::vector<vk::PushConstantRange>& _ranges = std::vector<vk::PushConstantRange>()) const;
 
             bool create();
 
@@ -111,13 +128,17 @@ namespace Mix {
             std::map<std::string, Pipeline> mPipelines;
 
         public:
-            Pipeline& createPipeline(const std::string& name,
-                                     const vk::RenderPass renderPass = nullptr,
-                                     const uint32_t subpassIndex = 0);
+            void init(const std::shared_ptr<Core>& _core) {
+                setCore(_core);
+            }
 
-            const Pipeline& getPipeline(const std::string& name);
+            Pipeline& createPipeline(const std::string& _name,
+                                     const vk::RenderPass _renderPass = nullptr,
+                                     const uint32_t _subpassIndex = 0);
 
-            void destroyPipeline(const std::string& name);
+            const Pipeline& getPipeline(const std::string& _name);
+
+            void destroyPipeline(const std::string& _name);
 
             void destroy();
 
@@ -125,4 +146,4 @@ namespace Mix {
         };
     }
 }
-#endif // !_MX_VK_PIPELINE_H_
+#endif // !MX_VK_PIPELINE_H_

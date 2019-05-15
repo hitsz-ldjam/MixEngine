@@ -14,15 +14,8 @@ namespace Mix {
             mBuffers(std::move(_buffers)), mDescriptor(std::move(_descriptorSets)) {
         }
 
-        RenderInfo getRenderInfo() const {
-            RenderInfo renderInfo;
-            renderInfo.meshRef = mGameObj->GetComponent<MeshFilter>()->getMeshRef();
-
-            return renderInfo;
-        }
-
         const Graphics::MeshUniform& uniform() {
-            auto transform = mGameObj->GetComponent<Transform>();
+            auto transform = mGameObj->getComponent<Transform>();
             mUniform.modelMat = glm::scale(glm::mat4(1.0f), transform->scale());
             mUniform.modelMat = glm::toMat4(transform->rotation())  * mUniform.modelMat;
             mUniform.modelMat = glm::translate(mUniform.modelMat, transform->position());

@@ -20,19 +20,21 @@ namespace Mix {
     class GameObject : public Object {
         MX_DECLARE_RTTI;
         MX_DECLARE_CLASS_FACTORY;
+
+        using Base = Object;
     public:
         GameObject() :mParent(nullptr) {
             AddGameObj(this);
-            AddComponent<Transform>();
+            addComponent<Transform>();
         }
 
         GameObject(const GameObject& _obj) = delete;
 
-        GameObject(GameObject&& _obj);
+        GameObject(GameObject&& _other) noexcept;
 
         virtual ~GameObject() {
             if (mParent)
-                mParent->RemoveChild(this);
+                mParent->removeChild(this);
 
             for (auto it = mChildren.begin(); it != mChildren.end();) {
                 delete (*it++);
@@ -47,63 +49,63 @@ namespace Mix {
 
         GameObject& operator=(const GameObject& _obj) = delete;
 
-        GameObject& operator=(GameObject&& _obj);
+        GameObject& operator=(GameObject&& _other) noexcept;
 
         /**
          * \brief Add a Component of type _Ty to this GameObject, using default constructor to create the Component
          * \return The pointer to the Component
          */
         template<typename _Ty>
-        _Ty* AddComponent();
+        _Ty* addComponent();
 
         /**
          * \brief Add Component _comp to this GameObject
          * \return The pointer to the Component
          */
-        Component* AddComponent(Component* _comp);
+        Component* addComponent(Component* _comp);
 
         /**
          * \brief Construct a Component of type _Ty and add it to this GameObject
          * \return The pointer to the Component
          */
-        template<typename _Ty, typename... Args>
-        _Ty* AddComponent(Args&& ..._args);
+        template<typename _Ty, typename... _Args>
+        _Ty* addComponent(_Args&& ..._args);
 
         /**
          * \brief Get the pointer to the Component of type _Ty that attached to this GameObject
          * \return The pointer to the Component, return nullptr if not found
          */
-        template<typename T>
-        T* GetComponent();
+        template<typename _Ty>
+        _Ty* getComponent();
 
         /**
          * \brief Get all Components of type _Ty that attached to this GameObject
          * \return A vector containing pointers of Components that been found
          */
         template<typename _Ty>
-        std::vector<_Ty*> GetComponents();
+        std::vector<_Ty*> getComponents();
 
         /**
          * \brief Get Component of type _Ty in children of this GameObject using DFS
          */
         template<typename _Ty>
-        _Ty* GetComponentInChildren();
+        _Ty* getComponentInChildren();
 
         /**
          * \brief Remove Component that _comp points to,
          * do nothing if _comp isn't attached to this GameObject
          */
-        void RemoveComponent(Component* _comp);
+        void removeComponent(Component* _comp);
 
         /**
          * \brief Add _obj as a child of this GameObject
          */
-        void AddChild(GameObject* _obj) {
+        void addChild(GameObject* _obj) {
             if (_obj->mParent == this)
                 return;
 
             if (_obj->mParent)
-                _obj->mParent->RemoveChild(_obj);
+                _obj->mParent->removeChild(_obj);
 
             _obj->mParent = this;
             mChildren.insert(_obj);
@@ -112,7 +114,7 @@ namespace Mix {
         /**
          * \brief Remove a child that _obj points to from this GameObject
          */
-        void RemoveChild(GameObject* _obj) {
+        void removeChild(GameObject* _obj) {
             if (_obj->mParent != this)
                 return;
 
@@ -123,58 +125,60 @@ namespace Mix {
         /**
          * \brief Set the active state this GameObject
          */
-        void SetActive(const bool _active) {
+        void setActive(const bool _active) {
             mActive = _active;
         }
 
         /**
          * \brief Check if this GameObject is active
          */
-        bool IsActive() const {
+        bool isActive() const {
             return mActive;
         }
 
         /**
          * \brief Get the index of the layer that this GameObject belongs to
          */
-        LayerIndex GetLayer() const {
+        LayerIndex getLayer() const {
             return mLayer;
         }
 
         /**
          * \brief Set the index of the layer that this GameObject belongs to
          */
-        void SetLayer(const LayerIndex _index) {
+        void setLayer(const LayerIndex _index) {
             mLayer = _index;
         }
 
         /**
          * \brief Set a tag to this GameObject
          */
-        void SetTag(const Tag& _tag) {
+        void setTag(const Tag& _tag) {
             mTag = _tag;
         }
 
         /**
          * \brief Get the tag attached to this GameObject
          */
-        const Tag& GetTag() const {
+        const Tag& getTag() const {
             return mTag;
         }
 
-        void SetModelRef(Resource::ResourceRef _ref) {
-            mModeRef = _ref;
+        void setModelRef(Resource::ResourceRef _ref) {
+            if (!mModeRefOptional)
+                mModeRefOptional.emplace(nullptr);
+            mModeRefOptional = _ref;
         }
 
-        Resource::ResourceRef GetModelRef() const {
-            return mModeRef.value_or(nullptr);
+        Resource::ResourceRef getModelRef() const {
+            return mModeRefOptional.value_or(nullptr);
         }
 
     protected:
         GameObject* mParent;
         std::set<GameObject*> mChildren;
         std::set<Component*> mComponents;
-        std::optional<Resource::ResourceRef> mModeRef;
+        std::optional<Resource::ResourceRef> mModeRefOptional;
 
         bool mActive = true;
         LayerIndex mLayer = 0;
@@ -225,7 +229,7 @@ namespace Mix {
 
 
     template<typename _Ty>
-    inline _Ty * GameObject::AddComponent() {
+    inline _Ty * GameObject::addComponent() {
         // if type _Ty isn't derived from Component
         _Ty* t = reinterpret_cast<_Ty*>(1);
         if (!dynamic_cast<Component*>(t))
@@ -237,52 +241,52 @@ namespace Mix {
         return t;
     }
 
-    template<typename T, typename ...Args>
-    inline T * GameObject::AddComponent(Args && ..._args) {
+    template<typename _Ty, typename ..._Args>
+    inline _Ty * GameObject::addComponent(_Args && ..._args) {
         // if type _Ty isn't derived from Component
-        T* t = reinterpret_cast<T*>(1);
+        _Ty* t = reinterpret_cast<_Ty*>(1);
         if (!dynamic_cast<Component*>(t))
             throw ComponentCastError();
 
-        t = new T(std::forward<Args>(_args)...);
+        t = new _Ty(std::forward<_Args>(_args)...);
         t->setGameObj(this);
         mComponents.insert(t);
         return t;
     }
 
-    template<typename T>
-    inline T * GameObject::GetComponent() {
-        T* result;
+    template<typename _Ty>
+    inline _Ty * GameObject::getComponent() {
+        _Ty* result;
 
         for (auto comp : mComponents) {
-            if ((result = dynamic_cast<T*>(comp)))
+            if ((result = dynamic_cast<_Ty*>(comp)))
                 return result;
         }
 
         return nullptr;
     }
 
-    template<typename T>
-    inline std::vector<T*> GameObject::GetComponents() {
-        std::vector<T*> results;
-        T* result;
+    template<typename _Ty>
+    inline std::vector<_Ty*> GameObject::getComponents() {
+        std::vector<_Ty*> results;
+        _Ty* result;
 
         for (auto comp : mComponents) {
-            if ((result = dynamic_cast<T*>(comp)))
+            if ((result = dynamic_cast<_Ty*>(comp)))
                 results.push_back(result);
         }
 
         return results;
     }
 
-    template<typename T>
-    inline T * GameObject::GetComponentInChildren() {
+    template<typename _Ty>
+    inline _Ty * GameObject::getComponentInChildren() {
 
-        T* ptr = GetComponent<T>();
+        _Ty* ptr = getComponent<_Ty>();
 
         if (!ptr) {
             for (auto child : mChildren) {
-                if ((ptr = child->GetComponentInChildren<T>()))
+                if ((ptr = child->getComponentInChildren<_Ty>()))
                     return ptr;
             }
         }
