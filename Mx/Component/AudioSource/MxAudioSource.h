@@ -17,8 +17,7 @@ namespace Mix {
     MX_DECLARE_CLASS_FACTORY
 
     public:
-        AudioSource(AudioClip* _clip = nullptr) : loop(false),
-                                                  playOnAwake(true),
+        AudioSource(AudioClip* _clip = nullptr) : playOnAwake(true),
                                                   velocityUpdateMode(Audio::VelocityUpdateMode::AUTO),
                                                   mClip(_clip),
                                                   mChannel(nullptr),
@@ -29,8 +28,8 @@ namespace Mix {
 
         // ----- Properties -----
 
-        bool loop;
         bool playOnAwake;
+
         Audio::VelocityUpdateMode velocityUpdateMode;
 
         const AudioClip* clip() const { return mClip; }
@@ -65,6 +64,21 @@ namespace Mix {
             if(mChannel)
                 mChannel->isVirtual(&iv);
             return iv;
+        }
+
+        // todo: fix execution order issue
+        bool loop() const {
+            if(mChannel) {
+                FMOD_MODE m;
+                mChannel->getMode(&m);
+                return m & FMOD_LOOP_NORMAL;
+            }
+            return false;
+        }
+
+        void loop(const bool _loop) {
+            if(mChannel)
+                mChannel->setMode(_loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF);
         }
 
         /**
