@@ -30,9 +30,6 @@ namespace Mix {
         // todo: delete debug code
         Scene mScene;
 
-        // todo: replace with new timing interface
-        std::chrono::time_point<std::chrono::high_resolution_clock> start, lastFrame;
-
         MixEngine(int _argc = 0, char** _argv = nullptr);
 
         bool mQuit;
@@ -41,6 +38,7 @@ namespace Mix {
         void init();
         void process(const SDL_Event& _event);
         void update();
+        void fixedUpdate();
         void lateUpdate();
         void render();
     };

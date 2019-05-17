@@ -18,7 +18,6 @@ namespace Mix {
             LOADING,
             LOADED,
             FAILED,
-            OTHER,
         };
 
         enum class VelocityUpdateMode {

@@ -50,16 +50,15 @@ namespace Mix {
         auto result = FMOD::System_Create(&mFmodCore);
         if(result != FMOD_OK)
             throw FmodInitializationError();
-
         result = mFmodCore->init(512, FMOD_INIT_NORMAL, nullptr);
         if(result != FMOD_OK)
             throw FmodInitializationError();
 
+        // initialize engine
         Input::Init();
+        Time::Reset();
 
-        // todo: replace with new timing interface
-        start = lastFrame = std::chrono::high_resolution_clock::now();
-
+        // initialize behaviours
         // todo: delete debug code
         mScene.init();
     }
@@ -118,17 +117,24 @@ namespace Mix {
     }
 
     void MixEngine::update() {
+        Time::Tick();
+
+        // update behaviours
         // todo: delete debug code
         mScene.update();
+
+        // todo: What?
+        // fixed update behaviours
+        if(Time::mFixedSteps) {
+            for(int i = 0; i < Time::mFixedSteps; ++i)
+                fixedUpdate();
+        }
     }
+
+    void MixEngine::fixedUpdate() { }
 
     void MixEngine::lateUpdate() {
         Input::Reset();
-
-        // todo: replace with new timing interface
-        Time::mTime = Time::getDuration(start);
-        Time::mDeltaTime = Time::getDuration(lastFrame);
-        lastFrame = std::chrono::high_resolution_clock::now();
 
         // update fmod
         mFmodCore->update();
