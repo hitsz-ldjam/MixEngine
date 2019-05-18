@@ -1,6 +1,10 @@
 #include "MxVkGraphics.h"
-#include "MxVkUniform.h"
 #include "../Mx/MxRender.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include "../Math/MxMathTransform.h"
 
 namespace Mix {
     namespace Graphics {
@@ -68,24 +72,56 @@ namespace Mix {
 
             // todo complete render loop
             auto& cmd = mCommandBuffers[currFrame];
-            
+
+            cmd.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                             mPipelineMgr->getPipeline("pipeline").get());
+
+            auto filters = Object::FindObjectsOfType<MeshFilter>();
+            for (auto filter : filters) {
+                auto resMesh = filter->getMesh()->meshRef().dynamicCast<Resource::ResMesh*>();
+                auto trans = filter->getGameObj()->getComponent<Transform>();
+
+                Uniform::MeshUniform uniform;
+                uniform.modelMat = Math::Transform::MatrixFromTRS(trans->position(),
+                                                                  trans->rotation(),
+                                                                  trans->scale());
+
+                uniform.normMat = glm::transpose(glm::inverse(uniform.modelMat));
+
+                dynamicUniformBuffers[currFrame]->pushBack(&uniform, sizeof(uniform));
+                cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                       mPipelineMgr->getPipeline("pipeline").pipelineLayout(),
+                                       0, mDescriptorSets[currFrame],
+                                       dynamicUniformBuffers[currFrame]->getAlign());
+                dynamicUniformBuffers[currFrame]->next();
+
+
+                cmd.bindVertexBuffers(0, resMesh->vertexBuffer->buffer, { 0 });
+                cmd.bindIndexBuffer(resMesh->indexBuffer->buffer, 0, vk::IndexType::eUint32);
+                for (auto& submesh : resMesh->submeshes) {
+                    cmd.drawIndexed(submesh.indexCount,
+                                    1,
+                                    submesh.firstIndex,
+                                    submesh.firstVertex,
+                                    0);
+                }
+            }
+
+
             //end render pass
             mRenderPass->endRenderPass(mCommandBuffers[currFrame]);
 
             //end command buffer
             mCommandBuffers[currFrame].end();
+            dynamicUniformBuffers[currFrame]->reset();
         }
 
-        void Vulkan::Vulkan::updateUniformBuffer(float _deltaTime) {
-            auto objects = Object::FindObjectsOfType<MeshRenderer>();
-            for (auto obj : objects) {
-                auto buffer = obj->uniformBuffers(mSwapchain->currentFrame());
-                auto& uniform = obj->uniform();
-                buffer->copyTo(&uniform, sizeof(uniform));
-            }
-
-            CameraUniform ubo;
-            ubo.position = glm::vec4(0.0f, 0.0f, 3.0f, 1.0f);
+        void Vulkan::updateUniformBuffer(float _deltaTime) {
+            // todo
+            auto camera = GameObject::Find("Camera");
+            auto transform = camera->getComponent <Transform>();
+            Uniform::CameraUniform ubo;
+            ubo.position = transform->position();
             const glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
             ubo.forward = glm::vec4(glm::normalize(target - glm::vec3(ubo.position)), 0.0f);
             ubo.viewMat = glm::lookAt(glm::vec3(ubo.position),
@@ -97,7 +133,7 @@ namespace Mix {
                                            0.1f, 1000.0f);
             ubo.projMat[1][1] *= -1.0f;
 
-            uniforms[mSwapchain->currentFrame()]->copyTo(&ubo, sizeof(ubo));
+            cameraUniforms[mSwapchain->currentFrame()]->copyTo(&ubo, sizeof(ubo));
         }
 
         void Vulkan::destroy() {
@@ -110,7 +146,7 @@ namespace Mix {
             mCore->getDevice().destroyImageView(texImageView);
             mCore->getDevice().destroySampler(sampler);
 
-            uniforms.clear();
+            cameraUniforms.clear();
 
             for (auto& frameBuffer : mFramebuffers)
                 delete frameBuffer;
@@ -187,16 +223,10 @@ namespace Mix {
             auto cameraLayout = std::make_shared<DescriptorSetLayout>();
             cameraLayout->init(mCore);
             cameraLayout->addBindings(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
+            cameraLayout->addBindings(1, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex);
             cameraLayout->create();
 
-            auto objLayout = std::make_shared<DescriptorSetLayout>();
-            objLayout->init(mCore);
-            objLayout->addBindings(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
-            objLayout->addBindings(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment);
-            objLayout->create();
-
             mDescriptorSetLayout["Camera"] = cameraLayout;
-            mDescriptorSetLayout["Object"] = objLayout;
         }
 
         void Vulkan::buildShaders() {
@@ -259,7 +289,6 @@ namespace Mix {
             pipeline.addDefaultBlendAttachments();
 
             pipeline.addDescriptorSetLayout(mDescriptorSetLayout["Camera"]->get());
-            pipeline.addDescriptorSetLayout(mDescriptorSetLayout["Object"]->get());
 
             pipeline.create();
         }
@@ -270,8 +299,6 @@ namespace Mix {
         }
 
         void Vulkan::buildFrameBuffers() {
-
-
             mFramebuffers.resize(mSwapchain->imageCount());
             for (uint32_t i = 0; i < mFramebuffers.size(); ++i) {
                 mFramebuffers[i] = new Framebuffer();
@@ -286,27 +313,33 @@ namespace Mix {
         }
 
         void Vulkan::buildUniformBuffers() {
-            uniforms.resize(mSwapchain->imageCount());
+            cameraUniforms.resize(mSwapchain->imageCount());
+            dynamicUniformBuffers.resize(mSwapchain->imageCount());
 
-            for (size_t i = 0; i < uniforms.size(); ++i) {
-                uniforms[i] = Buffer::CreateBuffer(mCore,
-                                                   mAllocator,
-                                                   vk::BufferUsageFlagBits::eUniformBuffer,
-                                                   vk::MemoryPropertyFlagBits::eHostVisible |
-                                                   vk::MemoryPropertyFlagBits::eHostCoherent,
-                                                   sizeof(CameraUniform));
+            for (size_t i = 0; i < cameraUniforms.size(); ++i) {
+                cameraUniforms[i] = Buffer::CreateBuffer(mCore,
+                                                         mAllocator,
+                                                         vk::BufferUsageFlagBits::eUniformBuffer,
+                                                         vk::MemoryPropertyFlagBits::eHostVisible |
+                                                         vk::MemoryPropertyFlagBits::eHostCoherent,
+                                                         sizeof(Graphics::Uniform::CameraUniform));
+
+                dynamicUniformBuffers[i] = std::make_shared<DynamicUniformBuffer>(mCore,
+                                                                                  mAllocator,
+                                                                                  sizeof(Uniform::MeshUniform),
+                                                                                  100);
             }
         }
 
-        void Vulkan::Vulkan::buildCommandBuffers() {
+        void Vulkan::buildCommandBuffers() {
             mCommandBuffers = mCommandMgr->allocCommandBuffers(mSwapchain->imageCount(),
                                                                vk::CommandBufferLevel::ePrimary);
         }
 
-        void Vulkan::Vulkan::buildDescriptorSets() {
+        void Vulkan::buildDescriptorSets() {
             //create descriptor pool
             mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBuffer, mSwapchain->imageCount() * 5);
-            mDescriptorPool->addPoolSize(vk::DescriptorType::eCombinedImageSampler, mSwapchain->imageCount() * 5);
+            mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBufferDynamic, mSwapchain->imageCount() * 5);
             mDescriptorPool->create(mSwapchain->imageCount() * 5);
 
             // test Allocate camera descriptor set
@@ -314,24 +347,28 @@ namespace Mix {
 
             // update descriptor sets
             for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
-                std::array<vk::WriteDescriptorSet, 1> descriptorWrites = {};
+                std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {};
                 descriptorWrites[0].dstSet = mDescriptorSets[i]; //descriptor which will be write in
                 descriptorWrites[0].dstBinding = 0; //destination binding
                 descriptorWrites[0].dstArrayElement = 0;
                 descriptorWrites[0].descriptorType = vk::DescriptorType::eUniformBuffer; //the type of the descriptor that will be wirte in
                 descriptorWrites[0].descriptorCount = 1; //descriptor count
-                descriptorWrites[0].pBufferInfo = &uniforms[i]->descriptor; //descriptorBufferInfo
+                descriptorWrites[0].pBufferInfo = &cameraUniforms[i]->descriptor; //descriptorBufferInfo
                 descriptorWrites[0].pImageInfo = nullptr;
                 descriptorWrites[0].pTexelBufferView = nullptr;
+
+
+                auto write = dynamicUniformBuffers[i]->getWriteDescriptorSet(mDescriptorSets[i], 1);
+                descriptorWrites[1] = write.get();
 
                 mCore->getDevice().updateDescriptorSets(descriptorWrites, nullptr);
             }
         }
 
-        void Vulkan::Vulkan::loadResource() {
+        void Vulkan::loadResource() {
             mImageMgr->init(mCore, mAllocator);
 
-            const gli::texture2d texture(gli::load("TestResources/Texture/1.DDS"));
+            /*const gli::texture2d texture(gli::load("TestResources/Texture/1.DDS"));
             auto cmd = mCommandMgr->allocCommandBuffer();
             mImageMgr->beginLoad(cmd);
             mImageMgr->loadTexture("front", texture);
@@ -358,7 +395,7 @@ namespace Mix {
             samplerInfo.addressModeV = vk::SamplerAddressMode::eClampToEdge;
             samplerInfo.addressModeW = vk::SamplerAddressMode::eClampToEdge;
 
-            sampler = mCore->getDevice().createSampler(samplerInfo);
+            sampler = mCore->getDevice().createSampler(samplerInfo);*/
         }
     }
 }

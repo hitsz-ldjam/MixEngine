@@ -95,7 +95,7 @@ namespace Mix {
         }
 
         void Chunk::deallocate(const MemoryBlock & _block) {
-            auto it = std::find(mBlocks.begin(), mBlocks.end(), _block);
+            const auto it = std::find(mBlocks.begin(), mBlocks.end(), _block);
             assert(it != mBlocks.end());
 
             it->free = true;
@@ -138,7 +138,7 @@ namespace Mix {
                                               const vk::MemoryPropertyFlags & _properties,
                                               vk::MemoryRequirements* _memReq) {
             auto memoryReq = mCore->getDevice().getImageMemoryRequirements(_image);
-            MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment, mCore->getMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
+            const MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment, mCore->getMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
             mCore->getDevice().bindImageMemory(_image, block.memory, block.offset);
 
             if (_memReq)
@@ -151,7 +151,7 @@ namespace Mix {
                                               const vk::MemoryPropertyFlags & _properties,
                                               vk::MemoryRequirements* _memReq) {
             auto memoryReq = mCore->getDevice().getBufferMemoryRequirements(_buffer);
-            MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment, mCore->getMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
+            const MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment, mCore->getMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
             mCore->getDevice().bindBufferMemory(_buffer, block.memory, block.offset);
 
             if (_memReq)

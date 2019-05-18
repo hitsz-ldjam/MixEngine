@@ -62,6 +62,7 @@ namespace Mix {
         };
 
         class ChunkFactory :public GraphicsComponent {
+            static const vk::DeviceSize MinChunkSize = 8 * 1024 * 1024;
         public:
             void setMinChunkSize(const vk::DeviceSize _size) {
                 assert(Utils::IsPowerOf2(_size));
@@ -75,7 +76,7 @@ namespace Mix {
             std::unique_ptr<Chunk> getChunk(vk::DeviceSize _size, uint32_t _memTypeIndex);
 
         private:
-            vk::DeviceSize mMinChunkSize = 8 * 1024 * 1024;
+            vk::DeviceSize mMinChunkSize = MinChunkSize;
         };
 
         class AbstractAllocator :public GraphicsComponent {
@@ -90,7 +91,7 @@ namespace Mix {
 
             AbstractAllocator& operator=(AbstractAllocator&& _other) noexcept {
                 Base::operator=(std::move(_other));
-                return *this; 
+                return *this;
             }
 
             virtual MemoryBlock allocate(vk::DeviceSize _size, vk::DeviceSize _alignment, uint32_t _memoryTypeIndex) = 0;
@@ -103,16 +104,16 @@ namespace Mix {
         public:
             void init(std::shared_ptr<Core>& _core);
 
-            MemoryBlock allocate(vk::DeviceSize _size, 
-                                 vk::DeviceSize _alignment, 
+            MemoryBlock allocate(vk::DeviceSize _size,
+                                 vk::DeviceSize _alignment,
                                  uint32_t _memoryTypeIndex) override;
 
-            MemoryBlock allocate(const vk::Image& _image, 
-                                 const vk::MemoryPropertyFlags & _properties, 
+            MemoryBlock allocate(const vk::Image& _image,
+                                 const vk::MemoryPropertyFlags & _properties,
                                  vk::MemoryRequirements* _memReq = nullptr);
 
-            MemoryBlock allocate(const vk::Buffer& _buffer, 
-                                 const vk::MemoryPropertyFlags& _properties, 
+            MemoryBlock allocate(const vk::Buffer& _buffer,
+                                 const vk::MemoryPropertyFlags& _properties,
                                  vk::MemoryRequirements* _memReq = nullptr);
 
             void deallocate(MemoryBlock& _block) override;

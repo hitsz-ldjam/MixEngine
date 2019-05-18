@@ -1,10 +1,15 @@
 #pragma once
-#ifndef _MX_TRANSFORM_H_
-#define _MX_TRANSFORM_H_
+#ifndef MX_TRANSFORM_H_
+#define MX_TRANSFORM_H_
 
 #include "MxComponent.h"
+#include "MxDef.h"
+#include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Mix {
+    enum class Space { WORLD, SELF };
+
     struct Axis {
         union {
             struct {
@@ -48,7 +53,7 @@ namespace Mix {
         const glm::quat& rotation() const { return mQuaternion; }
         glm::quat& rotation() { return mQuaternion; }
         const glm::vec3& scale() const { return mScale; }
-        glm::vec3 scale() { return mScale; }
+        glm::vec3& scale() { return mScale; }
 
         glm::vec3 eulerAngle() const;
 

@@ -17,6 +17,9 @@ namespace Mix {
             return mMeshRef.dynamicCast<Resource::ResMesh*>()->submeshes.size();
         }
 
+        const Resource::ResourceRef& meshRef() const {
+            return mMeshRef;
+        }
     private:
         Resource::ResourceRef mMeshRef = nullptr;
     };

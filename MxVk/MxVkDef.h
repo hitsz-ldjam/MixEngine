@@ -1,9 +1,10 @@
 #pragma once
 #ifndef MX_VK_DEF_H
-#define MX_VK_DEF_H
+#define MX_VK_DEF_H_
 
-#include"../Mx/MxDef.h"
-#include"../Mx/MxObject.h"
+#include "../Mx/MxDef.h"
+#include "../Mx/MxObject.h"
+#include <glm/glm.hpp>
 #include <vulkan/vulkan.hpp>
 #include <optional>
 

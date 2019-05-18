@@ -4,6 +4,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <glTF/tiny_gltf.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 namespace Mix {
     namespace Utils {
@@ -42,7 +46,7 @@ namespace Mix {
             LoadImages(_model, modelData);
             LoadMaterials(_model, modelData);
 
-            TransformData trans;
+            glm::mat4 trans = glm::mat4(1.0f);
             const tinygltf::Scene& scene = _model.scenes[_model.defaultScene > -1 ? _model.defaultScene : 0];
 
             modelData.meshes.reserve(_model.meshes.size());
@@ -264,38 +268,38 @@ namespace Mix {
         }
 
         void GltfLoader::ProcessNode(const tinygltf::Model& _gltfModel,
-                                     TransformData& _trans,
+                                     const glm::mat4&       _trans,
                                      const tinygltf::Node * _node,
-                                     ModelData& _modelData) const {
+                                     ModelData&             _modelData) const {
             // set transform
-            TransformData localTrans;
-            if (_node->translation.size() == 3) {
-                localTrans.translation = glm::make_vec3(_node->translation.data());
-            }
-
-            if (_node->rotation.size() == 4) {
-                localTrans.rotation = glm::make_quat(_node->rotation.data());
-            }
-
-            if (_node->scale.size() == 3) {
-                localTrans.scale = glm::make_vec3(_node->scale.data());
-            }
-
+            glm::mat4 localTrans = glm::mat4(1.0f);
             if (_node->matrix.size() == 16) {
-                localTrans.matrix = glm::make_mat4x4(_node->matrix.data());
+                localTrans = glm::make_mat4(_node->matrix.data());
+            } else {
+                if (_node->scale.size() == 3) {
+                    glm::vec3 scale = glm::make_vec3(_node->scale.data());
+                    localTrans = glm::scale(localTrans, scale);
+                }
+
+                if (_node->rotation.size() == 4) {
+                    localTrans = glm::toMat4(glm::make_quat(_node->rotation.data()));
+                }
+
+                if (_node->translation.size() == 3) {
+                    glm::vec3 trans = glm::make_vec3(_node->translation.data());
+                    localTrans = glm::translate(localTrans, trans);
+                }
             }
 
-            localTrans.translation = _trans.translation + localTrans.translation;
-            localTrans.rotation = _trans.rotation * localTrans.rotation;
-            localTrans.scale = _trans.scale*localTrans.scale;
-            localTrans.matrix = _trans.matrix*localTrans.matrix;
+            localTrans = _trans * localTrans;
+
 
             if (_node->mesh > -1) {
                 MeshData meshData;
                 const tinygltf::Mesh& mesh = _gltfModel.meshes[_node->mesh];
 
                 meshData.name = mesh.name;
-                meshData.transform = _trans;
+                meshData.transform = localTrans;
 
 
                 const float *bufferPos;
@@ -394,10 +398,6 @@ namespace Mix {
                     ProcessNode(_gltfModel, localTrans, &_gltfModel.nodes[i], _modelData);
                 }
             }
-        }
-
-        vk::DeviceSize Align(const vk::DeviceSize _size, const vk::DeviceSize _alignment) {
-            return (_size + _alignment - 1) & ~(_alignment - 1);
         }
 
         vk::DeviceSize NextPowerOf2(const vk::DeviceSize _size) {

@@ -51,7 +51,7 @@ namespace Mix {
         MX_DECLARE_RTTI;
         MX_DECLARE_NO_CLASS_FACTORY;
     public:
-        Object() {
+        Object(const std::string& _name = "") :mName(_name) {
             AddObject(this);
         }
 

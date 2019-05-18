@@ -23,7 +23,7 @@ namespace Mix {
 
         using Base = Object;
     public:
-        GameObject() :mParent(nullptr) {
+        GameObject(const std::string& _name = "") :Base(_name), mParent(nullptr) {
             AddGameObj(this);
             addComponent<Transform>();
         }

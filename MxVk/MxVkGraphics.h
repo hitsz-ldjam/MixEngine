@@ -12,7 +12,6 @@
 #include "MxVkAllocator.h"
 #include "MxVkMesh.h"
 #include "MxVkShader.h"
-#include "MxVkBuffer.h"
 #include "MxVkSwapchain.h"
 #include "MxVkFramebuffer.h"
 #include "MxVkRenderPass.h"
@@ -21,7 +20,8 @@
 #include "MxVkCommand.h"
 
 #include <vector>
-#include <fstream>
+#include "Buffers/MxVkBuffer.h"
+#include "Buffers/MxVkUniformBuffer.h"
 
 #define WIN_WIDTH 640
 #define WIN_HEIGHT 480
@@ -126,14 +126,9 @@ namespace Mix {
             vk::ImageView texImageView;
             vk::Sampler sampler;
 
-            struct Uniform {
-                glm::mat4 model;
-                glm::mat4 view;
-                glm::mat4 proj;
-                int index;
-            };
+            std::vector<std::shared_ptr<Buffer>> cameraUniforms;
+            std::vector<std::shared_ptr<DynamicUniformBuffer>> dynamicUniformBuffers;
 
-            std::vector<std::shared_ptr<Buffer>> uniforms;
             Settings mSettings;
         };
     }

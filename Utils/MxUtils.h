@@ -14,6 +14,8 @@
 #define STBI_MSC_SECURE_CRT
 #include <glTF/tiny_gltf.h>
 #include <filesystem>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #define MAX_NUM_JOINTS 128u
 
@@ -23,18 +25,8 @@
 
 namespace Mix {
     namespace Utils {
-        
-
         class GltfLoader {
         public:
-            struct TransformData {
-                glm::vec3 translation = glm::vec3(0.0f);
-                glm::quat rotation = glm::identity<glm::quat>();
-                glm::vec3 scale = glm::vec3(1.0f);
-
-                glm::mat4 matrix = glm::mat4(1.0f);
-            };
-
             struct PrimitiveData {
                 size_t firstVertex;
                 size_t vertexCount;
@@ -46,7 +38,7 @@ namespace Mix {
 
             struct MeshData {
                 std::string name;
-                TransformData transform;
+                glm::mat4 transform;
                 std::vector<PrimitiveData> primitives;
             };
 
@@ -136,9 +128,9 @@ namespace Mix {
             static void LoadMaterials(const tinygltf::Model& _model, ModelData& _modelData);
 
             void ProcessNode(const tinygltf::Model& _gltfModel,
-                             TransformData& _trans,
+                             const glm::mat4&       _trans,
                              const tinygltf::Node * _node,
-                             ModelData& _modelData) const;
+                             ModelData&             _modelData) const;
         };
 
         class NextIdGenerator {
@@ -161,8 +153,13 @@ namespace Mix {
             IdStep mStep = 0;
         };
 
-        vk::DeviceSize Align(vk::DeviceSize _size, vk::DeviceSize _alignment);
+        template<typename _Pre, typename _Lst>
+        _Pre Align(_Pre const& _size, _Lst const& _alignment) {
+            return (_size + _alignment - 1) & ~(_alignment - 1);
+        }
+
         vk::DeviceSize NextPowerOf2(vk::DeviceSize _size);
+
         bool IsPowerOf2(vk::DeviceSize _size);
 
         class GuidGenerator {
@@ -177,6 +174,22 @@ namespace Mix {
         private:
             static std::hash<std::string> sStringHash;
             static std::hash<long long> sTimeHash;
+        };
+
+        template<typename _Ty = uint32_t>
+        struct OffsetSize {
+            using ValueType = _Ty;
+
+            OffsetSize() = default;
+
+            OffsetSize(ValueType const& _offset, ValueType const& _size) :offset(_offset), size(_size) {}
+
+            bool operator==(OffsetSize const& _other) { return offset == _other.offset && size == _other.size; }
+
+            bool operator!=(OffsetSize const& _other) { return !*this == _other; }
+
+            ValueType offset = 0;
+            ValueType size = 0;
         };
     }
 }

@@ -2,6 +2,8 @@
 #include "../../Mx/MxMesh.h"
 #include "MxGltfParser.h"
 #include "../../MxVk/MxVkGraphics.h"
+#include "../../MxVk/Buffers/MxVkBuffer.h"
+#include <glm/gtx/matrix_decompose.inl>
 
 namespace Mix {
     namespace Resource {
@@ -39,14 +41,29 @@ namespace Mix {
 
         std::shared_ptr<Object> GltfParser::parse(const Guid& _key) {
             auto ref = mRefMgr->getReference(_key);
-            auto ptr = ref.dynamicCast<ResModel*>();
+            auto modePtr = ref.dynamicCast<ResModel*>();
 
             auto gameObject = std::make_shared<GameObject>();
             gameObject->setModelRef(ref);
-            for (auto& mesh : ptr->meshes) {
+
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            for (auto& mesh : modePtr->meshes) {
+                auto meshPtr = mesh.dynamicCast<ResMesh*>();
+
                 auto child = new GameObject();
                 auto filter = child->addComponent<MeshFilter>();
                 filter->setMesh(std::make_shared<Mesh>(mesh));
+
+                auto transform = child->getComponent<Transform>();
+
+                glm::decompose(meshPtr->transform, 
+                               transform->scale(),
+                               transform->rotation(),
+                               transform->position(),
+                               skew,
+                               perspective);
+
                 gameObject->addChild(child);
             }
 
@@ -198,9 +215,11 @@ namespace Mix {
             model->indexCount = _modelData.indices.size();
 
             for (auto& meshData : _modelData.meshes) {
-                auto mesh = new ResMesh(Utils::GuidGenerator::GetGuid(_path.generic_string() + "/" + meshData.name),
+                auto mesh = new ResMesh(Utils::GuidGenerator::GetGuid(),
                                         meshData.name,
                                         _path);
+                
+                mesh->transform = meshData.transform;
 
                 mesh->vertexBuffer = vertexBuffer;
                 mesh->indexBuffer = indexBuffer;

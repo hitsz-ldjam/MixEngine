@@ -33,7 +33,6 @@ class Demo final : public Mix::Behaviour {
 public:
     ~Demo() {
         delete clip;
-        delete mObj;
         puts("Demo deleted");
     }
 
@@ -59,31 +58,33 @@ public:
         auto v = FindObjectOfType<Mix::Graphics::Vulkan>();
 
         mResources.init();
-        auto tempObj = mResources.load("E:/Git/vulkan-learning-master/res/models/cube.gltf");
+        gameObj = std::dynamic_pointer_cast<Mix::GameObject>(mResources.load("E:/Git/vulkan-learning-master/res/models/gltfSample/FlightHelmet/glTF/FlightHelmet.gltf"));
 
+        camera = std::make_shared<Mix::GameObject>("Camera");
+        camera->getComponent<Mix::Transform>()->position() = glm::vec3(0.0f, 0.0f, 3.0f);
 
-        mObj = new Mix::GameObject();
         mTimer.Start();
     }
 
     void update() override {
         mTimer.Tick();
-
-        auto tran = mObj->getComponent<Mix::Transform>();
+        auto tran = camera->getComponent<Mix::Transform>();
+        tran->lookAt(glm::vec3(0.0f, 0.0f, 0.0f));
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_W))
-            tran->translate(Mix::Axis::WorldForward, Mix::Space::WORLD);
+            tran->translate(Mix::Axis::WorldForward, Mix::Space::SELF);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_S))
-            tran->translate(-Mix::Axis::WorldForward, Mix::Space::WORLD);
+            tran->translate(-Mix::Axis::WorldForward, Mix::Space::SELF);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_D))
-            tran->translate(Mix::Axis::WorldRight, Mix::Space::WORLD);
+            tran->translate(Mix::Axis::WorldRight, Mix::Space::SELF);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_A))
-            tran->translate(-Mix::Axis::WorldRight, Mix::Space::WORLD);
+            tran->translate(-Mix::Axis::WorldRight, Mix::Space::SELF);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_SPACE))
-            tran->translate(Mix::Axis::WorldUp, Mix::Space::WORLD);
+            tran->translate(Mix::Axis::WorldUp, Mix::Space::SELF);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_LCTRL))
-            tran->translate(-Mix::Axis::WorldUp, Mix::Space::WORLD);
-        clip->set3DAttributes(&tran->position());
+            tran->translate(-Mix::Axis::WorldUp, Mix::Space::SELF);
 
+        clip->set3DAttributes(&tran->position());
+        std::cout << tran->forward() << std::endl;
         mVulkan.update(static_cast<float>(mTimer.DeltaTime()));
     }
 
@@ -96,7 +97,8 @@ private:
     Mix::Graphics::Vulkan mVulkan;
     Mix::Timer              mTimer;
 
-    Mix::GameObject* mObj = nullptr;
+    std::shared_ptr<Mix::GameObject> camera;
+    std::shared_ptr<Mix::GameObject> gameObj;
     Mix::Resource::Resources mResources;
 };
 

@@ -2,6 +2,7 @@
 #ifndef MX_VK_IMAGE_H_
 #define MX_VK_IMAGE_H_
 
+#include <gli/gli.hpp>
 #include "../Utils/MxUtils.h"
 #include "MxVkCore.h"
 #include "MxVkAllocator.h"

@@ -8,6 +8,30 @@
 
 namespace Mix {
     namespace Graphics {
+        class  WriteDescriptorSet {
+        public:
+            WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorImageInfo &_imageInfo) :
+                mWriteDescriptorSet(_writeDescriptorSet),
+                mImageInfo(std::make_unique<vk::DescriptorImageInfo>(_imageInfo)),
+                mBufferInfo(nullptr) {
+                mWriteDescriptorSet.pImageInfo = mImageInfo.get();
+            }
+
+            WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorBufferInfo &_bufferInfo) :
+                mWriteDescriptorSet(_writeDescriptorSet),
+                mImageInfo(nullptr),
+                mBufferInfo(std::make_unique<vk::DescriptorBufferInfo>(_bufferInfo)) {
+                mWriteDescriptorSet.pBufferInfo = mBufferInfo.get();
+            }
+
+            const VkWriteDescriptorSet &get() const { return mWriteDescriptorSet; }
+
+        private:
+            vk::WriteDescriptorSet mWriteDescriptorSet;
+            std::unique_ptr<vk::DescriptorImageInfo> mImageInfo;
+            std::unique_ptr<vk::DescriptorBufferInfo> mBufferInfo;
+        };
+
         class DescriptorSetLayout :public GraphicsComponent {
         public:
             ~DescriptorSetLayout() { destroy(); }
@@ -34,6 +58,8 @@ namespace Mix {
 
             void clear() { mBindings.clear(); }
         };
+
+
 
         class DescriptorPool :public GraphicsComponent {
         public:

@@ -3,7 +3,7 @@
 #define MX_MODEL_H_
 
 #include "../MxResource.h"
-#include "../../MxVk/MxVkBuffer.h"
+#include "../../MxVk/Buffers/MxVkBuffer.h"
 
 namespace Mix {
     namespace Resource {
@@ -32,8 +32,10 @@ namespace Mix {
                 }
             };
 
+            glm::mat4 transform = glm::mat4(1.0f);
             std::vector<SubmeshInfo> submeshes;
 
+            // vulkan data
             Graphics::MemoryBlock vertexMem;
             std::shared_ptr<Graphics::Buffer> vertexBuffer;
 
