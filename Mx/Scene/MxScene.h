@@ -6,14 +6,19 @@
 #include "../Window/MxWindow.h"
 
 namespace Mix {
-    // todo: temp scene
+    // todo: temp demo scene
     class Scene {
     public:
+        Scene();
+        ~Scene();
+
         void init();
         void update();
+        void fixedUpate();
+        void lateUpate();
 
     private:
-        Window fuckGarbageCPPWindow;
+        Window* window;
     };
 }
 

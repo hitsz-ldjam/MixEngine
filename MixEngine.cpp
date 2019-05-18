@@ -56,7 +56,7 @@ namespace Mix {
 
         // initialize engine
         Input::Init();
-        Time::Reset();
+        Time::Init();
 
         // initialize behaviours
         // todo: delete debug code
@@ -123,20 +123,27 @@ namespace Mix {
         // todo: delete debug code
         mScene.update();
 
-        // todo: What?
-        // fixed update behaviours
-        if(Time::mFixedSteps) {
-            for(int i = 0; i < Time::mFixedSteps; ++i)
-                fixedUpdate();
+        // todo: smooth and reset smoothing
+        for(int i = 0; i < Time::mFixedClampedSteps; ++i) {
+            fixedUpdate();
         }
     }
 
-    void MixEngine::fixedUpdate() { }
+    void MixEngine::fixedUpdate() {
+        // todo: call bullet3
+
+        // fixed update behaviours
+        // todo: delete debug code
+        mScene.fixedUpate();
+    }
 
     void MixEngine::lateUpdate() {
+        // late update beahviours
+        // todo: delete debug code
+        mScene.lateUpate();
+
         Input::Reset();
 
-        // update fmod
         mFmodCore->update();
     }
 

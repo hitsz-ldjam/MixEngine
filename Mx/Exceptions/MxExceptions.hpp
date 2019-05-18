@@ -45,14 +45,6 @@ namespace Mix {
     MX_DECLARE_RUNTIME_ERROR(WindowIconLoadingError, [ERROR] Failed to load icon image)
 
     MX_DECLARE_RUNTIME_ERROR(FmodInitializationError, [ERROR] Failed to initialize FMOD)
-
-    MX_DECLARE_RUNTIME_ERROR(AudioManagerNotInitializedError, [ERROR] AudioManager not initialized)
-
-    class FileLoadingError final : public std::runtime_error {
-    public:
-        explicit FileLoadingError(const std::string& _path) : std::runtime_error("[ERROR] Cannot load file [" + _path + "]") {}
-    };
-
 }
 
 #endif

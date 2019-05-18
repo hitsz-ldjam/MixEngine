@@ -19,7 +19,6 @@ namespace Mix {
     private:
         virtual void init() {}
         virtual void update() {}
-        // todo: fixedUpdate()
         virtual void fixedUpdate() {}
         virtual void lateUpdate() {}
     };

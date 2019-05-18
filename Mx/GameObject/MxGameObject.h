@@ -24,6 +24,7 @@ namespace Mix {
     MX_DECLARE_CLASS_FACTORY
 
     public:
+        // todo: reorder parameters
         GameObject(const std::string& _name = "",
                    Tag _tag = "",
                    const LayerIndex _layer = 0,
