@@ -1,38 +1,45 @@
 #pragma once
-#ifndef _MX_MESH_H_
-#define _MX_MESH_H_
+#ifndef MX_MESH_H_
+#define MX_MESH_H_
 
 #include "MxGameObject.h"
 #include "MxComponent.h"
-#include <string>
+#include "../Resource/Model/MxResModel.h"
 
 namespace Mix {
+    class Mesh {
+    public:
+        Mesh() = default;
+
+        explicit Mesh(Resource::ResourceRef _ref) :mMeshRef(std::move(_ref)) {}
+
+        uint32_t submeshCount() const {
+            return mMeshRef.dynamicCast<Resource::ResMesh*>()->submeshes.size();
+        }
+
+        const Resource::ResourceRef& meshRef() const {
+            return mMeshRef;
+        }
+    private:
+        Resource::ResourceRef mMeshRef = nullptr;
+    };
+
     class MeshFilter :public Component {
         MX_DECLARE_RTTI;
         MX_DECLARE_CLASS_FACTORY;
     public:
-        struct MeshRef {
-            ModelId model;
-            MeshId mesh;
+        MeshFilter() = default;
 
-            MeshRef() = default;
-            MeshRef(const ModelId& model, const MeshId& mesh) :model(model), mesh(mesh) {}
-        };
-
-    public:
-        const MeshRef& getMeshRef() const {
-            return mMeshRef;
+        void setMesh(const std::shared_ptr<Mesh>& _mesh) {
+            mMesh = _mesh;
         }
 
-        void setMeshRef(const ModelId & modelId, const MeshId & meshId) {
-            // todo check if meshName is valid
-            mMeshRef.model = modelId;
-            mMeshRef.mesh = meshId;
+        std::shared_ptr<Mesh> getMesh() const {
+            return mMesh;
         }
+
     private:
-        // todo for now, we refer a mesh by name
-        // we will change this in the future since this may be inefficient
-        MeshRef mMeshRef;
+        std::shared_ptr<Mesh> mMesh;
     };
 }
 

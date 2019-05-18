@@ -8,7 +8,7 @@ namespace Mix {
             createInfo.messageType = messageType;
             createInfo.pfnUserCallback = callback;
 
-            vk::DebugUtilsMessengerEXT messenger = mCore->instance().createDebugUtilsMessengerEXT(createInfo,
+            vk::DebugUtilsMessengerEXT messenger = mCore->getInstance().createDebugUtilsMessengerEXT(createInfo,
                                                                                                   nullptr,
                                                                                                   mCore->dynamicLoader());
 
@@ -16,11 +16,11 @@ namespace Mix {
             return mMessengers.back();
         }
 
-        void Debug::destroyDebugCallback(const vk::DebugUtilsMessengerEXT & messenger) {
-            mCore->instance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->dynamicLoader());
+        void Debug::destroyDebugCallback(const vk::DebugUtilsMessengerEXT & _messenger) {
+            mCore->getInstance().destroyDebugUtilsMessengerEXT(_messenger, nullptr, mCore->dynamicLoader());
             mMessengers.erase(std::find(mMessengers.begin(),
                               mMessengers.end(),
-                              messenger));
+                              _messenger));
         }
 
         void Debug::destroy() {
@@ -28,55 +28,46 @@ namespace Mix {
                 return;
 
             for (const auto& messenger : mMessengers)
-                mCore->instance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->dynamicLoader());
+                mCore->getInstance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->dynamicLoader());
 
             mMessengers.clear();
             mCore = nullptr;
         }
 
-        std::string Debug::severityToString(const vk::DebugUtilsMessageSeverityFlagBitsEXT severity) {
-            switch (severity) {
+        std::string Debug::SeverityToString(const vk::DebugUtilsMessageSeverityFlagBitsEXT _severity) {
+            switch (_severity) {
             case vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
                 return "Verbose";
-                break;
             case vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
                 return "Info";
-                break;
             case vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
                 return "Warning";
-                break;
             case vk::DebugUtilsMessageSeverityFlagBitsEXT::eError:
                 return "Error";
-                break;
             default:
                 return "Unknown";
-                break;
             }
         }
 
-        std::string Debug::typeToString(const vk::DebugUtilsMessageTypeFlagBitsEXT type) {
-            switch (type) {
+        std::string Debug::TypeToString(const vk::DebugUtilsMessageTypeFlagBitsEXT _type) {
+            switch (_type) {
             case vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral:
                 return "General";
-                break;
             case vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation:
                 return "Validation";
-                break;
             case vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance:
                 return "Performance";
-                break;
             default:
                 return "Unkown";
-                break;
             }
         }
 
-        VKAPI_ATTR VkBool32 VKAPI_CALL Debug::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT * pCallbackData, void * pUserData) {
+        VKAPI_ATTR VkBool32 VKAPI_CALL Debug::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT _messageSeverity, VkDebugUtilsMessageTypeFlagsEXT _messageType, const VkDebugUtilsMessengerCallbackDataEXT * _pCallbackData, void * _pUserData) {
             std::string msg = "[ Validation layer ] : [ ";
-            msg += severityToString(static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(messageSeverity));
+            msg += SeverityToString(static_cast<vk::DebugUtilsMessageSeverityFlagBitsEXT>(_messageSeverity));
             msg += " ] [ ";
-            msg += typeToString(static_cast<vk::DebugUtilsMessageTypeFlagBitsEXT>(messageType));
-            msg = msg + " ]\n\t" + pCallbackData->pMessage;
+            msg += TypeToString(static_cast<vk::DebugUtilsMessageTypeFlagBitsEXT>(_messageType));
+            msg = msg + " ]\n\t" + _pCallbackData->pMessage;
             std::cerr << std::endl << msg << std::endl;
             return VK_FALSE;
         }

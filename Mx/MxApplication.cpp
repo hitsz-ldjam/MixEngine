@@ -1,7 +1,7 @@
 #include "MxApplication.h"
 
 namespace Mix {
-    Application::Application(int argc, char** argv) {
+    Application::Application(int _argc, char** _argv) {
         // behaviours.reserve(capacity);
         quit = false;
     }
@@ -42,7 +42,7 @@ namespace Mix {
 
         // todo: initialize vulkan and other stuff
 
-        AudioManager::getInstance();
+        AudioManager::GetInstance();
         Input::keyboardState = SDL_GetKeyboardState(nullptr);
 
         quit = false;
@@ -53,7 +53,7 @@ namespace Mix {
 
     void Application::lateUpdate() {
         for(auto be : behaviours) be->lateUpdate();
-        AudioManager::getInstance().update();
+        AudioManager::GetInstance().Update();
     }
 
     void Application::process(SDL_Event& event) {
@@ -124,10 +124,10 @@ namespace Mix {
     }
 
     void Application::preEvent() {
-        Time::time = Time::getDuration(start);
-        Time::deltaTime = Time::getDuration(lastFrame);
+        Time::time = Time::GetDuration(start);
+        Time::deltaTime = Time::GetDuration(lastFrame);
         lastFrame = std::chrono::high_resolution_clock::now();
-        Input::reset();
+        Input::Reset();
     }
 
     void Application::preRender() {

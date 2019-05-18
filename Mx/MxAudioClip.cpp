@@ -1,66 +1,68 @@
 #include "MxAudioClip.h"
 
 namespace Mix {
-    FMOD::Studio::System* AudioClip::system = AudioManager::getInstance().getSystem();
-    FMOD::System* AudioClip::lowLevelSystem = AudioManager::getInstance().getLowLevelSystem();
+    FMOD::Studio::System* AudioClip::System = AudioManager::GetInstance().GetSystem();
+    FMOD::System* AudioClip::LowLevelSystem = AudioManager::GetInstance().GetLowLevelSystem();
 
-    AudioClip::AudioClip(const std::string& name, const AudioClipLoadType type) {
-        FMOD_RESULT result = lowLevelSystem->createSound(name.c_str(), static_cast<unsigned>(type), nullptr, &sound);
+    AudioClip::AudioClip(const std::string& _name, const AudioClipLoadType _type) {
+        FMOD_RESULT result = LowLevelSystem->createSound(_name.c_str(), static_cast<unsigned>(_type), nullptr, &mSound);
         if(result != FMOD_OK)
-            throw std::runtime_error("Error: Failed to load audio " + name);
+            throw std::runtime_error("Error: Failed to load audio " + _name);
     }
 
     AudioClip::~AudioClip() {
-        if(sound)
-            sound->release();
-        sound = nullptr;
+        if(mSound)
+            mSound->release();
+        mSound = nullptr;
     }
 
-    FMOD::Channel* AudioClip::init(const bool playOnInit, FMOD::ChannelGroup* channelGroup) {
-        if(getLoadState() == FMOD_OPENSTATE_READY && !channel)
-            lowLevelSystem->playSound(sound, channelGroup, !playOnInit, &channel);
-        return channel;
+    FMOD::Channel* AudioClip::init(const bool _playOnInit, FMOD::ChannelGroup* _channelGroup) {
+        if(getLoadState() == FMOD_OPENSTATE_READY && !mChannel)
+            LowLevelSystem->playSound(mSound, _channelGroup, !_playOnInit, &mChannel);
+        return mChannel;
     }
 
     FMOD_OPENSTATE AudioClip::getLoadState() {
         FMOD_OPENSTATE state = FMOD_OPENSTATE_ERROR;
-        if(sound)
-            sound->getOpenState(&state, nullptr, nullptr, nullptr);
+        if(mSound)
+            mSound->getOpenState(&state, nullptr, nullptr, nullptr);
         return state;
     }
 
     bool AudioClip::getMute() {
         bool mute = false;
-        if(channel)
-            channel->getMute(&mute);
+        if(mChannel)
+            mChannel->getMute(&mute);
         return mute;
     }
 
     bool AudioClip::getPaused() {
         bool paused = false;
-        if(channel)
-            channel->getPaused(&paused);
+        if(mChannel)
+            mChannel->getPaused(&paused);
         return paused;
     }
 
     float AudioClip::getVolume() {
         float volume = 0.;
-        if(channel)
-            channel->getVolume(&volume);
+        if(mChannel)
+            mChannel->getVolume(&volume);
         return volume;
     }
 
-    void AudioClip::set3DAttributes(const glm::vec3* position, const glm::vec3* velocity) {
+    void AudioClip::setVolume(const float _volume) const { if (mChannel) mChannel->setVolume(_volume); }
+
+    void AudioClip::set3DAttributes(const glm::vec3* _position, const glm::vec3* _velocity) {
         FMOD_VECTOR pos, vel, *param1 = nullptr, *param2 = nullptr;
-        if(position) {
-            pos = {position->x, position->y, position->z};
+        if(_position) {
+            pos = {_position->x, _position->y, _position->z};
             param1 = &pos;
         }
-        if(velocity) {
-            vel = {velocity->x, velocity->y, velocity->z};
+        if(_velocity) {
+            vel = {_velocity->x, _velocity->y, _velocity->z};
             param2 = &vel;
         }
-        if(channel)
-            channel->set3DAttributes(param1, param2);
+        if(mChannel)
+            mChannel->set3DAttributes(param1, param2);
     }
 }

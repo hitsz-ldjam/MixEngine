@@ -1,27 +1,17 @@
 #pragma once
-#ifndef _MX_DEF_H_
-#define _MX_DEF_H_
+#ifndef MX_DEF_H_
+#define MX_DEF_H_
 
 #include <cstdint>
 #include <string>
 
 #include <vulkan/vulkan.hpp>
 
-// include GLI
-#include <gli/gli.hpp>
-
 // include GLM
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/euler_angles.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/epsilon.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 
 #define MX_ENGINE_NAME "MixEngine"
@@ -46,6 +36,7 @@ namespace Mix {
     typedef vk::DeviceSize IdStep;
     typedef Id MeshId;
     typedef Id ModelId;
+    typedef long long Guid;
 
     namespace Version {
         static VersionInt makeVersion(uint32_t major, uint32_t minor, uint32_t patch) {
@@ -78,7 +69,19 @@ namespace Mix {
         constexpr float Pi = 3.141593f;
     }
 
-    enum class Space { World, Self };
+    struct NoCopy {
+        NoCopy() = default;
+
+        ~NoCopy() = default;
+
+        NoCopy(const NoCopy&) = delete;
+
+        NoCopy(NoCopy&&) = default;
+
+        NoCopy& operator=(const NoCopy&) = delete;
+
+        NoCopy& operator=(NoCopy&&) = default;
+    };
 }
 
-#endif // !_MX_DEF_H_
+#endif // !MX_DEF_H_

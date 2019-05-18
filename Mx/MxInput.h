@@ -26,57 +26,57 @@ namespace Mix {
             return anyKeyDown;
         }
 
-        static bool GetAxisRaw(const SDL_Scancode scancode) {
-            return keyboardState[scancode];
+        static bool GetAxisRaw(const SDL_Scancode _scancode) {
+            return keyboardState[_scancode];
         }
 
-        static bool GetAxisRaw(const std::string& name) {
-            return GetAxisRaw(SDL_GetScancodeFromName(name.c_str()));
+        static bool GetAxisRaw(const std::string& _name) {
+            return GetAxisRaw(SDL_GetScancodeFromName(_name.c_str()));
         }
 
         // On an AZERTY keyboard, pressing 'A' will emit
         // a 'Q' scancode (representing the physical location) and an 'A' keycode.
 
-        static bool GetButton(const SDL_Scancode scancode) {
-            return keyEvent[scancode] & PRESSED_MASK;
+        static bool GetButton(const SDL_Scancode _scancode) {
+            return keyEvent[_scancode] & PRESSED_MASK;
         }
 
-        static bool GetButton(const std::string& name) {
-            return GetButton(SDL_GetScancodeFromName(name.c_str()));
+        static bool GetButton(const std::string& _name) {
+            return GetButton(SDL_GetScancodeFromName(_name.c_str()));
         }
 
-        static bool GetButtonDown(const SDL_Scancode scancode) {
-            return keyEvent[scancode] & FIRST_PRESSED_MASK;
+        static bool GetButtonDown(const SDL_Scancode _scancode) {
+            return keyEvent[_scancode] & FIRST_PRESSED_MASK;
         }
 
-        static bool GetButtonDown(const std::string& name) {
-            return GetButtonDown(SDL_GetScancodeFromName(name.c_str()));
+        static bool GetButtonDown(const std::string& _name) {
+            return GetButtonDown(SDL_GetScancodeFromName(_name.c_str()));
         }
 
-        static bool GetButtonUp(const SDL_Scancode scancode) {
-            return keyEvent[scancode] & RELEASED_MASK;
+        static bool GetButtonUp(const SDL_Scancode _scancode) {
+            return keyEvent[_scancode] & RELEASED_MASK;
         }
 
-        static bool GetButtonUp(const std::string& name) {
-            return GetButtonUp(SDL_GetScancodeFromName(name.c_str()));
+        static bool GetButtonUp(const std::string& _name) {
+            return GetButtonUp(SDL_GetScancodeFromName(_name.c_str()));
         }
 
-        static bool GetKey(const SDL_Keycode keycode) {
-            return GetButton(SDL_GetScancodeFromKey(keycode));
+        static bool GetKey(const SDL_Keycode _keycode) {
+            return GetButton(SDL_GetScancodeFromKey(_keycode));
         }
 
         // Redundant method. The same as GetButton(const std::string& name).
-        static bool GetKey(const std::string& name) {
-            return GetKey(SDL_GetKeyFromName(name.c_str()));
+        static bool GetKey(const std::string& _name) {
+            return GetKey(SDL_GetKeyFromName(_name.c_str()));
         }
 
-        static bool GetKeyDown(const SDL_Keycode keycode) {
-            return GetButtonDown(SDL_GetScancodeFromKey(keycode));
+        static bool GetKeyDown(const SDL_Keycode _keycode) {
+            return GetButtonDown(SDL_GetScancodeFromKey(_keycode));
         }
 
         // Redundant method. The same as GetButtonDown(const std::string& name).
-        static bool GetKeyDown(const std::string& name) {
-            return GetKeyDown(SDL_GetKeyFromName(name.c_str()));
+        static bool GetKeyDown(const std::string& _name) {
+            return GetKeyDown(SDL_GetKeyFromName(_name.c_str()));
         }
 
         /** @note Directly calls SDL_GetModState(). */
@@ -84,30 +84,30 @@ namespace Mix {
             return SDL_GetModState();
         }
 
-        static bool GetKeyUp(const SDL_Keycode keycode) {
-            return GetButtonUp(SDL_GetScancodeFromKey(keycode));
+        static bool GetKeyUp(const SDL_Keycode _keycode) {
+            return GetButtonUp(SDL_GetScancodeFromKey(_keycode));
         }
 
         // Redundant method. The same as GetButtonUp(const std::string& name).
-        static bool GetKeyUp(const std::string& name) {
-            return GetKeyUp(SDL_GetKeyFromName(name.c_str()));
+        static bool GetKeyUp(const std::string& _name) {
+            return GetKeyUp(SDL_GetKeyFromName(_name.c_str()));
         }
 
-        /** @param btnBitmask Current button state, which can be tested using the SDL_BUTTON(X) macros. */
-        static glm::ivec2 MousePosition(Uint32* btnBitmask = nullptr) {
+        /** @param _btnBitmask Current button state, which can be tested using the SDL_BUTTON(X) macros. */
+        static glm::ivec2 MousePosition(Uint32* _btnBitmask = nullptr) {
             glm::ivec2 position;
-            Uint32 state = SDL_GetMouseState(&position.x, &position.y);
-            if(btnBitmask)
-                *btnBitmask = state;
+            const auto state = SDL_GetMouseState(&position.x, &position.y);
+            if(_btnBitmask)
+                *_btnBitmask = state;
             return position;
         }
 
-        /** @param btnBitmask Current button state, which can be tested using the SDL_BUTTON(X) macros. */
-        static glm::ivec2 MousePositionDelta(Uint32* btnBitmask = nullptr) {
+        /** @param _btnBitmask Current button state, which can be tested using the SDL_BUTTON(X) macros. */
+        static glm::ivec2 MousePositionDelta(Uint32* _btnBitmask = nullptr) {
             glm::ivec2 delta;
-            Uint32 state = SDL_GetRelativeMouseState(&delta.x, &delta.y);
-            if(btnBitmask)
-                *btnBitmask = state;
+            const auto state = SDL_GetRelativeMouseState(&delta.x, &delta.y);
+            if(_btnBitmask)
+                *_btnBitmask = state;
             return delta;
         }
 
@@ -140,7 +140,7 @@ namespace Mix {
         static glm::ivec2 mouseScrollDelta;
         static Uint8 mouseButtonEvent[SDL_BUTTON_X2];
 
-        static void reset() {
+        static void Reset() {
             memset(keyEvent, 0, SDL_NUM_SCANCODES * sizeof(*keyEvent));
             anyKey = false;
             anyKeyDown = false;

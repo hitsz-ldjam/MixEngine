@@ -3,23 +3,22 @@
 #define _MX_TIMER_H_
 
 
-#include "MxObject.h"
 #include <chrono>
 
 
 namespace Mix {
     class Timer {
     public:
-        double totalTime();
+        double TotalTime();
 
-        double deltaTime() const {
+        double DeltaTime() const {
             return mDeltaTime;
         }
 
-        void reset();
-        void start();
-        void stop();
-        void tick();
+        void Reset();
+        void Start();
+        void Stop();
+        void Tick();
 
     private:
         using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
@@ -34,10 +33,10 @@ namespace Mix {
         TimePoint mStopTp;
         TimePoint mPrevTp;
         TimePoint mCurrTp;
-        Duration mPausedTime;
+        Duration mPausedTime = std::chrono::steady_clock::duration(0);
 
-        double durToSeconds(const Duration& dur) {
-            return static_cast<double>(dur.count()) * Duration::period::num / Duration::period::den;
+        static double DurToSeconds(const Duration& _dur) {
+            return static_cast<double>(_dur.count()) * Duration::period::num / Duration::period::den;
         }
     };
 }

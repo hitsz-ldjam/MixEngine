@@ -1,12 +1,11 @@
 #pragma once
 
-#ifndef _MIX_ENGINE_H_
-#define _MIX_ENGINE_H_
+#ifndef MIX_ENGINE_H_
+#define MIX_ENGINE_H_
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-// todo
 #include "Mx/MxDef.h"
 
 #include "Mx/MxApplication.h"

@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _MX_APPLICATION_H_
-#define _MX_APPLICATION_H_
+#ifndef MX_APPLICATION_H_
+#define MX_APPLICATION_H_
 
 #include <iostream>
 
@@ -17,7 +17,7 @@ namespace Mix {
     class Application {
     public:
         std::vector<Behaviour*> behaviours;
-        Application(int argc = 0, char** argv = nullptr);
+        Application(int _argc = 0, char** _argv = nullptr);
         ~Application();
         int exec();
 

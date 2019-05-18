@@ -9,13 +9,13 @@ namespace Mix {
     class Time {
         friend class Application;
     public:
-        static double getTime() { return time; };
-        static double getDeltaTime() { return deltaTime; };
+        static double GetTime() { return time; };
+        static double GetDeltaTime() { return deltaTime; };
     private:
         static double time;
         static double deltaTime;
-        static double getDuration(const std::chrono::high_resolution_clock::time_point& startPoint) {
-            auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - startPoint);
+        static double GetDuration(const std::chrono::high_resolution_clock::time_point& _startPoint) {
+            auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - _startPoint);
             return static_cast<double>(duration.count()) / 10e8;
         }
     };

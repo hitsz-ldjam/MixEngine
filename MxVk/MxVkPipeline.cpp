@@ -9,119 +9,119 @@ namespace Mix {
             }
         }
 
-        Pipeline & Pipeline::operator=(Pipeline && pipeline) {
-            this->mCore = pipeline.mCore;
-            this->mPipeline = pipeline.mPipeline;
-            this->mPipelineLayout = pipeline.mPipelineLayout;
-            this->mRenderPass = pipeline.mRenderPass;
-            this->mSubpassIndex = pipeline.mSubpassIndex;
-            this->mPipelineStates = pipeline.mPipelineStates;
+        Pipeline & Pipeline::operator=(Pipeline && _pipeline) noexcept {
+            this->mCore = _pipeline.mCore;
+            this->mPipeline = _pipeline.mPipeline;
+            this->mPipelineLayout = _pipeline.mPipelineLayout;
+            this->mRenderPass = _pipeline.mRenderPass;
+            this->mSubpassIndex = _pipeline.mSubpassIndex;
+            this->mPipelineStates = _pipeline.mPipelineStates;
 
-            pipeline.mCore = nullptr;
-            pipeline.mPipelineStates = nullptr;
-            pipeline.mPipeline = nullptr;
-            pipeline.mPipelineLayout = nullptr;
-            pipeline.mRenderPass = nullptr;
-            pipeline.mSubpassIndex = 0;
+            _pipeline.mCore = nullptr;
+            _pipeline.mPipelineStates = nullptr;
+            _pipeline.mPipeline = nullptr;
+            _pipeline.mPipelineLayout = nullptr;
+            _pipeline.mRenderPass = nullptr;
+            _pipeline.mSubpassIndex = 0;
             return *this;
         }
 
-        void Pipeline::init(std::shared_ptr<Core> & core) {
-            mCore = core;
+        void Pipeline::init(const std::shared_ptr<Core>& _core) {
+            setCore(_core);
             mPipelineStates = new PipelineStates;
         }
 
-        void Pipeline::setTargetRenderPass(const vk::RenderPass renderPass, const uint32_t subpassIndex) {
-            mRenderPass = renderPass;
-            mSubpassIndex = subpassIndex;
+        void Pipeline::setTargetRenderPass(const vk::RenderPass _renderPass, const uint32_t _subpassIndex) {
+            mRenderPass = _renderPass;
+            mSubpassIndex = _subpassIndex;
         }
 
-        void Pipeline::addShader(const vk::ShaderStageFlagBits stage, const vk::ShaderModule shader, const vk::SpecializationInfo* specInfo) {
+        void Pipeline::addShader(const vk::ShaderStageFlagBits _stage, const vk::ShaderModule _shader, const vk::SpecializationInfo* _specInfo) const {
             static char pName[] = "main";
             vk::PipelineShaderStageCreateInfo createInfo = {};
-            createInfo.stage = stage;
-            createInfo.module = shader;
+            createInfo.stage = _stage;
+            createInfo.module = _shader;
             createInfo.pName = pName;
-            createInfo.pSpecializationInfo = specInfo;
+            createInfo.pSpecializationInfo = _specInfo;
 
             mPipelineStates->shaders.push_back(std::move(createInfo));
         }
 
-        void Pipeline::setVertexInput(const std::vector<vk::VertexInputBindingDescription>& bindingDescri, const std::vector<vk::VertexInputAttributeDescription>& attriDescri) {
-            mPipelineStates->vertexInput.pVertexBindingDescriptions = bindingDescri.data();
-            mPipelineStates->vertexInput.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescri.size());
-            mPipelineStates->vertexInput.pVertexAttributeDescriptions = attriDescri.data();
-            mPipelineStates->vertexInput.vertexAttributeDescriptionCount = static_cast<uint32_t>(attriDescri.size());
+        void Pipeline::setVertexInput(const std::vector<vk::VertexInputBindingDescription>& _bindingDescri, const std::vector<vk::VertexInputAttributeDescription>& _attriDescri) const {
+            mPipelineStates->vertexInput.pVertexBindingDescriptions = _bindingDescri.data();
+            mPipelineStates->vertexInput.vertexBindingDescriptionCount = static_cast<uint32_t>(_bindingDescri.size());
+            mPipelineStates->vertexInput.pVertexAttributeDescriptions = _attriDescri.data();
+            mPipelineStates->vertexInput.vertexAttributeDescriptionCount = static_cast<uint32_t>(_attriDescri.size());
         }
 
-        void Pipeline::setInputAssembly(const vk::PrimitiveTopology topology, const bool primitiveRestart) {
-            mPipelineStates->inputAssembly.topology = topology;
-            mPipelineStates->inputAssembly.primitiveRestartEnable = primitiveRestart;
+        void Pipeline::setInputAssembly(const vk::PrimitiveTopology _topology, const bool _primitiveRestart) const {
+            mPipelineStates->inputAssembly.topology = _topology;
+            mPipelineStates->inputAssembly.primitiveRestartEnable = _primitiveRestart;
         }
 
-        void Pipeline::addViewport(const std::vector<vk::Viewport>& viewports) {
-            mPipelineStates->viewports.insert(mPipelineStates->viewports.end(), viewports.begin(), viewports.end());
+        void Pipeline::addViewport(const std::vector<vk::Viewport>& _viewports) const {
+            mPipelineStates->viewports.insert(mPipelineStates->viewports.end(), _viewports.begin(), _viewports.end());
         }
 
-        void Pipeline::addViewport(const vk::Viewport& viewport) {
-            mPipelineStates->viewports.push_back(viewport);
+        void Pipeline::addViewport(const vk::Viewport& _viewport) const {
+            mPipelineStates->viewports.push_back(_viewport);
         }
 
-        void Pipeline::addScissor(const std::vector<vk::Rect2D>& scissors) {
-            mPipelineStates->scissors.insert(mPipelineStates->scissors.end(), scissors.begin(), scissors.end());
+        void Pipeline::addScissor(const std::vector<vk::Rect2D>& _scissors) const {
+            mPipelineStates->scissors.insert(mPipelineStates->scissors.end(), _scissors.begin(), _scissors.end());
         }
 
-        void Pipeline::addScissor(const vk::Rect2D & scissors) {
-            mPipelineStates->scissors.push_back(scissors);
+        void Pipeline::addScissor(const vk::Rect2D & _scissors) const {
+            mPipelineStates->scissors.push_back(_scissors);
         }
 
-        void Pipeline::setRasterization(const vk::PolygonMode polygonMode, const vk::CullModeFlags cullMode, const vk::FrontFace frontFace, const float lineWidth, const bool depthClampEnable, const bool rasterizerDiscardEnable) {
+        void Pipeline::setRasterization(const vk::PolygonMode _polygonMode, const vk::CullModeFlags _cullMode, const vk::FrontFace _frontFace, const float _lineWidth, const bool _depthClampEnable, const bool _rasterizerDiscardEnable) const {
 
-            mPipelineStates->rasterization.polygonMode = polygonMode;
-            mPipelineStates->rasterization.cullMode = cullMode;
-            mPipelineStates->rasterization.frontFace = frontFace;
-            mPipelineStates->rasterization.lineWidth = lineWidth;
-            mPipelineStates->rasterization.depthClampEnable = depthClampEnable;
-            mPipelineStates->rasterization.rasterizerDiscardEnable = rasterizerDiscardEnable;
+            mPipelineStates->rasterization.polygonMode = _polygonMode;
+            mPipelineStates->rasterization.cullMode = _cullMode;
+            mPipelineStates->rasterization.frontFace = _frontFace;
+            mPipelineStates->rasterization.lineWidth = _lineWidth;
+            mPipelineStates->rasterization.depthClampEnable = _depthClampEnable;
+            mPipelineStates->rasterization.rasterizerDiscardEnable = _rasterizerDiscardEnable;
         }
 
-        void Pipeline::setDepthBias(const bool enable, const float constantFactor, const float slopeFactor, const float clamp) {
-            mPipelineStates->rasterization.depthBiasEnable = enable;
-            mPipelineStates->rasterization.depthBiasConstantFactor = constantFactor;
-            mPipelineStates->rasterization.depthBiasSlopeFactor = slopeFactor;
-            mPipelineStates->rasterization.depthBiasClamp = clamp;
+        void Pipeline::setDepthBias(const bool _enable, const float _constantFactor, const float _slopeFactor, const float _clamp) const {
+            mPipelineStates->rasterization.depthBiasEnable = _enable;
+            mPipelineStates->rasterization.depthBiasConstantFactor = _constantFactor;
+            mPipelineStates->rasterization.depthBiasSlopeFactor = _slopeFactor;
+            mPipelineStates->rasterization.depthBiasClamp = _clamp;
         }
 
-        void Pipeline::setMultiSample(const vk::SampleCountFlagBits samples, const bool sampleShading, const float minSampleShading, const vk::SampleMask * sampleMask, const bool alphaToCoverageEnable, const bool alphaToOneEnable) {
+        void Pipeline::setMultiSample(const vk::SampleCountFlagBits _samples, const bool _sampleShading, const float _minSampleShading, const vk::SampleMask * _sampleMask, const bool _alphaToCoverageEnable, const bool _alphaToOneEnable) const {
 
-            mPipelineStates->multisample.sampleShadingEnable = sampleShading;
-            mPipelineStates->multisample.rasterizationSamples = samples;
-            mPipelineStates->multisample.minSampleShading = minSampleShading;
-            mPipelineStates->multisample.pSampleMask = sampleMask;
-            mPipelineStates->multisample.alphaToCoverageEnable = alphaToCoverageEnable;
-            mPipelineStates->multisample.alphaToOneEnable = alphaToOneEnable;
+            mPipelineStates->multisample.sampleShadingEnable = _sampleShading;
+            mPipelineStates->multisample.rasterizationSamples = _samples;
+            mPipelineStates->multisample.minSampleShading = _minSampleShading;
+            mPipelineStates->multisample.pSampleMask = _sampleMask;
+            mPipelineStates->multisample.alphaToCoverageEnable = _alphaToCoverageEnable;
+            mPipelineStates->multisample.alphaToOneEnable = _alphaToOneEnable;
         }
 
-        void Pipeline::setDepthTest(const bool depthTestEnable, const bool depthWriteEnable, const vk::CompareOp depthCompareOp) {
-            mPipelineStates->depthStencil.depthTestEnable = depthTestEnable;
-            mPipelineStates->depthStencil.depthWriteEnable = depthWriteEnable;
-            mPipelineStates->depthStencil.depthCompareOp = depthCompareOp;
+        void Pipeline::setDepthTest(const bool _depthTestEnable, const bool _depthWriteEnable, const vk::CompareOp _depthCompareOp) const {
+            mPipelineStates->depthStencil.depthTestEnable = _depthTestEnable;
+            mPipelineStates->depthStencil.depthWriteEnable = _depthWriteEnable;
+            mPipelineStates->depthStencil.depthCompareOp = _depthCompareOp;
         }
 
-        void Pipeline::setDepthBoundsTest(const bool enable, const float minBounds, const float maxBounds) {
-            mPipelineStates->depthStencil.depthBoundsTestEnable = enable;
-            mPipelineStates->depthStencil.minDepthBounds = minBounds;
-            mPipelineStates->depthStencil.maxDepthBounds = maxBounds;
+        void Pipeline::setDepthBoundsTest(const bool _enable, const float _minBounds, const float _maxBounds) const {
+            mPipelineStates->depthStencil.depthBoundsTestEnable = _enable;
+            mPipelineStates->depthStencil.minDepthBounds = _minBounds;
+            mPipelineStates->depthStencil.maxDepthBounds = _maxBounds;
         }
 
-        void Pipeline::setStencilTest(const bool enable, const vk::StencilOpState & front, const vk::StencilOpState & back) {
-            mPipelineStates->depthStencil.stencilTestEnable = enable;
-            mPipelineStates->depthStencil.front = front;
-            mPipelineStates->depthStencil.back = back;
+        void Pipeline::setStencilTest(const bool _enable, const vk::StencilOpState & _front, const vk::StencilOpState & _back) const {
+            mPipelineStates->depthStencil.stencilTestEnable = _enable;
+            mPipelineStates->depthStencil.front = _front;
+            mPipelineStates->depthStencil.back = _back;
         }
 
-        void Pipeline::addDefaultBlendAttachments() {
-            vk::PipelineColorBlendAttachmentState colorBlendAttachment = {};
+        void Pipeline::addDefaultBlendAttachments() const {
+            vk::PipelineColorBlendAttachmentState colorBlendAttachment;
             colorBlendAttachment.blendEnable = true; //enable blend
             colorBlendAttachment.colorWriteMask =
                 vk::ColorComponentFlagBits::eR |
@@ -139,57 +139,57 @@ namespace Mix {
             addBlendAttachments(std::move(colorBlendAttachment));
         }
 
-        void Pipeline::addBlendAttachments(const vk::PipelineColorBlendAttachmentState & attachment) {
-            mPipelineStates->colorBlendAttachments.push_back(attachment);
+        void Pipeline::addBlendAttachments(const vk::PipelineColorBlendAttachmentState & _attachment) const {
+            mPipelineStates->colorBlendAttachments.push_back(_attachment);
         }
 
-        void Pipeline::addBlendAttachments(const std::vector<vk::PipelineColorBlendAttachmentState>& attachments) {
+        void Pipeline::addBlendAttachments(const std::vector<vk::PipelineColorBlendAttachmentState>& _attachments) const {
             mPipelineStates->colorBlendAttachments.insert(mPipelineStates->colorBlendAttachments.end(),
-                                                          attachments.begin(),
-                                                          attachments.end());
+                                                          _attachments.begin(),
+                                                          _attachments.end());
         }
 
-        void Pipeline::setBlend(const bool logicalOpEnable, const vk::LogicOp logicOp, const float constantR, const float constantG, const float constantB, const float constantA) {
-            mPipelineStates->colorBlend.logicOpEnable = logicalOpEnable;
-            mPipelineStates->colorBlend.logicOp = logicOp;
+        void Pipeline::setBlend(const bool _logicalOpEnable, const vk::LogicOp _logicOp, const float _constantR, const float _constantG, const float _constantB, const float _constantA) const {
+            mPipelineStates->colorBlend.logicOpEnable = _logicalOpEnable;
+            mPipelineStates->colorBlend.logicOp = _logicOp;
             mPipelineStates->colorBlend.pAttachments = mPipelineStates->colorBlendAttachments.data();
             mPipelineStates->colorBlend.attachmentCount = static_cast<uint32_t>(mPipelineStates->colorBlendAttachments.size());
-            mPipelineStates->colorBlend.blendConstants[0] = constantR;
-            mPipelineStates->colorBlend.blendConstants[1] = constantG;
-            mPipelineStates->colorBlend.blendConstants[2] = constantB;
-            mPipelineStates->colorBlend.blendConstants[3] = constantA;
+            mPipelineStates->colorBlend.blendConstants[0] = _constantR;
+            mPipelineStates->colorBlend.blendConstants[1] = _constantG;
+            mPipelineStates->colorBlend.blendConstants[2] = _constantB;
+            mPipelineStates->colorBlend.blendConstants[3] = _constantA;
         }
 
-        void Pipeline::addDynamicState(const vk::DynamicState dynamicState) {
-            mPipelineStates->dynamicStates.push_back(dynamicState);
+        void Pipeline::addDynamicState(const vk::DynamicState _dynamicState) const {
+            mPipelineStates->dynamicStates.push_back(_dynamicState);
         }
 
-        void Pipeline::addDynamicState(const std::vector<vk::DynamicState>& dynamicStates) {
+        void Pipeline::addDynamicState(const std::vector<vk::DynamicState>& _dynamicStates) const {
             mPipelineStates->dynamicStates.insert(mPipelineStates->dynamicStates.end(),
-                                                  dynamicStates.begin(),
-                                                  dynamicStates.end());
+                                                  _dynamicStates.begin(),
+                                                  _dynamicStates.end());
         }
 
-        void Pipeline::addDescriptorSetLayout(const vk::DescriptorSetLayout setLayout) {
-            mPipelineStates->descriptorSetLayouts.push_back(setLayout);
+        void Pipeline::addDescriptorSetLayout(const vk::DescriptorSetLayout _setLayout) const {
+            mPipelineStates->descriptorSetLayouts.push_back(_setLayout);
         }
 
-        void Pipeline::addDescriptorSetLayout(const std::vector<vk::DescriptorSetLayout>& setLayouts) {
+        void Pipeline::addDescriptorSetLayout(const std::vector<vk::DescriptorSetLayout>& _setLayouts) const {
             mPipelineStates->descriptorSetLayouts.insert(mPipelineStates->descriptorSetLayouts.end(),
-                                                         setLayouts.begin(),
-                                                         setLayouts.end());
+                                                         _setLayouts.begin(),
+                                                         _setLayouts.end());
         }
 
-        void Pipeline::addPushConstantRange(vk::ShaderStageFlags stageFlags, uint32_t offset, uint32_t size) {
-            mPipelineStates->pushConstantRanges.push_back(vk::PushConstantRange(stageFlags, offset, size));
+        void Pipeline::addPushConstantRange(vk::ShaderStageFlags _stageFlags, uint32_t _offset, uint32_t _size) const {
+            mPipelineStates->pushConstantRanges.push_back(vk::PushConstantRange(_stageFlags, _offset, _size));
         }
 
-        void Pipeline::addPushConstantRange(const vk::PushConstantRange & range) {
-            mPipelineStates->pushConstantRanges.push_back(range);
+        void Pipeline::addPushConstantRange(const vk::PushConstantRange & _range) const {
+            mPipelineStates->pushConstantRanges.push_back(_range);
         }
 
-        void Pipeline::addPushConstantRanges(const std::vector<vk::PushConstantRange>& ranges) {
-            mPipelineStates->pushConstantRanges.insert(mPipelineStates->pushConstantRanges.end(), ranges.begin(), ranges.end());
+        void Pipeline::addPushConstantRanges(const std::vector<vk::PushConstantRange>& _ranges) const {
+            mPipelineStates->pushConstantRanges.insert(mPipelineStates->pushConstantRanges.end(), _ranges.begin(), _ranges.end());
         }
 
         bool Pipeline::create() {
@@ -200,7 +200,7 @@ namespace Mix {
             layoutCreateInfo.pPushConstantRanges = mPipelineStates->pushConstantRanges.data();
             layoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(mPipelineStates->pushConstantRanges.size());
 
-            mPipelineLayout = mCore->device().createPipelineLayout(layoutCreateInfo);
+            mPipelineLayout = mCore->getDevice().createPipelineLayout(layoutCreateInfo);
 
             vk::PipelineViewportStateCreateInfo viewportState = {};
             viewportState.pViewports = mPipelineStates->viewports.data();
@@ -237,7 +237,7 @@ namespace Mix {
             pipelineCreateInfo.basePipelineHandle = nullptr;	//基础管线（vulkan允许在已经存在的管线上派生新的管线）
             pipelineCreateInfo.basePipelineIndex = -1;
 
-            mPipeline = mCore->device().createGraphicsPipeline(nullptr, pipelineCreateInfo);
+            mPipeline = mCore->getDevice().createGraphicsPipeline(nullptr, pipelineCreateInfo);
 
             clear();
             return true;
@@ -247,34 +247,34 @@ namespace Mix {
             if (!mCore)
                 return;
 
-            mCore->device().destroyPipeline(mPipeline);
-            mCore->device().destroyPipelineLayout(mPipelineLayout);
+            mCore->getDevice().destroyPipeline(mPipeline);
+            mCore->getDevice().destroyPipelineLayout(mPipelineLayout);
             mCore = nullptr;
             mPipeline = nullptr;
             mPipelineLayout = nullptr;
         }
 
-        Pipeline & PipelineMgr::createPipeline(const std::string & name, const vk::RenderPass renderPass, const uint32_t subpassIndex) {
-            if (mPipelines.count(name) != 0)
-                throw PipelineAlreadyExist(name);
+        Pipeline & PipelineMgr::createPipeline(const std::string & _name, const vk::RenderPass _renderPass, const uint32_t _subpassIndex) {
+            if (mPipelines.count(_name) != 0)
+                throw PipelineAlreadyExist(_name);
 
             Pipeline pipeline;
             pipeline.init(mCore);
-            pipeline.setTargetRenderPass(renderPass, subpassIndex);
-            mPipelines[name] = std::move(pipeline);
-            return mPipelines[name];
+            pipeline.setTargetRenderPass(_renderPass, _subpassIndex);
+            mPipelines[_name] = std::move(pipeline);
+            return mPipelines[_name];
         }
-        const Pipeline & PipelineMgr::getPipeline(const std::string & name) {
-            if (mPipelines.count(name) == 0)
-                throw PipelineNotFound(name);
+        const Pipeline & PipelineMgr::getPipeline(const std::string & _name) {
+            if (mPipelines.count(_name) == 0)
+                throw PipelineNotFound(_name);
 
-            return mPipelines[name];
+            return mPipelines[_name];
         }
-        void PipelineMgr::destroyPipeline(const std::string & name) {
-            if (mPipelines.count(name) == 0)
-                throw PipelineNotFound(name);
+        void PipelineMgr::destroyPipeline(const std::string & _name) {
+            if (mPipelines.count(_name) == 0)
+                throw PipelineNotFound(_name);
 
-            mPipelines.erase(name);
+            mPipelines.erase(_name);
         }
         void PipelineMgr::destroy() {
             mPipelines.clear();
