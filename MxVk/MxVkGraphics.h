@@ -1,63 +1,77 @@
 #pragma once
-#ifndef _MX_VK_GRAPHICS_H_
-#define _MX_VK_GRAPHICS_H_
+#ifndef MX_VK_GRAPHICS_H_
+#define MX_VK_GRAPHICS_H_
 
 #include "../Mx/MxWindow.h"
 #include "../Utils/MxUtils.h"
 #include "../Mx/MxObject.h"
-#include "../Mx/MxRender.h"
-#include "../Mx/MxMesh.h"
 
 #include "MxVkDef.h"
-#include "MxVkExcept.hpp"
 #include "MxVkCore.h"
 #include "MxVkDebug.h"
 #include "MxVkAllocator.h"
 #include "MxVkMesh.h"
 #include "MxVkShader.h"
-#include "MxVkBuffer.h"
 #include "MxVkSwapchain.h"
 #include "MxVkFramebuffer.h"
 #include "MxVkRenderPass.h"
 #include "MxVkDescriptor.h"
 #include "MxVkPipeline.h"
 #include "MxVkCommand.h"
-#include "MxVkSyncObjMgr.h"
-#include "MxVkUniform.h"
 
 #include <vector>
-// todo
-#include <fstream>
+#include "Buffers/MxVkBuffer.h"
+#include "Buffers/MxVkUniformBuffer.h"
 
 #define WIN_WIDTH 640
 #define WIN_HEIGHT 480
 
 namespace Mix {
     namespace Graphics {
-        class Graphics {
+        class Vulkan :public Object {
+            MX_DECLARE_RTTI;
+            MX_DECLARE_NO_CLASS_FACTORY;
         public:
-            Graphics() {};
-            ~Graphics() {
+            Vulkan() {};
+            ~Vulkan() {
                 destroy();
             }
 
             void init();
-            void setTargetWindow(Window* window) {
-                mWindow = window;
+
+            void setTargetWindow(Window* _window) {
+                mWindow = _window;
             }
+
             void build();
-            void update(float deltaTime);
+
+            void update(float _deltaTime);
 
             void destroy();
+
             struct Settings {
                 vk::SampleCountFlagBits sampleCount = vk::SampleCountFlagBits::e1;
             };
 
-            /*
-            Interfaces
-            */
-            GameObject* createModelObj(const Utils::GLTFLoader::ModelData& modelData);
+            const vk::Device& getLogicalDevice() const {
+                return mCore->getDevice();
+            }
 
+            const vk::PhysicalDevice& getPhysicalDevice() const {
+                return mCore->getPhysicalDevice();
+            }
+
+            std::shared_ptr<Core> getCore() const {
+                return mCore;
+            }
+
+            std::shared_ptr<DeviceAllocator> getAllocator() const {
+                return mAllocator;
+            }
+
+            std::shared_ptr<CommandMgr> getCommandMgr() const {
+                return mCommandMgr;
+            }
 
         private:
             void buildCore();
@@ -80,8 +94,8 @@ namespace Mix {
             void loadResource();
 
         private:
-            void updateCmdBuffer(float deltaTime);
-            void updateUniformBuffer(float deltaTime);
+            void updateCmdBuffer(float _deltaTime);
+            void updateUniformBuffer(float _deltaTime);
 
         private:
             Window*                 mWindow = nullptr;
@@ -100,7 +114,7 @@ namespace Mix {
             std::shared_ptr<CommandMgr>             mCommandMgr;
 
             std::shared_ptr<ImageMgr>               mImageMgr;
-            std::shared_ptr<gltf::MeshMgr>          mMeshMgr;
+            // std::shared_ptr<gltf::MeshMgr>          mMeshMgr;
 
             std::vector<Framebuffer*>       mFramebuffers;
             Image                           mDepthStencil;
@@ -112,17 +126,12 @@ namespace Mix {
             vk::ImageView texImageView;
             vk::Sampler sampler;
 
-            struct Uniform {
-                glm::mat4 model;
-                glm::mat4 view;
-                glm::mat4 proj;
-                int index;
-            };
+            std::vector<std::shared_ptr<Buffer>> cameraUniforms;
+            std::vector<std::shared_ptr<DynamicUniformBuffer>> dynamicUniformBuffers;
 
-            std::vector<Buffer*> uniforms;
             Settings mSettings;
         };
     }
 }
 
-#endif // !_MX_VK_GRAPHICS_H_
+#endif // !MX_VK_GRAPHICS_H_

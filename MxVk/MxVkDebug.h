@@ -14,7 +14,12 @@ namespace Mix {
         class Debug :public GraphicsComponent {
         public:
             Debug() { mCore = nullptr; };
-            virtual ~Debug() { destroy(); }
+
+            ~Debug() { destroy(); }
+
+            void init(const std::shared_ptr<Core>& _core) {
+                setCore(_core);
+            }
 
             const vk::DebugUtilsMessengerEXT& setDebugCallback(const vk::DebugUtilsMessageSeverityFlagsEXT& messageSeverity,
                                                                const vk::DebugUtilsMessageTypeFlagsEXT& messageType,
@@ -29,23 +34,23 @@ namespace Mix {
                                                                  vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation) {
 
 
-                return setDebugCallback(messageSeverity, messageType, debugCallback, nullptr);
+                return setDebugCallback(messageSeverity, messageType, DebugCallback, nullptr);
             }
 
-            void destroyDebugCallback(const vk::DebugUtilsMessengerEXT& messenger);
+            void destroyDebugCallback(const vk::DebugUtilsMessengerEXT& _messenger);
 
             void destroy();
 
-            static std::string severityToString(const vk::DebugUtilsMessageSeverityFlagBitsEXT severity);
-            static std::string typeToString(const vk::DebugUtilsMessageTypeFlagBitsEXT type);
+            static std::string SeverityToString(const vk::DebugUtilsMessageSeverityFlagBitsEXT _severity);
+            static std::string TypeToString(const vk::DebugUtilsMessageTypeFlagBitsEXT _type);
 
         private:
             std::vector<vk::DebugUtilsMessengerEXT> mMessengers;
 
-            static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                                                VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                                                const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                                                void* pUserData);
+            static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT _messageSeverity,
+                                                                VkDebugUtilsMessageTypeFlagsEXT _messageType,
+                                                                const VkDebugUtilsMessengerCallbackDataEXT* _pCallbackData,
+                                                                void* _pUserData);
         };
     }
 }

@@ -20,6 +20,8 @@ namespace Mix {
             throw std::runtime_error("Error: Failed to initialize low level system");
     }
 
+    FMOD::Studio::System* AudioManager::GetSystem() const { return system; }
+
     AudioManager::~AudioManager() {
         if(system)
             system->release();

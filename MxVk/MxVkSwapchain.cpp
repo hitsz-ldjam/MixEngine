@@ -2,16 +2,16 @@
 
 namespace Mix {
     namespace Graphics {
-        void  Swapchain::init(std::shared_ptr<Core>& core) {
-            mCore = core;
+        void Swapchain::init(const std::shared_ptr<Core>& _core){
+            setCore(_core);
             mSupportDetails.capabilities =
-                mCore->physicalDevice().getSurfaceCapabilitiesKHR(mCore->surface());
+                mCore->getPhysicalDevice().getSurfaceCapabilitiesKHR(mCore->getSurface());
 
             mSupportDetails.formats =
-                mCore->physicalDevice().getSurfaceFormatsKHR(mCore->surface());
+                mCore->getPhysicalDevice().getSurfaceFormatsKHR(mCore->getSurface());
 
             mSupportDetails.presentModes =
-                mCore->physicalDevice().getSurfacePresentModesKHR(mCore->surface());
+                mCore->getPhysicalDevice().getSurfacePresentModesKHR(mCore->getSurface());
         }
 
         void Swapchain::destroy() {
@@ -19,12 +19,14 @@ namespace Mix {
                 return;
 
             for (auto& view : mImageViews)
-                mCore->device().destroyImageView(view);
-            mCore->device().destroySwapchainKHR(mSwapchain);
+                mCore->getDevice().destroyImageView(view);
+            mCore->getDevice().destroySwapchainKHR(mSwapchain);
             mCore = nullptr;
         }
 
-        void  Swapchain::create(const std::vector<vk::SurfaceFormatKHR>& rqFormats, const std::vector<vk::PresentModeKHR>& rqPresentMode, const vk::Extent2D& rqExtent) {
+        void  Swapchain::create(const std::vector<vk::SurfaceFormatKHR>& _rqFormats, 
+                                const std::vector<vk::PresentModeKHR>& _rqPresentMode, 
+                                const vk::Extent2D& _rqExtent) {
             mImageAvlSph.resize(mImageCount);
             mRenderFinishedSph.resize(mImageCount);
             mInFlightFences.resize(mImageCount);
@@ -37,21 +39,21 @@ namespace Mix {
 
             // to keep thins in present() right
             for (uint32_t i = 1; i < mImageCount; ++i) {
-                mCore->device().resetFences(mInFlightFences[i].get());
+                mCore->getDevice().resetFences(mInFlightFences[i].get());
             }
 
             vk::SurfaceFormatKHR format;
-            if (!chooseFormat(rqFormats, format))
+            if (!chooseFormat(_rqFormats, format))
                 throw SurfaceFormatUnsupported();
 
             vk::PresentModeKHR presentMode;
-            if (!choosePresentMode(rqPresentMode, presentMode))
+            if (!choosePresentMode(_rqPresentMode, presentMode))
                 throw PresentModeUnsupported();
 
-            VkExtent2D extent = chooseExtent(rqExtent);
+            VkExtent2D extent = chooseExtent(_rqExtent);
 
             vk::SwapchainCreateInfoKHR createInfo = {};
-            createInfo.surface = mCore->surface();
+            createInfo.surface = mCore->getSurface();
             createInfo.presentMode = presentMode;
             createInfo.minImageCount = mImageCount;
             createInfo.imageFormat = format.format;
@@ -82,9 +84,9 @@ namespace Mix {
             createInfo.oldSwapchain = nullptr;
 
             // create swapchain
-            mSwapchain = mCore->device().createSwapchainKHR(createInfo, nullptr, mCore->dynamicLoader());
+            mSwapchain = mCore->getDevice().createSwapchainKHR(createInfo, nullptr, mCore->dynamicLoader());
             //acquire image in swapchain
-            mImages = mCore->device().getSwapchainImagesKHR(mSwapchain, mCore->dynamicLoader());
+            mImages = mCore->getDevice().getSwapchainImagesKHR(mSwapchain, mCore->dynamicLoader());
             //stroe
             mSurfaceFormat = format;
             mPresentMode = presentMode;
@@ -92,11 +94,11 @@ namespace Mix {
             createSwapchainImageView();
         }
 
-        vk::Extent2D  Swapchain::chooseExtent(const vk::Extent2D & rqExtent) {
+        vk::Extent2D  Swapchain::chooseExtent(const vk::Extent2D & _rqExtent) {
             if (mSupportDetails.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
                 return mSupportDetails.capabilities.currentExtent;
             } else {
-                VkExtent2D actualExtent = { static_cast<uint32_t>(rqExtent.width), static_cast<uint32_t>(rqExtent.height) };
+                VkExtent2D actualExtent = { static_cast<uint32_t>(_rqExtent.width), static_cast<uint32_t>(_rqExtent.height) };
                 actualExtent.width = std::max(mSupportDetails.capabilities.minImageExtent.width,
                                               std::min(mSupportDetails.capabilities.maxImageExtent.width, actualExtent.width));
                 actualExtent.height = std::max(mSupportDetails.capabilities.minImageExtent.height,
@@ -105,28 +107,28 @@ namespace Mix {
             }
         }
 
-        bool  Swapchain::choosePresentMode(const std::vector<vk::PresentModeKHR>& rqPresentModes, vk::PresentModeKHR & presentMode) {
-            for (auto rqPresentMode : rqPresentModes) {
+        bool  Swapchain::choosePresentMode(const std::vector<vk::PresentModeKHR>& _rqPresentModes, vk::PresentModeKHR & _presentMode) {
+            for (auto rqPresentMode : _rqPresentModes) {
                 for (auto support : mSupportDetails.presentModes)
                     if (rqPresentMode == support) {
-                        presentMode = rqPresentMode;
+                        _presentMode = rqPresentMode;
                         return true;
                     }
             }
             return false;
         }
 
-        bool  Swapchain::chooseFormat(const std::vector<vk::SurfaceFormatKHR>& rqFormats, VkSurfaceFormatKHR & format) {
+        bool  Swapchain::chooseFormat(const std::vector<vk::SurfaceFormatKHR>& _rqFormats, VkSurfaceFormatKHR & _format) {
             if (mSupportDetails.formats.size() == 1 &&
                 mSupportDetails.formats[0].format == vk::Format::eUndefined) {
-                format = rqFormats[0];
+                _format = _rqFormats[0];
                 return true;
             }
 
-            for (const auto& rqFormat : rqFormats) {
+            for (const auto& rqFormat : _rqFormats) {
                 for (const auto& support : mSupportDetails.formats) {
                     if (rqFormat.format == support.format && rqFormat.colorSpace == support.colorSpace) {
-                        format = support;
+                        _format = support;
                         return true;
                     }
                 }
@@ -137,7 +139,7 @@ namespace Mix {
         void  Swapchain::createSwapchainImageView() {
             mImageViews.resize(mImages.size());
             for (size_t i = 0; i < mImages.size(); ++i)
-                mImageViews[i] = Tools::createImageView2D(mCore->device(),
+                mImageViews[i] = Tools::CreateImageView2D(mCore->getDevice(),
                                                           mImages[i],
                                                           mSurfaceFormat.format,
                                                           vk::ImageAspectFlagBits::eColor,
@@ -145,14 +147,14 @@ namespace Mix {
                                                           0, 1);
         }
 
-        void Swapchain::present(vk::CommandBuffer& cmdBuffer) {
-            mCore->device().waitForFences(mInFlightFences[mLastFrame].get(),
+        void Swapchain::present(vk::CommandBuffer& _cmdBuffer) {
+            mCore->getDevice().waitForFences(mInFlightFences[mLastFrame].get(),
                                           VK_TRUE,
                                           std::numeric_limits<uint64_t>::max());
 
-            mCore->device().resetFences(mInFlightFences[mLastFrame].get());
+            mCore->getDevice().resetFences(mInFlightFences[mLastFrame].get());
 
-            auto acquireResult = mCore->device().acquireNextImageKHR(mSwapchain,
+            auto acquireResult = mCore->getDevice().acquireNextImageKHR(mSwapchain,
                                                                      std::numeric_limits<uint64_t>::max(),
                                                                      mImageAvlSph[mCurrFrame].get(),
                                                                      nullptr);
@@ -175,7 +177,7 @@ namespace Mix {
             submitInfo.pWaitDstStageMask = waitStages;
             submitInfo.pSignalSemaphores = signalSemaphores;
             submitInfo.signalSemaphoreCount = 1;
-            submitInfo.pCommandBuffers = &cmdBuffer;
+            submitInfo.pCommandBuffers = &_cmdBuffer;
             submitInfo.commandBufferCount = 1;
 
             mCore->getQueues().graphics.value().submit(submitInfo, mInFlightFences[mCurrFrame].get());

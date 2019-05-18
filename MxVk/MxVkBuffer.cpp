@@ -2,109 +2,77 @@
 
 namespace Mix {
     namespace Graphics {
-        Buffer * Buffer::createBuffer(std::shared_ptr<Core> core,
-                                      std::shared_ptr<DeviceAllocator> allocator,
-                                      const vk::BufferUsageFlags usage,
-                                      const vk::MemoryPropertyFlags memoryProperty,
-                                      const vk::DeviceSize size,
-                                      const void * data,
-                                      const vk::CommandBuffer& cmd,
-                                      const vk::SharingMode sharingMode) {
-            Buffer* buffer = new Buffer;
-            buffer->init(core, allocator);
+        std::shared_ptr<Buffer> Buffer::CreateBuffer(std::shared_ptr<Core>            _core,
+                                                     std::shared_ptr<DeviceAllocator> _allocator,
+                                                     const vk::BufferUsageFlags&      _usage,
+                                                     const vk::MemoryPropertyFlags&   _memoryProperty,
+                                                     const vk::DeviceSize             _size,
+                                                     const vk::SharingMode            _sharingMode,
+                                                     const void*                      _data) {
+            auto buffer = std::make_shared<Buffer>();
+            buffer->init(_core, _allocator);
 
             vk::BufferCreateInfo createInfo;
-            createInfo.size = size;
-            createInfo.usage = usage;
-            createInfo.sharingMode = sharingMode;
+            createInfo.size = _size;
+            createInfo.usage = _usage;
+            createInfo.sharingMode = _sharingMode;
 
-            buffer->buffer = core->device().createBuffer(createInfo);
+            buffer->buffer = _core->getDevice().createBuffer(createInfo);
 
             vk::MemoryRequirements memRequirements;
-            buffer->memory = allocator->allocate(buffer->buffer, memoryProperty, &memRequirements);
+            buffer->memory = _allocator->allocate(buffer->buffer, _memoryProperty, &memRequirements);
 
             buffer->alignment = memRequirements.alignment;
-            buffer->size = size;
-            buffer->usages = usage;
-            buffer->memoryProperty = memoryProperty;
+            buffer->size = _size;
+            buffer->usages = _usage;
+            buffer->memoryProperty = _memoryProperty;
 
-            if (data && memoryProperty & vk::MemoryPropertyFlagBits::eHostVisible) {
-                buffer->copyTo(data, size);
+            buffer->setupDescriptor(_size, 0);
 
-                //if not HOST_COHERENT then need to be flushed
-                if (!(memoryProperty & vk::MemoryPropertyFlagBits::eHostCoherent))
-                    buffer->flush();
+            // copy data to the buffer
+            if (_data) {
+                if (_memoryProperty & vk::MemoryPropertyFlagBits::eHostVisible) {
+                    buffer->copyTo(_data, _size);
+
+                    //if not HOST_COHERENT then need to be flushed
+                    if (!(_memoryProperty & vk::MemoryPropertyFlagBits::eHostCoherent))
+                        buffer->flush();
+                }
             }
 
-            buffer->setupDescriptor(buffer->size, 0);
             return buffer;
         }
 
-        void Buffer::copyToDeviceBuffer(std::shared_ptr<Core> core,
-                                        std::shared_ptr<DeviceAllocator> allocator,
-                                        const vk::CommandBuffer& cmd,
-                                        const Buffer* dstBuffer,
-                                        const void* data) {
-            if (!data)
-                throw std::runtime_error("Error : Pointer [ data ] is NULL");
-
-            Buffer* tempBuffer = createBuffer(core,
-                                              allocator,
-                                              vk::BufferUsageFlagBits::eTransferSrc,
-                                              vk::MemoryPropertyFlagBits::eHostVisible |
-                                              vk::MemoryPropertyFlagBits::eHostCoherent,
-                                              dstBuffer->size,
-                                              data,
-                                              cmd,
-                                              vk::SharingMode::eExclusive);
-
-            vk::BufferCopy copyRegion = {};
-            copyRegion.size = dstBuffer->size;
-            copyRegion.srcOffset = 0;
-            copyRegion.dstOffset = 0;
-
-            cmd.copyBuffer(tempBuffer->buffer, dstBuffer->buffer, copyRegion);
-            delete tempBuffer;
+        void Buffer::init(std::shared_ptr<Core> _core, std::shared_ptr<DeviceAllocator> _allocator) {
+            mCore = _core;
+            mAllocator = _allocator;
         }
 
-        void Buffer::copyToDeviceBuffer(std::shared_ptr<Core> core, std::shared_ptr<DeviceAllocator> allocator, const vk::CommandBuffer & cmd, const std::unique_ptr<Buffer>& dstBuffer, const void * data) {
-            copyToDeviceBuffer(core,
-                               allocator,
-                               cmd,
-                               dstBuffer.get(),
-                               data);
-        }
-
-        void Buffer::init(std::shared_ptr<Core> core, std::shared_ptr<DeviceAllocator> allocator) {
-            mCore = core;
-            mAllocator = allocator;
-        }
-
-        void Buffer::setupDescriptor(const vk::DeviceSize size, const vk::DeviceSize offset) {
-            descriptor.offset = offset;
+        void Buffer::setupDescriptor(const vk::DeviceSize _size, const vk::DeviceSize _offset) {
+            descriptor.offset = _offset;
             descriptor.buffer = buffer;
-            descriptor.range = size;
+            descriptor.range = _size;
         }
 
-        void Buffer::copyTo(const void * data, const vk::DeviceSize size) {
-            assert(data);
-            memcpy(memory.ptr, data, static_cast<size_t>(size));
+        void Buffer::copyTo(const void * _data, const vk::DeviceSize _size) const {
+            assert(_data);
+            memcpy(memory.ptr, _data, static_cast<size_t>(_size));
         }
 
-        void Buffer::flush(const vk::DeviceSize size, const vk::DeviceSize offset) {
+        void Buffer::flush(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
             vk::MappedMemoryRange mappedRange;
             mappedRange.memory = memory.memory;
-            mappedRange.offset = offset;
-            mappedRange.size = size;
-            mCore->device().flushMappedMemoryRanges(mappedRange);
+            mappedRange.offset = _offset;
+            mappedRange.size = _size;
+            mCore->getDevice().flushMappedMemoryRanges(mappedRange);
         }
 
-        void Buffer::invalidate(const vk::DeviceSize size, const vk::DeviceSize offset) {
+        void Buffer::invalidate(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
             vk::MappedMemoryRange mappedRange = {};
             mappedRange.memory = memory.memory;
-            mappedRange.offset = offset;
-            mappedRange.size = size;
-            mCore->device().invalidateMappedMemoryRanges(mappedRange);
+            mappedRange.offset = _offset;
+            mappedRange.size = _size;
+            mCore->getDevice().invalidateMappedMemoryRanges(mappedRange);
         }
 
         void Buffer::destory() {
@@ -112,7 +80,7 @@ namespace Mix {
                 return;
 
             if (buffer) {
-                mCore->device().destroyBuffer(buffer);
+                mCore->getDevice().destroyBuffer(buffer);
                 buffer = nullptr;
 
                 mAllocator->deallocate(memory);
@@ -145,7 +113,7 @@ namespace Mix {
                 createInfo.sharingMode = sharingMode;
 
                 mBuffer = mCore->device().createBuffer(createInfo);
-                mMemBlock = mAllocator->allocate(mBuffer, memoryProperty, &mMemReq);
+                mMemBlock = mAllocator->Allocate(mBuffer, memoryProperty, &mMemReq);
                 mBufferUsage = usage;
                 mMemProperty = memoryProperty;
 

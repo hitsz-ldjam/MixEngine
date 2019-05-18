@@ -1,12 +1,10 @@
 #pragma once
-#ifndef _MX_VK_SHADER_H_
-#define _MX_VK_SHADER_H_
-
+#ifndef MX_VK_SHADER_H_
+#define MX_VK_SHADER_H_
 
 #include "MxVkCore.h"
 #include <string>
 #include <unordered_map>
-#include <map>
 
 
 namespace Mix {
@@ -21,19 +19,27 @@ namespace Mix {
                 stage = s;
             }
 
-            bool operator==(const ShaderModule& shader) {
-                return module == shader.module;
+            bool operator==(const ShaderModule& _shader) const {
+                return module == _shader.module;
+            }
+
+            bool operator!=(const ShaderModule& _shader)const {
+                return !(*this == _shader);
             }
         };
 
 
         class ShaderMgr :public GraphicsComponent {
         public:
-            virtual ~ShaderMgr() { destroy(); };
+            ~ShaderMgr() { destroy(); };
+
+            void init(const std::shared_ptr<Core>& _core) {
+                setCore(_core);
+            }
 
             void destroy();
 
-            void createShader(const std::string& name, const char* data, const size_t size,vk::ShaderStageFlagBits stage);
+            void createShader(const std::string& name, const char* data, const size_t size, vk::ShaderStageFlagBits stage);
 
             const ShaderModule& getModule(const std::string& name);
 
@@ -44,4 +50,4 @@ namespace Mix {
         };
     }
 }
-#endif // !_MX_VK_SHADER_H_
+#endif // !MX_VK_SHADER_H_

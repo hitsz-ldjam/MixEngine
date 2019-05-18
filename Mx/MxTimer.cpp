@@ -1,20 +1,20 @@
 #include "MxTimer.h"
 
 namespace Mix {
-    double Timer::totalTime() {
+    double Timer::TotalTime() {
         if (mPaused)
-            return durToSeconds(mStopTp - mStartTp - mPausedTime);
+            return DurToSeconds(mStopTp - mStartTp - mPausedTime);
         else
-            return durToSeconds(mCurrTp - mStartTp - mPausedTime);
+            return DurToSeconds(mCurrTp - mStartTp - mPausedTime);
     }
 
-    void Timer::reset() {
+    void Timer::Reset() {
         mStartTp = Clock::now();
         mPrevTp = mStartTp;
         mPaused = false;
     }
 
-    void Timer::start() {
+    void Timer::Start() {
         if (mPaused) {
             auto now = Clock::now();
             mPausedTime += now - mStopTp;
@@ -23,21 +23,21 @@ namespace Mix {
         }
     }
 
-    void Timer::stop() {
+    void Timer::Stop() {
         if (!mPaused) {
             mStopTp = Clock::now();
             mPaused = true;
         }
     }
 
-    void Timer::tick() {
+    void Timer::Tick() {
         if (mPaused) {
             mDeltaTime = 0.0;
             return;
         }
 
         mCurrTp = Clock::now();
-        mDeltaTime = durToSeconds(mCurrTp - mPrevTp);
+        mDeltaTime = DurToSeconds(mCurrTp - mPrevTp);
         mPrevTp = mCurrTp;
     }
 

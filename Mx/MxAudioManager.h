@@ -1,10 +1,7 @@
 #pragma once
 
-#ifndef _MX_AUDIO_MANAGER_H_
-#define _MX_AUDIO_MANAGER_H_
-
-#include <string>
-#include <stdexcept>
+#ifndef MX_AUDIO_MANAGER_H_
+#define MX_AUDIO_MANAGER_H_
 
 #include <fmod/fmod_studio.hpp>
 
@@ -12,11 +9,11 @@ namespace Mix {
     class AudioManager {
         friend class Application;
     public:
-        FMOD::Studio::System* getSystem() { return system; }
-        FMOD::System* getLowLevelSystem() { return lowLevelSystem; }
+        FMOD::Studio::System* GetSystem() const;
+        FMOD::System* GetLowLevelSystem() const { return lowLevelSystem; }
         ~AudioManager();
 
-        static AudioManager& getInstance() {
+        static AudioManager& GetInstance() {
             static AudioManager instance;
             return instance;
         }
@@ -27,7 +24,7 @@ namespace Mix {
         FMOD::Studio::System* system = nullptr;
         FMOD::System* lowLevelSystem = nullptr;
         AudioManager();
-        void update() { if(system) system->update(); }
+        void Update() const { if(system) system->update(); }
     };
 }
 

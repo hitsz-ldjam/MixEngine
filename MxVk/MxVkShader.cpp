@@ -7,7 +7,7 @@ namespace Mix {
                 return;
 
             for (auto& pair : mModules) {
-                mCore->device().destroyShaderModule(pair.second.module);
+                mCore->getDevice().destroyShaderModule(pair.second.module);
             }
             mModules.clear();
             mCore = nullptr;
@@ -22,7 +22,7 @@ namespace Mix {
             createInfo.codeSize = size;
             createInfo.pCode = reinterpret_cast<const uint32_t*>(data);
 
-            temp = mCore->device().createShaderModule(createInfo);
+            temp = mCore->getDevice().createShaderModule(createInfo);
             mModules.insert(std::make_pair(name, ShaderModule(temp, stage)));
         }
 
@@ -36,7 +36,7 @@ namespace Mix {
             if (mModules.count(name) == 0)
                 throw ShaderNotFound(name);
 
-            mCore->device().destroyShaderModule(mModules[name].module);
+            mCore->getDevice().destroyShaderModule(mModules[name].module);
         }
     }
 }
