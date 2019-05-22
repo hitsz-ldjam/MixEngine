@@ -17,13 +17,6 @@
 #define GLM_FORCE_LEFT_HANDED
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/euler_angles.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/epsilon.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #define MX_ENGINE_NAME "MixEngine"
 #define MX_ENGINE_VERSION_MAJOR 0
@@ -48,34 +41,29 @@ namespace Mix {
     //typedef Id ModelId;
 
     namespace Version {
-        static VersionInt makeVersion(uint32_t major, uint32_t minor, uint32_t patch) {
-            return (major << 22 | minor << 12 | patch);
+        static VersionInt MakeVersion(const uint32_t _major, const uint32_t _minor, const uint32_t _patch) {
+            return (_major << 22 | _minor << 12 | _patch);
         }
 
-        static VersionInt getMajor(VersionInt version) {
-            return version >> 22;
+        static VersionInt GetMajor(const VersionInt _version) {
+            return _version >> 22;
         }
 
-        static VersionInt getMinor(VersionInt version) {
-            return (version >> 12) & 0x3ff;
+        static VersionInt GetMinor(const VersionInt _version) {
+            return (_version >> 12) & 0x3ff;
         }
 
-        static VersionInt getPatch(VersionInt version) {
-            return version & 0xfff;
+        static VersionInt GetPatch(const VersionInt _version) {
+            return _version & 0xfff;
         }
     }
 
     namespace EngineInfo {
-        static const std::string engineName = MX_ENGINE_NAME;
+        static const std::string EngineName = MX_ENGINE_NAME;
 
-        static const VersionInt engineVersion = Version::makeVersion(MX_ENGINE_VERSION_MAJOR,
+        static const VersionInt EngineVersion = Version::MakeVersion(MX_ENGINE_VERSION_MAJOR,
                                                                      MX_ENGINE_VERSION_MINOR,
                                                                      MX_ENGINE_VERSION_PATCH);
-    }
-
-    namespace Constants {
-        constexpr float Epsilon = 0.000001f;
-        constexpr float Pi = 3.141593f;
     }
 
     enum class Space { WORLD, SELF };

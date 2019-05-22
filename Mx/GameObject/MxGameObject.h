@@ -5,13 +5,16 @@
 
 #include <algorithm>
 #include <set>
+#include <optional>
 
 #include "../Object/MxObject.h"
 #include "../Component/MxComponent.h"
 #include "../Definitions/MxDefinitions.h"
+#include "../Exceptions/MxExceptions.hpp"
 #include "../Component/Transform/MxTransform.h"
 
-#ifdef _RESOURCE_MANAGER_ENABLED
+#define RESOURCE_MANAGER_ENABLED
+#ifdef RESOURCE_MANAGER_ENABLED
 #include "../Resource/MxResourceBase.h"
 #endif
 
@@ -32,11 +35,11 @@ namespace Mix {
 
         GameObject(const GameObject& _obj) = delete;
 
-        GameObject(GameObject&& _obj);
+        GameObject(GameObject&& _obj) noexcept;
 
         GameObject& operator=(const GameObject& _obj) = delete;
 
-        GameObject& operator=(GameObject&& _obj);
+        GameObject& operator=(GameObject&& _obj) noexcept;
 
         virtual ~GameObject();
 
@@ -64,8 +67,8 @@ namespace Mix {
          *  @brief Get the pointer to the Component of type _Ty that attached to this GameObject
          *  @return The pointer to the Component, return nullptr if not found
          */
-        template <typename T>
-        T* getComponent();
+        template <typename _Ty>
+        _Ty* getComponent();
 
         /**
          *  @brief Get all Components of type _Ty that attached to this GameObject
@@ -151,12 +154,12 @@ namespace Mix {
             return *mTransform;
         }
 
-#ifdef _RESOURCE_MANAGER_ENABLED
-        void SetModelRef(Resource::ResourceRef _ref) {
+#ifdef RESOURCE_MANAGER_ENABLED
+        void setModelRef(Resource::ResourceRef _ref) {
             mModeRef = _ref;
         }
 
-        Resource::ResourceRef GetModelRef() const {
+        Resource::ResourceRef getModelRef() const {
             return mModeRef.value_or(nullptr);
         }
 #endif
@@ -173,7 +176,7 @@ namespace Mix {
         // todo: set scene
         // Scene* scene;
 
-#ifdef _RESOURCE_MANAGER_ENABLED
+#ifdef RESOURCE_MANAGER_ENABLED
         std::optional<Resource::ResourceRef> mModeRef;
 #endif
 
@@ -234,51 +237,51 @@ namespace Mix {
         return t;
     }
 
-    template <typename T, typename ...Args>
-    inline T* GameObject::addComponent(Args&& ..._args) {
+    template <typename _T, typename ..._Args>
+    inline _T* GameObject::addComponent(_Args&& ..._args) {
         // if type _Ty isn't derived from Component
-        T* t = reinterpret_cast<T*>(1);
+        _T* t = reinterpret_cast<_T*>(1);
         if(!dynamic_cast<Component*>(t))
             throw ComponentCastingError();
 
-        t = new T(std::forward<Args>(_args)...);
+        t = new _T(std::forward<_Args>(_args)...);
         t->setGameObject(this);
         mComponents.insert(t);
         return t;
     }
 
-    template <typename T>
-    inline T* GameObject::getComponent() {
-        T* result;
+    template <typename _Ty>
+    inline _Ty* GameObject::getComponent() {
+        _Ty* result;
 
         for(auto comp : mComponents) {
-            if((result = dynamic_cast<T*>(comp)))
+            if((result = dynamic_cast<_Ty*>(comp)))
                 return result;
         }
 
         return nullptr;
     }
 
-    template <typename T>
-    inline std::vector<T*> GameObject::getComponents() {
-        std::vector<T*> results;
-        T* result;
+    template <typename _Ty>
+    inline std::vector<_Ty*> GameObject::getComponents() {
+        std::vector<_Ty*> results;
+        _Ty* result;
 
         for(auto comp : mComponents) {
-            if((result = dynamic_cast<T*>(comp)))
+            if((result = dynamic_cast<_Ty*>(comp)))
                 results.push_back(result);
         }
 
         return results;
     }
 
-    template <typename T>
-    inline T* GameObject::getComponentInChildren() {
-        T* ptr = getComponent<T>();
+    template <typename _Ty>
+    inline _Ty* GameObject::getComponentInChildren() {
+        _Ty* ptr = getComponent<_Ty>();
 
         if(!ptr) {
             for(auto child : mChildren) {
-                if((ptr = child->getComponentInChildren<T>()))
+                if((ptr = child->getComponentInChildren<_Ty>()))
                     return ptr;
             }
         }

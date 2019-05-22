@@ -21,7 +21,7 @@ namespace Mix {
         setActive(mActiveSelf);
     }
 
-    GameObject::GameObject(GameObject&& _obj): Object(std::move(_obj)) {
+    GameObject::GameObject(GameObject&& _obj) noexcept: Object(std::move(_obj)) {
         mParent = _obj.mParent;
         mChildren = std::move(_obj.mChildren);
         mComponents = std::move(_obj.mComponents);
@@ -43,7 +43,7 @@ namespace Mix {
         setActive(mActiveSelf);
     }
 
-    GameObject& GameObject::operator=(GameObject&& _obj) {
+    GameObject& GameObject::operator=(GameObject&& _obj) noexcept {
         mParent = _obj.mParent;
         mChildren = std::move(_obj.mChildren);
         mComponents = std::move(_obj.mComponents);
@@ -143,7 +143,7 @@ namespace Mix {
     }
 
     GameObject* GameObject::Find(const std::string& _name) {
-        auto it = std::find_if(sGameObjList.begin(), sGameObjList.end(), [&](const GameObject* _obj) -> bool { return _obj->mName == _name; });
+        const auto it = std::find_if(sGameObjList.begin(), sGameObjList.end(), [&](const GameObject* _obj) -> bool { return _obj->mName == _name; });
         if(it == sGameObjList.end())
             return nullptr;
 
@@ -157,7 +157,7 @@ namespace Mix {
     }
 
     GameObject* GameObject::FindGameObjectWithTag(const Tag& _tag) {
-        auto it = std::find_if(sGameObjList.begin(), sGameObjList.end(), [&](const GameObject* _obj) -> bool { return _obj->mTag == _tag; });
+        const auto it = std::find_if(sGameObjList.begin(), sGameObjList.end(), [&](const GameObject* _obj) -> bool { return _obj->mTag == _tag; });
         if(it == sGameObjList.end())
             return nullptr;
 

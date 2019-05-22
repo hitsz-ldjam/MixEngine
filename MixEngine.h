@@ -8,6 +8,8 @@
 
 #include <fmod/fmod.hpp>
 #include <SDL2/SDL.h>
+#include "Mx/Vulkan/MxVkGraphics.h"
+#include "Mx/Resource/MxResource.h"
 
 namespace Mix {
     class MixEngine {
@@ -28,7 +30,7 @@ namespace Mix {
     private:
 
         // todo: delete debug code
-        Scene mScene;
+        // Scene mScene;
 
         MixEngine(int _argc = 0, char** _argv = nullptr);
 
@@ -41,6 +43,13 @@ namespace Mix {
         void fixedUpdate();
         void lateUpdate();
         void render();
+
+        // todo test add graphics here
+        Window* mWindow = nullptr;
+        Graphics::Vulkan* mVulkan = nullptr;
+        Resource::Resources* mResources = nullptr;
+        GameObject* mCamera = nullptr;
+        GameObject* mGameObject = nullptr;
     };
 }
 
