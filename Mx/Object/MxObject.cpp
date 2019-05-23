@@ -1,4 +1,6 @@
 #include "MxObject.h"
+#include "../Exceptions/MxExceptions.hpp"
+#include "../Log/MxLog.h"
 
 namespace Mix {
     MX_IMPLEMENT_RTTI_NO_PARENT_NO_CREATE_FUNC(Object)
@@ -15,7 +17,7 @@ namespace Mix {
             funcMap->insert({_typeName, _func});
         }
         catch(std::out_of_range& e) {
-            std::cout << e.what() << std::endl;
+            Debug::Log::Error(e.what());
             return false;
         }
 

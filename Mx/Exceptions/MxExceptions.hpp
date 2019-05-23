@@ -31,6 +31,21 @@ namespace Mix {
         std::string mWhat;
     };
 
+    template<typename ... _Args>
+    class Exception :std::exception {
+    public:
+        explicit Exception(const std::string& _formate, _Args &&... _args) {
+            mWhat = StringFormat(_formate, std::forward<_Args>(_args)...);
+        }
+
+        char const* what() const override {
+            return mWhat.c_str();
+        }
+
+    private:
+        std::string mWhat;
+    };
+
     MX_DECLARE_RUNTIME_ERROR(ComponentCastingError, [ERROR] Cannot cast type to Component)
 
     class IndependentComponentError final : public std::runtime_error {

@@ -6,37 +6,46 @@
 #include "../../Definitions/MxDefinitions.h"
 #include "../MxComponent.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+
 namespace Mix {
     struct Axis {
-        union {
-            struct {
+        struct {
+            union  {
                 glm::vec3 x;
-                glm::vec3 y;
-                glm::vec3 z;
+                glm::vec3 right;
             };
 
-            struct {
-                glm::vec3 right;
+            union {
+                glm::vec3 y;
                 glm::vec3 up;
+            };
+
+            union {
+                glm::vec3 z;
                 glm::vec3 forward;
             };
         };
 
-        static const glm::vec3 worldX;
-        static const glm::vec3 worldY;
-        static const glm::vec3 worldZ;
+        static const glm::vec3 WorldX;
+        static const glm::vec3 WorldY;
+        static const glm::vec3 WorldZ;
 
-        static const glm::vec3 worldRight;
-        static const glm::vec3 worldUp;
-        static const glm::vec3 worldForward;
+        static const glm::vec3 WorldRight;
+        static const glm::vec3 WorldUp;
+        static const glm::vec3 WorldForward;
 
-        Axis() : x(worldX),
-                 y(worldY),
-                 z(worldZ) {}
+        Axis() : x(WorldX),
+                 y(WorldY),
+                 z(WorldZ) {}
 
         void applyRotate(const glm::mat4& _mat);
+
         void applyRotate(const glm::quat& _quat);
+
         void rotateFromInit(const glm::mat4& _mat);
+
         void rotateFromInit(const glm::quat& _quat);
     };
 
@@ -48,12 +57,20 @@ namespace Mix {
         Transform();
 
         const glm::vec3& position() const { return mPosition; }
+        glm::vec3& position() { return mPosition; }
         const glm::quat& rotation() const { return mQuaternion; }
+        glm::quat& rotation() { return mQuaternion; }
+        const glm::vec3& scale() const { return mScale; }
+        glm::vec3& scale() { return mScale; }
+
         glm::vec3 eulerAngle() const;
 
         const Axis& localAxis() const { return mAxis; }
+
         glm::vec3 forward() const { return mAxis.z; }
+
         glm::vec3 right() const { return mAxis.x; }
+
         glm::vec3 up() const { return mAxis.y; }
 
         void translate(const glm::vec3& _translation, const Space _relativeTo = Space::SELF);
@@ -86,9 +103,9 @@ namespace Mix {
 
         void scale(const glm::vec3& _scale, const Space _relativeTo = Space::SELF);
 
-        void lookAt(const glm::vec3& _worldPosition, const glm::vec3& _worldUp = Axis::worldUp);
+        void lookAt(const glm::vec3& _worldPosition, const glm::vec3& _worldUp = Axis::WorldUp);
 
-        void lookAt(const Transform& _target, const glm::vec3& _worldUp = Axis::worldUp) {
+        void lookAt(const Transform& _target, const glm::vec3& _worldUp = Axis::WorldUp) {
             lookAt(_target.position(), _worldUp);
         }
 
