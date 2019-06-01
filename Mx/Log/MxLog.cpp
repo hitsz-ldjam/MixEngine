@@ -10,13 +10,13 @@ namespace Mix {
             const auto mode = _out != 0 ? static_cast<OutputMode>(_out) : sOutputMode;
             std::lock_guard<std::mutex> lock(sMutex);
             if (mode & CONSOLE)
-                std::cout << "Info : " + StringFormat("%s", _str.c_str()) << std::endl;
+                std::cout << "Info : " + Utils::StringFormat("%s", _str.c_str()) << std::endl;
 
             if (mode & FILE) {
                 if (sFileStream.is_open())
-                    sFileStream << "Info : " + StringFormat("%s", _str.c_str()) << std::endl;
+                    sFileStream << "Info : " + Utils::StringFormat("%s", _str.c_str()) << std::endl;
                 else
-                    std::cerr << StringFormat("Warning : %s: The output mode [ FILE ] bit has been specified, "
+                    std::cerr << Utils::StringFormat("Warning : %s: The output mode [ FILE ] bit has been specified, "
                                               "but the output file is not specified", __FUNCTION__) << std::endl;
             }
         }
@@ -25,13 +25,13 @@ namespace Mix {
             const auto mode = _out != 0 ? static_cast<OutputMode>(_out) : sOutputMode;
             std::lock_guard<std::mutex> lock(sMutex);
             if (mode & CONSOLE)
-                std::cerr << "Error : " + StringFormat("%s", _str.c_str()) << std::endl;
+                std::cerr << "Error : " + Utils::StringFormat("%s", _str.c_str()) << std::endl;
 
             if (mode & FILE) {
                 if (sFileStream.is_open())
-                    sFileStream << "Error : " + StringFormat("%s", _str.c_str()) << std::endl << std::flush;
+                    sFileStream << "Error : " + Utils::StringFormat("%s", _str.c_str()) << std::endl << std::flush;
                 else
-                    std::cerr << StringFormat("Warning : %s: The output mode [ FILE ] bit has been specified, "
+                    std::cerr << Utils::StringFormat("Warning : %s: The output mode [ FILE ] bit has been specified, "
                                               "but the output file is not specified", __FUNCTION__) << std::endl;
             }
         }
@@ -40,13 +40,13 @@ namespace Mix {
             const auto mode = _out != 0 ? static_cast<OutputMode>(_out) : sOutputMode;
             std::lock_guard<std::mutex> lock(sMutex);
             if (mode & CONSOLE)
-                std::cout << "Warning : " + StringFormat("%s", _str.c_str()) << std::endl;
+                std::cout << "Warning : " + Utils::StringFormat("%s", _str.c_str()) << std::endl;
 
             if (mode & FILE) {
                 if (sFileStream.is_open())
-                    sFileStream << "Warning : " + StringFormat("%s", _str.c_str()) << std::endl;
+                    sFileStream << "Warning : " + Utils::StringFormat("%s", _str.c_str()) << std::endl;
                 else
-                    std::cerr << StringFormat("Warning : %s: The output mode [ FILE ] bit has been specified, "
+                    std::cerr << Utils::StringFormat("Warning : %s: The output mode [ FILE ] bit has been specified, "
                                               "but the output file is not specified", __FUNCTION__) << std::endl;
             }
         }
@@ -59,10 +59,10 @@ namespace Mix {
 
             sFileStream.open(_path, std::ios_base::app);
             if (!sFileStream.is_open())
-                std::cerr << StringFormat("Warning : %s: Failed to open file %s", __FUNCTION__) << std::endl;
+                std::cerr << Utils::StringFormat("Warning : %s: Failed to open file %s", __FUNCTION__) << std::endl;
 
             sOutputMode = static_cast<OutputMode>(sOutputMode | FILE);
-            sFileStream << StringFormat("-------%s--%s--------", __DATE__, __TIME__) << std::endl << std::flush;
+            sFileStream << Utils::StringFormat("-------%s--%s--------", __DATE__, __TIME__) << std::endl << std::flush;
         }
 
         void Log::CloseLogFile() {

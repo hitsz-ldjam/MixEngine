@@ -99,6 +99,8 @@ namespace Mix {
          */
         void removeChild(GameObject* _obj);
 
+    std::vector<GameObject*> getAllChildren() const;
+
         bool activeInHierarchy() const {
             return mActiveInHierarchy;
         }
@@ -152,6 +154,10 @@ namespace Mix {
 
         Transform& transform() {
             return *mTransform;
+        }
+
+        GameObject* parent() const {
+            return mParent;
         }
 
 #ifdef RESOURCE_MANAGER_ENABLED

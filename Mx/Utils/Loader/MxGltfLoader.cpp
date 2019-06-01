@@ -1,3 +1,4 @@
+#include "../../Math/MxMatrix4.h"
 #include "MxGltfLoader.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -104,7 +105,7 @@ namespace Mix {
                 {
                     auto it = material.values.find("baseColorFactor");
                     if (it != material.values.end()) {
-                        materialData.baseColorFactor = glm::make_vec4<double>(it->second.ColorFactor().data());
+                        materialData.baseColorFactor = Math::Vector4<double>(it->second.ColorFactor().data());
                     }
                 }
 
@@ -173,7 +174,7 @@ namespace Mix {
                 {
                     auto it = material.additionalValues.find("emissiveFactor");
                     if (it != material.additionalValues.end()) {
-                        materialData.emissiveFactor = glm::vec4(glm::make_vec3<double>(it->second.ColorFactor().data()), 1.0);
+                        materialData.emissiveFactor = Math::Vector4f(Math::Vector3<double>(it->second.ColorFactor().data()), 1.0);
                     }
                 }// !emissiveFactor
 
@@ -270,7 +271,7 @@ namespace Mix {
                                      const tinygltf::Node * _node,
                                      ModelData&             _modelData) const {
             // set transform
-            glm::mat4 localTrans = glm::mat4(1.0f);
+			Math::Matrix4 localTrans;
             if (_node->matrix.size() == 16) {
                 localTrans = glm::make_mat4(_node->matrix.data());
             } else {

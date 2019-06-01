@@ -4,6 +4,8 @@
 #include "../Descriptor/MxVkDescriptor.h"
 #include "../../Utils/MxOffsetSize.hpp"
 
+#include <cmath>
+
 namespace Mix {
     namespace Graphics {
         class DynamicUniformBuffer {
@@ -15,7 +17,7 @@ namespace Mix {
                 const auto align = _core->getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
                 const auto maxSize = _core->getPhysicalDeviceProperties().limits.maxUniformBufferRange;
 
-                const auto actualAlign = Math::Align(_sizePerObj, align);
+                const auto actualAlign = Math::Align(_sizePerObj, static_cast<uint32_t>(align));
 
                 const auto maxCount = maxSize / actualAlign;
                 const auto actualCount = std::min(maxCount, _count);
@@ -63,7 +65,7 @@ namespace Mix {
                 return WriteDescriptorSet(write, bufferInfo);
             }
 
-            vk::DeviceSize getAlign() const {
+            uint32_t getAlign() const {
                 return mUniformSize * mCurrCount;
             }
 

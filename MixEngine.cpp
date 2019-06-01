@@ -17,11 +17,11 @@ namespace Mix {
             mFmodCore->release();
         mFmodCore = nullptr;
 
-        delete mCamera;
+        /*delete mCamera;
         delete mGameObject;
         delete mResources;
         delete mVulkan;
-        delete mWindow;
+        delete mWindow;*/
         SDL_Quit();
     }
 
@@ -67,20 +67,82 @@ namespace Mix {
         // todo: delete debug code
         // mScene.init();
 
-        // todo test graphics
-        mWindow = new Window("Surprise! Mother Fucker!", { 680,400 }, SDL_WINDOW_VULKAN);
+        //// todo test graphics
+        //mWindow = new Window("Surprise! Mother Fucker!", { 680,400 }, SDL_WINDOW_VULKAN);
 
-        mVulkan = new Graphics::Vulkan();
-        mVulkan->init();
-        mVulkan->setTargetWindow(mWindow);
-        mVulkan->build();
+        //mVulkan = new Graphics::Vulkan();
+        //mVulkan->init();
+        //mVulkan->setTargetWindow(mWindow);
+        //mVulkan->build();
 
-        mResources = new Resource::Resources();
-        mResources->init();
+        //mResources = new Resource::Resources();
+        //mResources->init();
 
-        // add a model
-        mCamera = new GameObject("Camera");
-        mGameObject = dynamic_cast<GameObject*>(mResources->load("E:/Git/vulkan-learning-master/res/models/gltfSample/GearboxAssy/glTF/GearboxAssy.gltf"));
+        //// add a model
+        //mCamera = new GameObject("Camera");
+        //mGameObject = dynamic_cast<GameObject*>(mResources->load("E:/Git/vulkan-learning-master/res/models/gltfSample/GearboxAssy/glTF/GearboxAssy.gltf"));
+        A = std::make_shared<GameObject>("A");
+        B = new GameObject("B");
+        C = new GameObject("C");
+        A->addChild(B);
+        B->addChild(C);
+
+        A->transform().setLocalScale(Math::Vector3f(1.0f, 2.0f, 1.0f));
+
+        B->transform().setLocalPosition(Math::Vector3f(-2.0f, 2.0f, -2.0f));
+        B->transform().setLocalRotation(Math::Quaternion::AngleAxis(Math::Radians(45.0f), Math::Vector3f::Right));
+        B->transform().setLocalScale(Math::Vector3f(2, 1, 2));
+
+        C->transform().setLocalPosition(Math::Vector3f(2.0f, 0.0f, -2.0f));
+
+        std::cout << B->transform().getLocalRotation() << std::endl;
+
+        std::cout << "Local To World Matrix" << std::endl;
+        std::cout << "A:" << A->transform().localToWorldMatrix().toString() << std::endl;
+        std::cout << "B:" << B->transform().localToWorldMatrix().toString() << std::endl;
+        std::cout << "C:" << C->transform().localToWorldMatrix().toString() << std::endl;
+
+        std::cout << std::endl << "World Position" << std::endl;
+        std::cout << "A:" << A->transform().getPosition().toString() << std::endl;
+        std::cout << "B:" << B->transform().getPosition().toString() << std::endl;
+        std::cout << "C:" << C->transform().getPosition().toString() << std::endl;
+
+        std::cout << std::endl << "World Rotation" << std::endl;
+        std::cout << "A:" << A->transform().getRotation().toString() << std::endl;
+        std::cout << "B:" << B->transform().getRotation().toString() << std::endl;
+        std::cout << "C:" << C->transform().getRotation().toString() << std::endl;
+
+        std::cout << std::endl << "Lossy Scale" << std::endl;
+        std::cout << "A:" << A->transform().getLossyScale().toString() << std::endl;
+        std::cout << "B:" << B->transform().getLossyScale().toString() << std::endl;
+        std::cout << "C:" << C->transform().getLossyScale().toString() << std::endl;
+
+        std::cout << std::endl << "---------------------------------" << std::endl;
+
+		std::cout << Math::Quaternion::LookRotation(Math::Vector3f(2.0f, 1.0f, 4.0f));
+		B->transform().lookAt(Math::Vector3f(2.0f, 1.0f, 4.0f));
+
+        std::cout << std::endl << "---------------------------------" << std::endl;
+
+        std::cout << std::endl << "Local To World Matrix" << std::endl;
+        std::cout << "A:" << A->transform().localToWorldMatrix().toString() << std::endl;
+        std::cout << "B:" << B->transform().localToWorldMatrix().toString() << std::endl;
+        std::cout << "C:" << C->transform().localToWorldMatrix().toString() << std::endl;
+
+        std::cout << std::endl << "World Position" << std::endl;
+        std::cout << "A:" << A->transform().getPosition().toString() << std::endl;
+        std::cout << "B:" << B->transform().getPosition().toString() << std::endl;
+        std::cout << "C:" << C->transform().getPosition().toString() << std::endl;
+
+        std::cout << std::endl << "World Rotation" << std::endl;
+        std::cout << "A:" << A->transform().getRotation().toString() << std::endl;
+        std::cout << "B:" << B->transform().getRotation().toString() << std::endl;
+        std::cout << "C:" << C->transform().getRotation().toString() << std::endl;
+
+        std::cout << std::endl << "Lossy Scale" << std::endl;
+        std::cout << "A:" << A->transform().getLossyScale().toString() << std::endl;
+        std::cout << "B:" << B->transform().getLossyScale().toString() << std::endl;
+        std::cout << "C:" << C->transform().getLossyScale().toString() << std::endl;
     }
 
     void MixEngine::process(const SDL_Event& _event) {
@@ -169,7 +231,7 @@ namespace Mix {
 
     // todo: call vulkan here
     void MixEngine::render() {
-        auto tran = mCamera->getComponent<Mix::Transform>();
+        /*auto tran = mCamera->getComponent<Mix::Transform>();
         tran->lookAt(glm::vec3(0.0f, 0.0f, 0.0f));
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_W))
             tran->translate(Mix::Axis::WorldForward * (Time::DeltaTime() * 5.0f), Mix::Space::SELF);
@@ -183,6 +245,6 @@ namespace Mix {
             tran->translate(Mix::Axis::WorldUp * (Time::DeltaTime() * 5.0f), Mix::Space::WORLD);
         if (Mix::Input::GetAxisRaw(SDL_SCANCODE_LCTRL))
             tran->translate(-Mix::Axis::WorldUp * (Time::DeltaTime() * 5.0f), Mix::Space::WORLD);
-        mVulkan->update();
+        mVulkan->update();*/
     }
 }

@@ -59,7 +59,7 @@ namespace Mix {
 
         void Buffer::copyTo(const void* _data, const vk::DeviceSize& _offset, const vk::DeviceSize& _size) const {
             assert(_data && _offset + _size < size);
-            memcpy(static_cast<char*>(memory.ptr) + _offset, _data, _size);
+            memcpy(static_cast<char*>(memory.ptr) + _offset, _data, static_cast<size_t>(_size));
         }
 
         void Buffer::flush(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {

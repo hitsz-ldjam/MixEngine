@@ -1,130 +1,178 @@
 #include "MxTransform.h"
-#include "../../Math/MxMath.h"
+#include "../../GameObject/MxGameObject.h"
 
 #include <glm/gtx/quaternion.hpp>
 
+using namespace Mix::Math;
+
 namespace Mix {
-    MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(Transform, Component);
-    MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Transform);
+	MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(Transform, Component);
+	MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Transform);
 
-    const glm::vec3 Axis::WorldX = glm::vec3(1.0f, 0.0f, 0.0f);
-    const glm::vec3 Axis::WorldY = glm::vec3(0.0f, 1.0f, 0.0f);
-    const glm::vec3 Axis::WorldZ = glm::vec3(0.0f, 0.0f, 1.0f);
+	Math::Vector3f Transform::forward() const {
+		updateLocalToWorldMatrix();
+		return mLocalToWorld.multiplyDirection(Math::Vector3f::Forward);
+	}
 
-    const glm::vec3 Axis::WorldRight = glm::vec3(1.0f, 0.0f, 0.0f);
-    const glm::vec3 Axis::WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    const glm::vec3 Axis::WorldForward = glm::vec3(0.0f, 0.0f, 1.0f);
+	Math::Vector3f Transform::right() const {
+		updateLocalToWorldMatrix();
+		return mLocalToWorld.multiplyDirection(Math::Vector3f::Right);
+	}
 
-    void Axis::applyRotate(const glm::mat4& _mat) {
-        glm::mat3 m = _mat;
-        x = m * x;
-        y = m * y;
-        z = m * z;
-    }
+	Math::Vector3f Transform::up() const {
+		updateLocalToWorldMatrix();
+		return mLocalToWorld.multiplyDirection(Math::Vector3f::Up);
+	}
 
-    void Axis::applyRotate(const glm::quat& _quat) {
-        x = _quat * x;
-        y = _quat * y;
-        z = _quat * z;
-    }
+	const Matrix4& Transform::localToWorldMatrix() const {
+		updateLocalToWorldMatrix();
+		return mLocalToWorld;
+	}
 
-    void Axis::rotateFromInit(const glm::mat4& _mat) {
-        glm::mat3 m = _mat;
-        x = m * WorldX;
-        y = m * WorldY;
-        z = m * WorldZ;
-    }
+	Math::Matrix4 Transform::worldToLocalMatrix() const {
+		updateLocalToWorldMatrix();
+		return mLocalToWorld.inverse();
+	}
 
-    void Axis::rotateFromInit(const glm::quat& _quat) {
-        x = _quat * WorldX;
-        y = _quat * WorldY;
-        z = _quat * WorldZ;
-    }
+	Transform* Transform::root() const {
+		auto p = mGameObject;
+		while (p->parent() != nullptr) p = p->parent();
+		return &p->transform();
+	}
 
-    Transform::Transform()
-        : mPosition(0.0f, 0.0f, 0.0f),
-        mScale(1.0f, 1.0f, 1.0f),
-        mQuaternion(1.0f, 0.0f, 0.0f, 0.0f) {
-    }
+	void Transform::translate(const Math::Vector3f& _translation, const Space _relativeTo) {
+		Vector3f tr;
+		switch (_relativeTo) {
+		case Space::SELF:
+			tr = mQuat * _translation;
+			if (mGameObject && mGameObject->parent())
+				tr /= mGameObject->parent()->transform().getLocalScale();
+			break;
+		case Space::WORLD:
+			if (mGameObject && mGameObject->parent()) {
+				tr = (mGameObject->parent()->transform().worldToLocalMatrix().multiplyPoint(_translation));
+			} else {
+				tr = _translation;
+			}
+			break;
+		}
+		mPosition += tr;
+		recurSetHasChanged();
+	}
 
-    glm::vec3 Transform::eulerAngle() const {
-        return glm::eulerAngles(mQuaternion) + glm::vec3(0.0f, 0.0f, 0.0f);
-    }
+	void Transform::translate(const Math::Vector3f& _translation, const Transform& _relativeTo) {
+		auto tr = _relativeTo.localToWorldMatrix().multiplyDirection(_translation);
+		translate(tr, Space::WORLD);
+	}
 
-    void Transform::translate(const glm::vec3& _translation, const Space _relativeTo) {
-        switch (_relativeTo) {
-        case Space::WORLD:
-            mPosition += _translation;
-            break;
-        case Space::SELF:
-            mPosition += (_translation.x * mAxis.x + _translation.y * mAxis.y + _translation.z * mAxis.z);
-            break;
-        }
-    }
+	void Transform::rotate(const Math::Quaternion& _qua, const Space _relativeTo) {
+		switch (_relativeTo) {
+		case Space::SELF:
+			mQuat = mQuat * _qua;
+			break;
+		case Space::WORLD:
+			if (mGameObject && mGameObject->parent()) {
+				auto p = mGameObject->parent()->transform().getRotation();
+				mQuat = p.inverse() * _qua * p * mQuat;
+			} else
+				mQuat = _qua * mQuat;
+			break;
+		}
+		recurSetHasChanged();
+	}
 
-    void Transform::rotate(const glm::vec3& _eulers, const Space _relativeTo) {
-        switch (_relativeTo) {
-        case Space::WORLD:
-            mQuaternion = glm::tquat<float>(_eulers) * mQuaternion;
-            break;
-        case Space::SELF:
-            mQuaternion = glm::tquat<float>(glm::eulerAngles(mQuaternion) + _eulers);
-            break;
-        }
-        quaternionUpcdated();
-    }
+	void Transform::rotateAround(const Math::Vector3f& _point, const Math::Vector3f& _axis, const float _angle) {
+		auto pos = getPosition();
+		auto rot = Quaternion::AngleAxis(_angle, _axis);
+		auto dir = pos - _point;
+		dir = rot * dir;
+		setPosition(_point + dir);
+		auto oldRot = getRotation();
+		setRotation(rot * oldRot);
+	}
 
-    void Transform::rotateAround(const glm::vec3& _point, const glm::vec3& _axis, const float _angle) {
-        glm::vec3 relativePos = mPosition - _point;
-        glm::mat4 mat = glm::rotate(glm::mat4(1.0f), _angle, _axis);
-        relativePos = mat * glm::vec4(relativePos, 1.0f);
-        mPosition = relativePos + _point;
-    }
+	void Transform::lookAt(const Math::Vector3f& _worldPosition, const Math::Vector3f& _worldUp) {
+		// if worldPosition is equal to camera position, do nothing
+		if (_worldPosition == getPosition())
+			return;
 
-    void Transform::scale(const glm::vec3& _scale, const Space _relativeTo) {
-        switch (_relativeTo) {
-        case Space::WORLD:
-            mScale = _scale;
-            break;
-        case Space::SELF:
-            mScale *= _scale;
-            break;
-        }
-    }
+		const Vector3f dir = (_worldPosition - getPosition()).normalize();
+		float theta = dir.dot(forward());
+		// if dir and forward is in same direction, do nothing
+		if (EpsilonEqual(theta, 1.0f)) {
+			return;
+		}
 
-    void Transform::lookAt(const glm::vec3& _worldPosition, const glm::vec3& _worldUp) {
-        // if worldPosition is equal to camera position, do nothing
-        const auto equal = glm::epsilonEqual(_worldPosition, mPosition, Math::Constants::Epsilon);
-        if (equal.x && equal.y && equal.z)
-            return;
-        const glm::vec3 dir = glm::normalize(_worldPosition - mPosition);
+		// if dir and forward is in opposite direction
+		if (Math::EpsilonEqual(theta, -1.0f)) {
+			setRotation(Quaternion::AngleAxis(Math::Radians(180.0f), Vector3f::Up) * getRotation());
+			return;
+		}
 
-        float theta = glm::dot(dir, forward());
-        // if dir and forward is in same direction, do nothing
-        if(glm::epsilonEqual(theta,1.0f,Math::Constants::Epsilon)) {
-            return;
-        }
+		// if dir and worldUp is in the same direction
+		if (Math::EpsilonEqual(std::abs(dir.dot(_worldUp)), 1.0f)) {
+			setRotation(Quaternion::FromToRotation(Vector3f::Forward, dir) * getRotation());
+			return;
+		}
 
-        // if dir and forward is in opposite direction
-        if(glm::epsilonEqual(theta, -1.0f, Math::Constants::Epsilon)) {
-            mQuaternion = glm::angleAxis(glm::radians(180.0f), mAxis.y)*mQuaternion;
-            return;
-        }
+		setRotation(Quaternion::LookRotation(dir, _worldUp));
+	}
 
-        theta = glm::dot(dir, _worldUp);
+	void Transform::updateLocalToWorldMatrix() const {
+		if (mChanged) {
+			mLocalToWorld = Matrix4::TRS(mPosition, mQuat, mScale);
+			if (mGameObject && mGameObject->parent())
+				mLocalToWorld = mGameObject->parent()->transform().localToWorldMatrix()*mLocalToWorld;
+			mChanged = false;
+		}
+	}
 
-        // if dir and worldUp is in the same direction
-        if (glm::epsilonEqual(glm::abs(theta), 1.0f, Math::Constants::Epsilon)) {
-            mQuaternion = glm::rotation(mAxis.z, dir) * mQuaternion;
-            quaternionUpcdated();
-            return;
-        }
+	void Transform::recurSetHasChanged() const {
+		mChanged = true;
+		if (mGameObject) {
+			auto children = mGameObject->getAllChildren();
+			for (auto child : children) {
+				child->transform().recurSetHasChanged();
+			}
+		}
+	}
 
-        mQuaternion = glm::quatLookAt(dir, _worldUp);
-        quaternionUpcdated();
-    }
+	Vector3f Transform::getPosition() const {
+		if (!mGameObject || !mGameObject->parent())
+			return mPosition;
+		return mGameObject->parent()->transform().localToWorldMatrix().multiplyPoint(mPosition);
+	}
 
-    void Transform::quaternionUpcdated() {
-        mAxis.rotateFromInit(mQuaternion);
-    }
+	void Transform::setPosition(const Math::Vector3f& _pos) {
+		if (mGameObject->parent()) {
+			mPosition = mGameObject->parent()->transform().worldToLocalMatrix().multiplyPoint(_pos);
+		} else
+			mPosition = _pos;
+		recurSetHasChanged();
+	}
+
+	Math::Quaternion Transform::getRotation() const {
+		// get rotation from LocalToWorldMatrix maybe slow
+		// avoid using this if has no parent
+		if (!mGameObject || !mGameObject->parent())
+			return mQuat;
+
+		return mGameObject->parent()->transform().getRotation() * mQuat;
+	}
+
+	void Transform::setRotation(const Math::Quaternion& _qua) {
+		if (mGameObject->parent()) {
+			mQuat = mGameObject->parent()->transform().worldToLocalMatrix().getRotation() * _qua;
+		} else
+			mQuat = _qua;
+		recurSetHasChanged();
+	}
+
+	Vector3f Transform::getLossyScale() const {
+		if (!mGameObject || !mGameObject->parent())
+			return mScale;
+
+		Matrix4 m = Matrix4::TRS(getPosition(), getRotation(), Vector3f::One).inverse()*localToWorldMatrix();
+		return Vector3f(m[0][0], m[1][1], m[2][2]);
+	}
 }

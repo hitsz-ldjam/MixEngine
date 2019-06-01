@@ -1,7 +1,7 @@
 #include "MxVkGraphics.h"
 #include "Buffers/MxVkUniform.h"
 
-#include "../Math/MxMathTransform.h"
+#include "../Math/MxTransformation.h"
 #include "../Object/MxObject.h"
 #include "../Component/Mesh/MxMesh.h"
 
@@ -87,8 +87,8 @@ namespace Mix {
                 auto trans = filter->getGameObject()->getComponent<Transform>();
 
                 Uniform::MeshUniform uniform;
+                //uniform.modelMat = Math::Transform(trans->position(), trans->rotation(), trans->scale()).parentMatrix();
                 uniform.modelMat = resMesh->transform;
-
                 uniform.normMat = glm::transpose(glm::inverse(uniform.modelMat));
 
                 dynamicUniformBuffers[currFrame]->pushBack(&uniform, sizeof(uniform));
@@ -124,8 +124,8 @@ namespace Mix {
             auto camera = GameObject::Find("Camera");
             auto transform = camera->getComponent <Transform>();
             Uniform::CameraUniform ubo;
-            ubo.position = transform->position();
-            const glm::vec3 target = transform->position() + transform->forward();
+            ubo.position = transform->getPosition().vec;
+            const glm::vec3 target = transform->getPosition().vec + transform->forward().vec;
             ubo.forward = glm::vec4(glm::normalize(target - glm::vec3(ubo.position)), 0.0f);
             ubo.viewMat = glm::lookAt(glm::vec3(ubo.position),
                                       target,

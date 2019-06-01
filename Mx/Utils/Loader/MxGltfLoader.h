@@ -6,6 +6,8 @@
 #include <vulkan/vulkan.hpp>
 #include <chrono>
 
+#include "../../Math/MxVector3.h"
+#include "../../Math/MxQuaternion.h"
 #include "../../Vulkan/Core/MxVkDef.h"
 #include "../../Log/MxLog.h"
 
@@ -14,6 +16,7 @@
 #include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+
 
 namespace Mix {
     namespace Utils {
@@ -30,7 +33,9 @@ namespace Mix {
 
             struct MeshData {
                 std::string name;
-                glm::mat4 transform;
+				Math::Vector3f translation;
+				Math::Quaternion rotation;
+				Math::Vector3f scale;
                 std::vector<PrimitiveData> primitives;
             };
 
@@ -72,8 +77,8 @@ namespace Mix {
                 float metallicFactor = 1.0f;
                 float roughnessFactor = 1.0f;
 
-                glm::vec4 baseColorFactor = glm::vec4(1.0f);
-                glm::vec4 emissiveFactor = glm::vec4(1.0f);
+                Math::Vector4f baseColorFactor = Math::Vector4f::One;
+				Math::Vector4f emissiveFactor = Math::Vector4f::One;
 
                 int32_t baseColorTexture;
                 int32_t metallicRoughnessTexture;

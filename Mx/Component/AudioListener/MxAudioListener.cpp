@@ -2,6 +2,7 @@
 
 #include "../../GameObject/MxGameObject.h"
 #include "../../Time/MxTime.h"
+#include "../Transform/MxTransform.h"
 
 namespace Mix {
     MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(AudioListener, Behaviour)
@@ -13,7 +14,7 @@ namespace Mix {
         if(!mGameObject)
             throw IndependentComponentError(getTypeName());
         mCore = Audio::Core();
-        mLastPos = mGameObject->transform().position();
+        mLastPos = mGameObject->transform().getPosition().vec;
         mUseFixedUpdate = velocityUpdateMode == Audio::VelocityUpdateMode::FIXED ||
                           velocityUpdateMode == Audio::VelocityUpdateMode::AUTO /*&& mGameObject->getComponent<Rigidbody>()*/;
 
@@ -33,14 +34,14 @@ namespace Mix {
     void AudioListener::updatePosAndVel(const float _deltaTime) {
         auto trans = mGameObject->transform();
 
-        auto pos = trans.position();
+        auto pos = trans.getPosition().vec;
         auto vel = (pos - mLastPos) / _deltaTime;
         mLastPos = pos;
 
         auto fvPos = Audio::glmVec3ToFmodVec(pos),
              fvVel = Audio::glmVec3ToFmodVec(vel),
-             fvForward = Audio::glmVec3ToFmodVec(trans.forward()),
-             fvUp = Audio::glmVec3ToFmodVec(trans.up());
+             fvForward = Audio::glmVec3ToFmodVec(trans.forward().vec),
+             fvUp = Audio::glmVec3ToFmodVec(trans.up().vec);
 
         if(mCore)
             mCore->set3DListenerAttributes(mListenerIdx, &fvPos, &fvVel, &fvForward, &fvUp);

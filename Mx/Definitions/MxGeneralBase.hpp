@@ -29,8 +29,6 @@ namespace Mix {
         struct StaticBase {
             StaticBase() = delete;
 
-            ~StaticBase() = delete;
-
             StaticBase(const StaticBase&) = delete;
 
             StaticBase(StaticBase&&) = delete;

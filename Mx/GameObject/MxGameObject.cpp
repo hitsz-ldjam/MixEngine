@@ -118,6 +118,10 @@ namespace Mix {
         mChildren.erase(std::find(mChildren.begin(), mChildren.end(), _obj));
     }
 
+    std::vector<GameObject*> GameObject::getAllChildren() const {
+        return std::vector<GameObject*>(mChildren.begin(), mChildren.end());
+    }
+
     void GameObject::setActive(const bool _active) {
         mActiveSelf = _active;
         const bool activedInHierarchy = mActiveInHierarchy;

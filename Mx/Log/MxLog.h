@@ -1,6 +1,9 @@
 #pragma once
 #ifndef MX_LOG_H_
 #define MX_LOG_H_
+
+#include "../Utils/MxUtils.h"
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -9,14 +12,6 @@
 
 namespace Mix {
     namespace Debug {
-        template<typename... _Args>
-        static std::string StringFormat(const std::string &_format, _Args &&... _args) {
-            const size_t size = snprintf(nullptr, 0, _format.c_str(), _args ...) + 1; // Extra space for '\0'
-            std::unique_ptr<char[]> buf(new char[size]);
-            snprintf(buf.get(), size, _format.c_str(), _args ...);
-            return std::string(buf.get(), buf.get() + size - 1); // Excludes the '\0'
-        }
-
         class Log {
         public:
             enum OutputMode {
@@ -38,21 +33,21 @@ namespace Mix {
 
             template<const uint32_t _Out = 0, typename... _Args>
             static void Info(const std::string& _format, _Args... _args) {
-                Info(StringFormat(_format, _args...), _Out);
+                Info(Utils::StringFormat(_format, _args...), _Out);
             }
 
             static void Error(const std::string& _str, const uint32_t _out = 0);
 
             template<const uint32_t _Out = 0, typename... _Args>
             static void Error(const std::string& _format, _Args... _args) {
-                Error(StringFormat(_format, _args...), _Out);
+                Error(Utils::StringFormat(_format, _args...), _Out);
             }
 
             static void Warning(const std::string& _str, const uint32_t _out = 0);
 
             template<const uint32_t _Out = 0, typename... _Args>
             static void Warning(const std::string& _format, _Args... _args) {
-                Warning(StringFormat(_format, _args...), _Out);
+                Warning(Utils::StringFormat(_format, _args...), _Out);
             }
 
             static void OpenLogFile(const std::filesystem::path& _path);

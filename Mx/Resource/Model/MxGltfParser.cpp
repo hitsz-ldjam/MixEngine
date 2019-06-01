@@ -3,7 +3,7 @@
 #include "MxGltfParser.h"
 #include "../../Vulkan/MxVkGraphics.h"
 #include "../../Vulkan/Buffers/MxVkBuffer.h"
-#include <glm/gtx/matrix_decompose.inl>
+#include <glm/gtx/matrix_decompose.hpp>
 #include "../../Utils/MxGuid.h"
 
 namespace Mix {
@@ -58,13 +58,13 @@ namespace Mix {
 
                 auto transform = child->getComponent<Transform>();
 
-                // test 
-                glm::decompose(meshPtr->transform, 
+                // test todo
+                /*glm::decompose(meshPtr->transform, 
                                transform->scale(),
                                transform->rotation(),
-                               transform->position(),
+                               transform->getPosition(),
                                skew,
-                               perspective);
+                               perspective);*/
 
                 //
 
