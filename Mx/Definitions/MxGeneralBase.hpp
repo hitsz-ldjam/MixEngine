@@ -12,7 +12,7 @@ namespace Mix {
         struct NoCopyBase {
             NoCopyBase() = default;
 
-            ~NoCopyBase() = default;
+            virtual ~NoCopyBase() = default;
 
             NoCopyBase(const NoCopyBase&) = delete;
 

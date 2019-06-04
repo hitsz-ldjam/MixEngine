@@ -8,7 +8,7 @@ layout(set = 0, binding = 0) uniform CameraUniform {
     mat4 projMat;
 }camera;
 
-layout(set = 1, binding = 0) uniform MeshUniform {
+layout(set = 0, binding = 1) uniform MeshUniform {
 	mat4 modelMat;
 	mat4 normMat;
 }mesh;
@@ -19,6 +19,8 @@ layout(location = 2) in vec2 inTexCoord;
 
 layout(location = 0) out vec3 outNormal;
 layout(location = 1) out vec2 outUV;
+
+#define EPSILON 0.01
 
 void main() 
 {

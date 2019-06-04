@@ -160,16 +160,6 @@ namespace Mix {
             return mParent;
         }
 
-#ifdef RESOURCE_MANAGER_ENABLED
-        void setModelRef(Resource::ResourceRef _ref) {
-            mModeRef = _ref;
-        }
-
-        Resource::ResourceRef getModelRef() const {
-            return mModeRef.value_or(nullptr);
-        }
-#endif
-
     protected:
         GameObject* mParent;
         std::set<GameObject*> mChildren;
@@ -181,10 +171,6 @@ namespace Mix {
         Transform* mTransform;
         // todo: set scene
         // Scene* scene;
-
-#ifdef RESOURCE_MANAGER_ENABLED
-        std::optional<Resource::ResourceRef> mModeRef;
-#endif
 
         // ----- static variables and functions -----
 

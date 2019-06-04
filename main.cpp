@@ -6,8 +6,8 @@
 
 #include <iostream>
 #include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/euler_angles.inl>
-#include <glm/gtx/matrix_decompose.inl>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include "MixEngine.h"
 
 std::ostream& operator<<(std::ostream& _os, const glm::mat4& _m) {
@@ -35,43 +35,4 @@ int main(int argc, char** argv) {
     return Mix::MixEngine::Instance(argc, argv).exec();
     using namespace Mix::Math;
     using namespace std;
-
-    /*cout << "Default construct:" << Vector3f() << endl;
-
-    Vector3f vec41(1.0f);
-    Vector3f vec42(1.0f, 2.0f, 3.0f);
-
-    cout << "vec41 = " << vec41 << endl << "vec42 = " << vec42 << endl;
-
-    cout << "vec41 + vec42 = " << vec41 + vec42 << endl;
-    cout << "vec41 - vec42 = " << vec41 - vec42 << endl;
-    cout << "vec41 * vec42 = " << vec41 * vec42 << endl;
-    cout << "vec41 / vec42 = " << vec41 / vec42 << endl;
-
-    cout << " 1.0f + vec42 = " << 1.0f + vec42 << endl;
-    cout << " 1.0f * vec42 = " << 1.0f * vec42 << endl;
-
-    cout << "vec42 + 1.0f = " << vec42 + 1.0f << endl;
-    cout << "vec42 - 1.0f = " << vec42 - 1.0f << endl;
-    cout << "vec42 * 1.0f = " << vec42 * 1.0f << endl;
-    cout << "vec42 / 1.0f = " << vec42 / 1.0f << endl;
-
-    cout << "vec41 += 1.0f = " << (vec41 += 1.0f) << endl;
-    cout << "vec41 -= 1.0f = " << (vec41 -= 1.0f) << endl;
-    cout << "vec41 *= 2.0f = " << (vec41 *= 2.0f) << endl;
-    cout << "vec41 /= 2.0f = " << (vec41 /= 2.0f) << endl;
-
-    cout << "vec41 = Vector4f::One " << (vec41 = Vector3f::One) << endl;
-
-    cout << "vec41 length = " << vec41.length() << endl;
-    cout << "vec41 normalize = " << vec41.normalize() << endl;
-
-    cout << "vec41 == vec42 ?" << boolalpha << (vec41 == vec42) << endl;
-    cout << "vec41 != vec42 ?" << boolalpha << (vec41 != vec42) << endl;
-
-    cout << "-vec41 = " << -vec41 << endl;
-
-    for (int i = 0; i < 3; ++i) {
-        cout << boost::format("vec41[%d] = %d\n") % i % vec41[i];
-    }*/
 }

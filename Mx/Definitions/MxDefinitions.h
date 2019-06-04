@@ -6,28 +6,10 @@
 #include <cstdint>
 #include <string>
 
-// include Vulkan
-//#include <vulkan/vulkan.hpp>
-
-// include GLI
-//#include <gli/gli.hpp>
-
-// include GLM
-#define GLM_ENABLE_EXPERIMENTAL
-#define GLM_FORCE_LEFT_HANDED
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
 #define MX_ENGINE_NAME "MixEngine"
 #define MX_ENGINE_VERSION_MAJOR 0
 #define MX_ENGINE_VERSION_MINOR 0
 #define MX_ENGINE_VERSION_PATCH 1
-
-//#define MX_FREE_POINTER(p)											\
-//	if((p)!=nullptr){												\
-//		delete (p);\
-//        (p)=nullptr;\
-//}
 
 namespace Mix {
     typedef uint32_t VersionInt;

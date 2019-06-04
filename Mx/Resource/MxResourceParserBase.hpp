@@ -12,8 +12,6 @@ namespace Mix {
     namespace Resource {
         class ResourceParserBase {
         public:
-            explicit ResourceParserBase(ResourceRefMgr* _mgr) :mRefMgr(_mgr) {}
-
             ResourceParserBase(const ResourceParserBase& _other) = default;
 
             ResourceParserBase(ResourceParserBase&& _other) noexcept = default;
@@ -25,18 +23,12 @@ namespace Mix {
             /**
              * \brief Load file and parse it with specified type
              */
-            virtual Object* load(const std::filesystem::path& _path, const ResourceType _type) = 0;
+            virtual std::shared_ptr<ResourceBase> load(const std::filesystem::path& _path, const ResourceType _type) = 0;
 
             /**
              * \brief Load file and parse it with specified extension
              */
-            virtual Object* load(const std::filesystem::path& _path, const std::string& _ext) = 0;
-
-            /**
-             * \brief Parse a resource 
-             * \param _key Key used to find resource in ResourceRefMgr
-             */
-            virtual Object* parse(const Guid& _key) = 0;
+            virtual std::shared_ptr<ResourceBase> load(const std::filesystem::path& _path, const std::string& _ext) = 0;
 
             virtual ~ResourceParserBase() = default;
 
@@ -69,7 +61,8 @@ namespace Mix {
             }
 
         protected:
-            ResourceRefMgr* mRefMgr;
+			ResourceParserBase() = default;
+
             std::set<ResourceType> mSupportedTypes;
             std::unordered_set<std::string> mSupportedExts;
 

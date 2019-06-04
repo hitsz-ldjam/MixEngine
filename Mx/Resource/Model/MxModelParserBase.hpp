@@ -3,12 +3,22 @@
 #define MX_MODEL_PARSER_BASE_H_
 
 #include "../MxResourceParserBase.hpp"
+#include "MxMesh.h"
+#include "MxModel.h"
 
 namespace Mix {
     namespace Resource {
         class ModelParseBase :public ResourceParserBase {
         protected:
-            explicit ModelParseBase(ResourceRefMgr* _mgr) :ResourceParserBase(_mgr) {}
+			ModelParseBase() = default;
+
+			static std::shared_ptr<Mesh::DataType> GetMeshDataStruct(const Mesh& _mesh) {
+				return _mesh.mData;
+            }
+
+			static std::shared_ptr<Model::DataType> GetModeldataStruct(const Model& _model) {
+				return _model.mData;
+            }
         };
     }
 }
