@@ -5,7 +5,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
-#include <glm/vec2.hpp>
+#include "../Math/MxVector2.h"
 
 #include <filesystem>
 #include <string>
@@ -13,16 +13,22 @@
 namespace Mix {
     class Window final {
     public:
-        Window(SDL_Window* _window = nullptr) : mWindow(_window) {}
-        Window(const std::string& _title, const glm::ivec2& _size, const Uint32 _flags = 0);
+	    explicit Window(SDL_Window* _window = nullptr) : mWindow(_window) {}
+
+        Window(const std::string& _title, const Math::Vector2i& _size, const Uint32 _flags = 0);
+
         ~Window();
          
-        void create(const std::string& _title, const glm::ivec2& _size, const Uint32 _flags = 0);
+        void create(const std::string& _title, const Math::Vector2i& _size, const Uint32 _flags = 0);
+
         void setIcon(const std::filesystem::path& _path);
 
-        glm::ivec2 drawableSize() const;
+		Math::Vector2i drawableSize() const;
+
+		Math::Vector2i extent() const;
 
         SDL_Window* window() const { return mWindow; }
+
         SDL_Surface* surface() const { return SDL_GetWindowSurface(mWindow); }
 
         std::string getTitle() const {
@@ -45,6 +51,14 @@ namespace Mix {
 
         static void SetRelativeMouseMode(const bool _enable) {
             SDL_SetRelativeMouseMode(_enable ? SDL_TRUE : SDL_FALSE);
+        }
+
+		std::vector<const char*> getRequiredInstanceExts() const {
+			unsigned int count;
+			SDL_Vulkan_GetInstanceExtensions(mWindow, &count, nullptr);
+			std::vector<const char*> result(count);
+			SDL_Vulkan_GetInstanceExtensions(mWindow, &count, result.data());
+			return result;
         }
 
     private:

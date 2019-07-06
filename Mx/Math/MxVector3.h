@@ -27,6 +27,8 @@ namespace Mix {
 				};
 
 				glm::vec<3, _Ty, glm::defaultp> vec;
+
+				_Ty linear[3];
 			};
 
 			static const Vector3 Zero;

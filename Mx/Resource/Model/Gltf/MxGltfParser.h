@@ -4,23 +4,23 @@
 
 #include "../MxModelParserBase.hpp"
 #include "../../../Vulkan/MxVkGraphics.h"
-#include "../../../Vulkan/Core/MxVkSyncObjMgr.h"
+#include "../../../Vulkan/SyncObject/MxVkSyncObject.h"
 #include "MxGltfLoader.h"
+#include "../../../../MixEngine.h"
 
 namespace Mix {
 	namespace Resource {
-		class GltfParser final : public ModelParseBase {
+		class GltfParser final : public ModelParserBase {
 		public:
-			GltfParser(): ModelParseBase() {
+			GltfParser() {
 				mSupportedTypes.insert(ResourceType::GLTF_BIN);
 				mSupportedTypes.insert(ResourceType::GLTF_ASCII);
 
 				mSupportedExts.insert("gltf");
 				mSupportedExts.insert("glb");
 
-				auto vulkan = Object::FindObjectOfType<Graphics::Vulkan>();
-				mFence      = vulkan->getCore()->getSyncObjMgr().createFence();
-				vulkan->getLogicalDevice().resetFences(mFence.get());
+				auto vulkan = MixEngine::Instance().getModule<Graphics::Vulkan>();
+				mFence = Graphics::Fence(vulkan->getLogicalDevice(), false);
 			}
 
 			std::shared_ptr<ResourceBase> load(const std::filesystem::path& _path, const ResourceType _type) override;

@@ -2,54 +2,49 @@
 #ifndef MX_VK_FRAMEBUFFER_H_
 #define MX_VK_FRAMEBUFFER_H_
 
-
-#include "../Core/MxVkCore.h"
-
+#include "../../Definitions/MxGeneralBase.hpp"
+#include "../Pipeline/MxVkRenderPass.h"
 
 namespace Mix {
-    namespace Graphics {
-        class Framebuffer :public GraphicsComponent {
-            using Base = GraphicsComponent;
-        public:
-            Framebuffer() = default;
+	namespace Graphics {
+		class Device;
 
-            Framebuffer(const Framebuffer& _other) = default;
+		class FrameBuffer : public GeneralBase::NoCopyBase {
+		public:
+			FrameBuffer(const std::shared_ptr<RenderPass>& _renderPass,
+						const vk::Extent2D& _extent,
+						const uint32_t _layer = 1)
+				: mRenderPass(_renderPass), mExtent(_extent), mLayers(_layer) {
+			}
 
-            Framebuffer(Framebuffer&& _other) noexcept = default;
 
-            Framebuffer& operator=(const Framebuffer& _other) = default;
+			FrameBuffer(FrameBuffer&& _other) noexcept { swap(_other); }
 
-            Framebuffer& operator=(Framebuffer&& _other) noexcept = default;
+			FrameBuffer& operator=(FrameBuffer&& _other) noexcept { swap(_other); return *this; }
 
-            ~Framebuffer() { destroy(); }
+			void swap(FrameBuffer& _other) noexcept;
 
-            void init(const std::shared_ptr<Core>& _core) {
-                setCore(_core);
-            }
+			~FrameBuffer();
 
-            void setTargetRenderPass(const vk::RenderPass _renderPass) { mRenderPass = _renderPass; }
+			void addAttachments(const std::vector<vk::ImageView>& _attachments);
 
-            void setExtent(const vk::Extent2D& _extent) { mExtent = _extent; }
+			void create();
 
-            void setLayers(const uint32_t _layer) { mLayers = _layer; }
+			const vk::Framebuffer& get() const { return mFramebuffer; }
 
-            void addAttachments(const std::vector<vk::ImageView>& _attachments);
+			const std::vector<vk::ImageView>& getAttachments() const { return mAttachments; }
 
-            void create();
+			std::shared_ptr<RenderPass> getRenderPass() const { return mRenderPass; }
 
-            vk::Framebuffer get() const { return mFramebuffer; };
+		private:
+			vk::Framebuffer mFramebuffer;
+			std::shared_ptr<RenderPass> mRenderPass;
+			vk::Extent2D mExtent;
+			uint32_t mLayers = 0;
 
-            void destroy();
-
-        private:
-            vk::Framebuffer mFramebuffer;
-            vk::RenderPass mRenderPass;
-            vk::Extent2D mExtent;
-            uint32_t mLayers = 0;
-
-            std::vector<vk::ImageView> mAttachments;
-            void clear();
-        };
-    }
+			std::vector<vk::ImageView> mAttachments;
+			void clear();
+		};
+	}
 }
 #endif // !MX_VK_FRAMEBUFFER_H_

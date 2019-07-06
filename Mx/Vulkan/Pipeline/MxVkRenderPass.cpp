@@ -1,213 +1,290 @@
 #include "MxVkRenderPass.h"
 
-#include "vulkan/vulkan.h"
 namespace Mix {
-    namespace Graphics {
-        void RenderPass::clear() {
-            mAttachments.reset();
-            mAttachRefs.reset();
-            mDependencies.reset();
-            mSubpasses.reset();
-        }
+	namespace Graphics {
+		Attachment::Attachment(const uint32_t _binding,
+							   const Type _type,
+							   const vk::Format _format,
+							   const vk::SampleCountFlagBits _sampleCount,
+							   const vk::AttachmentLoadOp _loadOp,
+							   const vk::AttachmentStoreOp _storeOp,
+							   const vk::AttachmentLoadOp _stencilLoadOp,
+							   const vk::AttachmentStoreOp _stencilStoreOp,
+							   const vk::ImageLayout _initLayout,
+							   const vk::ImageLayout _finalLayout,
+							   const vk::AttachmentDescriptionFlags _flags)
+			: mBinding(_binding),
+			mType(_type) {
+			mDescription.flags = _flags;
+			mDescription.format = _format;
+			mDescription.samples = _sampleCount;
 
-        void RenderPass::init(std::shared_ptr<Core>& _core) {
-            mCore = _core;
-            mAttachments = std::make_shared<std::vector<vk::AttachmentDescription>>();
-            mAttachRefs = std::make_shared<std::vector<vk::AttachmentReference>>();
-            mDependencies = std::make_shared<std::vector<vk::SubpassDependency>>();
-            mSubpasses = std::make_shared<std::vector<SubpassContent>>();
-        }
+			switch (mType) {
+			case Type::IMAGE:
+				mDescription.loadOp = _loadOp;
+				mDescription.storeOp = _storeOp;
+				mDescription.stencilLoadOp = _stencilLoadOp;
+				mDescription.stencilStoreOp = _stencilStoreOp;
+				mDescription.initialLayout = _initLayout;
+				mDescription.finalLayout = _finalLayout;
+				break;
+			case Type::DEPTH_STENCIL:
+				mDescription.loadOp = _loadOp == vk::AttachmentLoadOp::eDontCare ? vk::AttachmentLoadOp::eClear : _loadOp;
+				mDescription.storeOp = _storeOp;
+				mDescription.stencilLoadOp = _stencilLoadOp;
+				mDescription.stencilStoreOp = _stencilStoreOp;
+				mDescription.initialLayout = _initLayout;
+				mDescription.finalLayout = _finalLayout == vk::ImageLayout::eUndefined ? vk::ImageLayout::eDepthStencilAttachmentOptimal : _finalLayout;
+				break;
+			case Type::PRESENT:
+				mDescription.loadOp = _loadOp == vk::AttachmentLoadOp::eDontCare ? vk::AttachmentLoadOp::eClear : _loadOp;
+				mDescription.storeOp = _storeOp == vk::AttachmentStoreOp::eDontCare ? vk::AttachmentStoreOp::eStore : _storeOp;
+				mDescription.stencilLoadOp = _stencilLoadOp;
+				mDescription.stencilStoreOp = _stencilStoreOp;
+				mDescription.initialLayout = _initLayout;
+				mDescription.finalLayout = _finalLayout == vk::ImageLayout::eUndefined ? vk::ImageLayout::ePresentSrcKHR : _finalLayout;
+				break;
+			}
+		}
 
-        ArrayIndex RenderPass::addColorAttach(const vk::Format _format,
-                                              const vk::SampleCountFlagBits _sampleCount,
-                                              const vk::AttachmentLoadOp _loadOp,
-                                              const vk::AttachmentStoreOp _storeOp,
-                                              const vk::ImageLayout _initLayout,
-                                              const vk::ImageLayout _finalLayout) {
-            vk::AttachmentDescription descri;
-            descri.format = _format;
-            descri.samples = _sampleCount;
-            descri.loadOp = _loadOp;
-            descri.storeOp = _storeOp;
-            descri.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-            descri.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-            descri.initialLayout = _initLayout;
-            descri.finalLayout = _finalLayout;
-            mAttachments->push_back(std::move(descri));
-            return mAttachments->size() - 1;
-        }
+		AttachmentRef::AttachmentRef(const Type _type,
+									 const uint32_t _attach,
+									 const vk::ImageLayout _layout)
+			:mType(_type), mRef(_attach) {
+			if(_layout==vk::ImageLayout::eUndefined) {
+				switch (_type) {
+				case Type::INPUT: mRef.layout = vk::ImageLayout::eShaderReadOnlyOptimal; break;
+				case Type::COLOR: mRef.layout = vk::ImageLayout::eColorAttachmentOptimal; break;
+				case Type::RESOLVE: mRef.layout = vk::ImageLayout::eColorAttachmentOptimal; break;
+				case Type::DEPTH_STENCIL:  mRef.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal; break;
+				default: ;
+				}
+			}
+		}
 
-        ArrayIndex RenderPass::addDepthStencilAttach(const vk::Format _format, 
-                                                     const vk::SampleCountFlagBits _sampleCount,
-                                                     const vk::AttachmentLoadOp _loadOp,
-                                                     const vk::AttachmentStoreOp _storeOp,
-                                                     const vk::AttachmentLoadOp _stencilLoadOp,
-                                                     const vk::AttachmentStoreOp _stencilStoreOp,
-                                                     const vk::ImageLayout _initLayout,
-                                                     const vk::ImageLayout _finalLayout) {
-            vk::AttachmentDescription descri;
-            descri.format = _format;
-            descri.samples = _sampleCount;
-            descri.loadOp = _loadOp;
-            descri.storeOp = _storeOp;
-            descri.stencilLoadOp = _stencilLoadOp;
-            descri.stencilStoreOp = _stencilStoreOp;
-            descri.initialLayout = _initLayout;
-            descri.finalLayout = _finalLayout;
-            mAttachments->push_back(std::move(descri));
-            return mAttachments->size() - 1;
-        }
+		Subpass::Subpass(const uint32_t _index,
+						 std::initializer_list<AttachmentRef> _refs,
+						 std::initializer_list<uint32_t> _preserves,
+						 const vk::SubpassDescriptionFlags _flags)
+			: mIndex(_index), mFlags(_flags) {
+			addRef(_refs);
+			addPreserve(_preserves);
+		}
 
-        ArrayIndex RenderPass::addColorAttachRef(const ArrayIndex _index, const vk::ImageLayout _layout) {
-            vk::AttachmentReference ref;
-            ref.attachment = static_cast<uint32_t>(_index);
-            ref.layout = _layout;
-            mAttachRefs->push_back(std::move(ref));
+		vk::SubpassDescription Subpass::get() const {
+			return vk::SubpassDescription(mFlags,
+										  vk::PipelineBindPoint::eGraphics,
+										  static_cast<uint32_t>(mInput.size()),
+										  mInput.data(),
+										  static_cast<uint32_t>(mColor.size()),
+										  mColor.data(),
+										  mResolve ? &mResolve.value() : nullptr,
+										  mDepthStencil ? &mDepthStencil.value() : nullptr,
+										  static_cast<uint32_t>(mPreserve.size()),
+										  mPreserve.data());
+		}
 
-            return mAttachRefs->size() - 1;
-        }
+		void Subpass::addRef(std::initializer_list<AttachmentRef> _refs) {
+			for (auto& ref : _refs) {
+				switch (ref.type()) {
+				case AttachmentRef::Type::INPUT: mInput.push_back(ref.get()); break;
+				case AttachmentRef::Type::COLOR: mColor.push_back(ref.get()); break;
+				case AttachmentRef::Type::RESOLVE: mResolve = ref.get(); break;
+				case AttachmentRef::Type::DEPTH_STENCIL: mDepthStencil = ref.get(); break;
+				}
+			}
+		}
 
-        ArrayIndex RenderPass::addDepthStencilAttachRef(const ArrayIndex _index, const vk::ImageLayout _layout) {
-            vk::AttachmentReference ref;
-            ref.attachment = static_cast<uint32_t>(_index);
-            ref.layout = _layout;
-            mAttachRefs->push_back(std::move(ref));
-            return mAttachRefs->size() - 1;
-        }
+		void Subpass::addRef(const AttachmentRef& _ref) {
+			switch (_ref.type()) {
+			case AttachmentRef::Type::INPUT: mInput.push_back(_ref.get()); break;
+			case AttachmentRef::Type::COLOR: mColor.push_back(_ref.get()); break;
+			case AttachmentRef::Type::RESOLVE: mResolve = _ref.get(); break;
+			case AttachmentRef::Type::DEPTH_STENCIL: mDepthStencil = _ref.get(); break;
+			}
+		}
 
-        ArrayIndex RenderPass::addSubpass(const vk::PipelineBindPoint _bindPoint) {
-            SubpassContent subpass;
-            subpass.bindPoint = _bindPoint;
-            mSubpasses->push_back(std::move(subpass));
-            return mSubpasses->size() - 1;
-        }
+		void Subpass::addPreserve(std::initializer_list<uint32_t> _preserves) {
+			mPreserve.insert(mPreserve.end(), _preserves);
+		}
 
-        bool RenderPass::addSubpassColorRef(const ArrayIndex _subpassIndex, const std::vector<ArrayIndex>& _refIndices) {
-            for (auto& index : _refIndices) {
-                if (!(index < mAttachRefs->size()))
-                    return false;
-            }
-            auto& subpass = (*mSubpasses)[_subpassIndex];
-            subpass.colorRef.reserve(subpass.colorRef.size() + _refIndices.size());
-            for (const auto& index : _refIndices) {
-                subpass.colorRef.push_back((*mAttachRefs)[index]);
-            }
-            return true;
-        }
+		void Subpass::addPreserve(const uint32_t _preserve) {
+			mPreserve.emplace_back(_preserve);
+		}
 
-        bool RenderPass::addSubpassColorRef(const ArrayIndex _subpassIndex, const ArrayIndex _refIndex) {
-            if (!(_refIndex < mAttachRefs->size()))
-                return false;
-            (*mSubpasses)[_subpassIndex].colorRef.push_back((*mAttachRefs)[_refIndex]);
-            return true;
-        }
+		RenderPass::RenderPass(const std::shared_ptr<Device>& _device)
+			: mDevice(_device),
+			mAttachments(new std::set<Attachment>),
+			mDependencies(new std::vector<vk::SubpassDependency>()),
+			mSubpasses(new std::set<Subpass>()) {
 
-        bool RenderPass::addSubpassDepthStencilRef(const ArrayIndex _subpassIndex, const ArrayIndex _refIndex) {
-            if (!(_refIndex < mAttachRefs->size()))
-                return false;
-            (*mSubpasses)[_subpassIndex].depthStencilRef = (*mAttachRefs)[_refIndex];
-            (*mSubpasses)[_subpassIndex].hasDepthStencilRef = true;
-            return true;
-        }
+		}
 
-        bool RenderPass::addSubpassResolveRef(const ArrayIndex _subpassIndex, const ArrayIndex _refIndex) {
-            if (!(_refIndex < mAttachRefs->size()))
-                return false;
-            (*mSubpasses)[_subpassIndex].resolveRef = (*mAttachRefs)[_refIndex];
-            (*mSubpasses)[_subpassIndex].hasResolveRef = true;
-            return true;
-        }
+		/*uint32_t RenderPass::addColorAttach(const vk::Format _format,
+											const vk::SampleCountFlagBits _sampleCount,
+											const vk::AttachmentLoadOp _loadOp,
+											const vk::AttachmentStoreOp _storeOp,
+											const vk::ImageLayout _initLayout,
+											const vk::ImageLayout _finalLayout) {
+			mAttachments->emplace_back(vk::AttachmentDescriptionFlags(),
+									   _format,
+									   _sampleCount,
+									   _loadOp, _storeOp,
+									   vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare,
+									   _initLayout, _finalLayout);
+			return mAttachments->size() - 1;
+		}
 
-        ArrayIndex RenderPass::addDependency(const ArrayIndex _srcSubpass, 
-                                             const ArrayIndex _dstSubpass,
-                                             const vk::PipelineStageFlags& _srcStage,
-                                             const vk::PipelineStageFlags& _dstStage, 
-                                             const vk::AccessFlags& _srcAccess,
-                                             const vk::AccessFlags& _dstAccess) {
-            if (_srcSubpass != VK_SUBPASS_EXTERNAL) {
-                if (_srcSubpass > _dstSubpass)
-                    return ~0U;
-                if (!(_srcSubpass < mSubpasses->size()))
-                    return ~0U;
-            }
-            if (_dstSubpass != VK_SUBPASS_EXTERNAL && !(_dstSubpass > mSubpasses->size()))
-                return ~0U;
+		uint32_t RenderPass::addDepthStencilAttach(const vk::Format _format,
+												   const vk::SampleCountFlagBits _sampleCount,
+												   const vk::AttachmentLoadOp _loadOp,
+												   const vk::AttachmentStoreOp _storeOp,
+												   const vk::AttachmentLoadOp _stencilLoadOp,
+												   const vk::AttachmentStoreOp _stencilStoreOp,
+												   const vk::ImageLayout _initLayout,
+												   const vk::ImageLayout _finalLayout) {
+			mAttachments->emplace_back(vk::AttachmentDescriptionFlags(),
+									   _format,
+									   _sampleCount,
+									   _loadOp, _storeOp,
+									   _stencilLoadOp, _stencilStoreOp,
+									   _initLayout, _finalLayout);
+			return mAttachments->size() - 1;
+		}*/
 
-            vk::SubpassDependency dependency;
-            dependency.srcSubpass = static_cast<uint32_t>(_srcSubpass);
-            dependency.dstSubpass = static_cast<uint32_t>(_dstSubpass);
-            dependency.srcStageMask = _srcStage;
-            dependency.dstStageMask = _dstStage;
-            dependency.srcAccessMask = _srcAccess;
-            dependency.dstAccessMask = _dstAccess;
-            mDependencies->push_back(std::move(dependency));
-            return mDependencies->size() - 1;
-        }
+		/*uint32_t RenderPass::addColorAttachRef(const uint32_t _index, const vk::ImageLayout _layout) {
+			mAttachRefs->emplace_back(_index, _layout);
+			return mAttachRefs->size() - 1;
+		}
 
-        void RenderPass::create() {
-            std::vector<vk::SubpassDescription> subpasses(mSubpasses->size());
-            for (uint32_t i = 0; i < subpasses.size(); ++i) {
-                subpasses[i].pipelineBindPoint = (*mSubpasses)[i].bindPoint;
+		uint32_t RenderPass::addDepthStencilAttachRef(const uint32_t _index, const vk::ImageLayout _layout) {
+			mAttachRefs->emplace_back(_index, _layout);
+			return mAttachRefs->size() - 1;
+		}
 
-                if (!(*mSubpasses)[i].colorRef.empty()) {
-                    subpasses[i].pColorAttachments = (*mSubpasses)[i].colorRef.data();
-                    subpasses[i].colorAttachmentCount = static_cast<uint32_t>((*mSubpasses)[i].colorRef.size());
-                }
+		uint32_t RenderPass::addSubpass(const vk::PipelineBindPoint _bindPoint) {
+			SubpassContent subpass;
+			subpass.bindPoint = _bindPoint;
+			mSubpasses->push_back(std::move(subpass));
+			return mSubpasses->size() - 1;
+		}
 
-                if (!(*mSubpasses)[i].inputRef.empty()) {
-                    subpasses[i].pInputAttachments = (*mSubpasses)[i].inputRef.data();
-                    subpasses[i].inputAttachmentCount = static_cast<uint32_t>((*mSubpasses)[i].inputRef.size());
-                }
+		bool RenderPass::addSubpassColorRef(const uint32_t _subpassIndex,
+											const std::vector<uint32_t>& _refIndices) {
+			for (auto& index : _refIndices) {
+				if (!(index < mAttachRefs->size()))
+					return false;
+			}
+			auto& subpass = (*mSubpasses)[_subpassIndex];
+			subpass.colorRef.reserve(subpass.colorRef.size() + _refIndices.size());
+			for (const auto& index : _refIndices) {
+				subpass.colorRef.push_back((*mAttachRefs)[index]);
+			}
+			return true;
+		}*/
 
-                if (!(*mSubpasses)[i].preserveRef.empty()) {
-                    subpasses[i].pResolveAttachments = (*mSubpasses)[i].preserveRef.data();
-                    subpasses[i].preserveAttachmentCount = static_cast<uint32_t>((*mSubpasses)[i].preserveRef.size());
-                }
+		/*bool RenderPass::addSubpassColorRef(const uint32_t _subpassIndex, const uint32_t _refIndex) {
+			if (!(_refIndex < mAttachRefs->size()))
+				return false;
+			(*mSubpasses)[_subpassIndex].colorRef.push_back((*mAttachRefs)[_refIndex]);
+			return true;
+		}
 
-                if ((*mSubpasses)[i].hasDepthStencilRef) {
-                    subpasses[i].pDepthStencilAttachment = &(*mSubpasses)[i].depthStencilRef;
-                }
+		bool RenderPass::addSubpassDepthStencilRef(const uint32_t _subpassIndex, const uint32_t _refIndex) {
+			if (!(_refIndex < mAttachRefs->size()))
+				return false;
+			(*mSubpasses)[_subpassIndex].depthStencilRef = (*mAttachRefs)[_refIndex];
+			(*mSubpasses)[_subpassIndex].hasDepthStencilRef = true;
+			return true;
+		}
 
-                if ((*mSubpasses)[i].hasResolveRef) {
-                    subpasses[i].pResolveAttachments = &(*mSubpasses)[i].resolveRef;
-                }
-            }
+		bool RenderPass::addSubpassResolveRef(const uint32_t _subpassIndex, const uint32_t _refIndex) {
+			if (!(_refIndex < mAttachRefs->size()))
+				return false;
+			(*mSubpasses)[_subpassIndex].resolveRef = (*mAttachRefs)[_refIndex];
+			(*mSubpasses)[_subpassIndex].hasResolveRef = true;
+			return true;
+		}*/
 
-            vk::RenderPassCreateInfo createInfo;
-            createInfo.pAttachments = mAttachments->data();
-            createInfo.attachmentCount = static_cast<uint32_t>(mAttachments->size());
-            createInfo.pSubpasses = subpasses.data();
-            createInfo.subpassCount = static_cast<uint32_t>(subpasses.size());
-            createInfo.pDependencies = mDependencies->data();
-            createInfo.dependencyCount = static_cast<uint32_t>(mDependencies->size());
+		void RenderPass::swap(RenderPass& _other) noexcept {
+			using std::swap;
+			swap(mDevice, _other.mDevice);
+			swap(mRenderPass, _other.mRenderPass);
+			swap(mAttachments, _other.mAttachments);
+			swap(mSubpasses, _other.mSubpasses);
+			swap(mDependencies, _other.mDependencies);
+		}
 
-            mRenderPass = mCore->getDevice().createRenderPass(createInfo);
-            clear();
-        }
+		void RenderPass::create() {
+			std::vector<vk::AttachmentDescription> attachments;
+			attachments.reserve(mAttachments->size());
+			for (auto& attach : *mAttachments)
+				attachments.emplace_back(attach.get());
 
-        void RenderPass::beginRenderPass(const vk::CommandBuffer& _cmdBuffer, const vk::Framebuffer& _frameBuffer, std::vector<vk::ClearValue>& _clearValues, const vk::Extent2D & _extent, const vk::Offset2D & _offset, const vk::SubpassContents _subpassContent) {
-            vk::RenderPassBeginInfo beginInfo;
-            beginInfo.renderPass = mRenderPass;
-            beginInfo.framebuffer = _frameBuffer;
-            beginInfo.pClearValues = _clearValues.data();
-            beginInfo.clearValueCount = static_cast<uint32_t>(_clearValues.size());
-            beginInfo.renderArea.offset = _offset;
-            beginInfo.renderArea.extent = _extent;
+			std::vector<vk::SubpassDescription> subpasses;
+			subpasses.reserve(mSubpasses->size());
+			for (auto& subpass : *mSubpasses)
+				subpasses.emplace_back(subpass.get());
 
-            _cmdBuffer.beginRenderPass(beginInfo, _subpassContent);
-        }
+			vk::RenderPassCreateInfo createInfo;
+			createInfo.pAttachments = attachments.data();
+			createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			createInfo.pSubpasses = subpasses.data();
+			createInfo.subpassCount = static_cast<uint32_t>(subpasses.size());
+			createInfo.pDependencies = mDependencies->data();
+			createInfo.dependencyCount = static_cast<uint32_t>(mDependencies->size());
 
-        void RenderPass::endRenderPass(const vk::CommandBuffer& _cmdBuffer) {
-            _cmdBuffer.endRenderPass();
-        }
+			mRenderPass = mDevice->get().createRenderPass(createInfo);
+		}
 
-        void RenderPass::destroy() {
-            if (!mCore)
-                return;
+		void RenderPass::beginRenderPass(const vk::CommandBuffer& _cmdBuffer, const vk::Framebuffer& _frameBuffer,
+										 std::vector<vk::ClearValue>& _clearValues, const vk::Extent2D& _extent,
+										 const vk::Offset2D& _offset, const vk::SubpassContents _subpassContent) {
+			vk::RenderPassBeginInfo beginInfo;
+			beginInfo.renderPass = mRenderPass;
+			beginInfo.framebuffer = _frameBuffer;
+			beginInfo.pClearValues = _clearValues.data();
+			beginInfo.clearValueCount = static_cast<uint32_t>(_clearValues.size());
+			beginInfo.renderArea.offset = _offset;
+			beginInfo.renderArea.extent = _extent;
 
-            mCore->getDevice().destroyRenderPass(mRenderPass);
-            mCore = nullptr;
-            clear();
-        }
-    }
+			_cmdBuffer.beginRenderPass(beginInfo, _subpassContent);
+		}
+
+		void RenderPass::endRenderPass(const vk::CommandBuffer& _cmdBuffer) {
+			_cmdBuffer.endRenderPass();
+		}
+
+		void RenderPass::destroy() {
+			if (!mDevice)
+				return;
+
+			mDevice->get().destroyRenderPass(mRenderPass);
+			mDevice = nullptr;
+		}
+
+		void RenderPass::addAttachment(std::initializer_list<Attachment> _attachments) {
+			mAttachments->insert(_attachments.begin(), _attachments.end());
+		}
+
+		void RenderPass::addAttachment(const Attachment& _attachment) {
+			mAttachments->emplace(_attachment);
+		}
+
+		void RenderPass::addSubpass(std::initializer_list<Subpass> _subpasses) {
+			mSubpasses->insert(_subpasses.begin(), _subpasses.end());
+		}
+
+		void RenderPass::addSubpass(const Subpass& _subpass) {
+			mSubpasses->emplace(_subpass);
+		}
+
+		void RenderPass::addDependency(const vk::SubpassDependency& _dependency) {
+			mDependencies->emplace_back(_dependency);
+		}
+
+		void RenderPass::addDependency(std::initializer_list<vk::SubpassDependency> _dependencies) {
+			mDependencies->insert(mDependencies->end(), _dependencies);
+		}
+	}
 }

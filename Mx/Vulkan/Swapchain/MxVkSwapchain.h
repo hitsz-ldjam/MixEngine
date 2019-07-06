@@ -2,82 +2,119 @@
 #ifndef MX_VK_SWAPCHAIN_H_
 #define MX_VK_SWAPCHAIN_H_
 
-#include "../Core/MxVkCore.h"
+#include "../Device/MxVkDevice.h"
 #include "../Image/MxVkImage.h"
-#include "../Core/MxVkSyncObjMgr.h"
+#include "../SyncObject/MxVkSyncObject.h"
 
 namespace Mix {
-    namespace Graphics {
-        class Swapchain :public GraphicsComponent {
-        public:
-            ~Swapchain() {
-                destroy();
-            }
+	namespace Graphics {
+		class Swapchain : public GeneralBase::NoCopyBase {
+		public:
+			explicit Swapchain(const std::shared_ptr<Device>& _device);
 
-            void init(const std::shared_ptr<Core>& _core);
+			~Swapchain();
 
-            void setImageCount(const uint32_t _count) {
-                mImageCount = mSupportDetails.capabilities.minImageCount < _count ? _count : mSupportDetails.capabilities.minImageCount;
-                mImageCount = mImageCount < mSupportDetails.capabilities.maxImageCount ? mImageCount : mSupportDetails.capabilities.maxImageCount;
-            }
+			void setImageCount(const uint32_t _count) {
+				// We need at least two image to swap
+				if (_count < 2)
+					return;
 
-            void destroy();
+				mImageCount = mSupportDetails.capabilities.minImageCount < _count ? _count : mSupportDetails.capabilities.minImageCount;
+				mImageCount = mImageCount < mSupportDetails.capabilities.maxImageCount ? mImageCount : mSupportDetails.capabilities.maxImageCount;
 
-            void create(const std::vector<vk::SurfaceFormatKHR>& _rqFormats,
-                        const std::vector<vk::PresentModeKHR>& _rqPresentMode,
-                        const vk::Extent2D& _rqExtent);
+			}
 
-            const std::vector<vk::SurfaceFormatKHR>& supportedFormat() const {
-                return mSupportDetails.formats;
-            }
+			Swapchain(Swapchain&& _other) noexcept { swap(_other); }
 
-            const std::vector<vk::PresentModeKHR>& supportedPresentMode() const {
-                return mSupportDetails.presentModes;
-            }
+			Swapchain& operator=(Swapchain&& _other) noexcept { swap(_other); return *this; }
 
-            const vk::SwapchainKHR& get() const { return mSwapchain; }
+			void swap(Swapchain& _rhs) noexcept;
 
-            const vk::SurfaceFormatKHR& surfaceFormat() const { return mSurfaceFormat; }
+			void create(const std::vector<vk::SurfaceFormatKHR>& _rqFormats,
+						const std::vector<vk::PresentModeKHR>& _rqPresentMode,
+						const vk::Extent2D& _rqExtent);
 
-            vk::PresentModeKHR presentMode() const { return mPresentMode; }
+			const std::vector<vk::SurfaceFormatKHR>& supportedFormat() const {
+				return mSupportDetails.formats;
+			}
 
-            const vk::Extent2D& extent() const { return mExtent; }
+			const std::vector<vk::PresentModeKHR>& supportedPresentMode() const {
+				return mSupportDetails.presentModes;
+			}
 
-            uint32_t imageCount() const { return mImageCount; }
+			const vk::SwapchainKHR& get() const { return mSwapchain; }
 
-            size_t currentFrame() const { return mCurrFrame; }
+			std::shared_ptr<Device> getDevice() const { return mDevice; }
 
-            const std::vector<vk::ImageView>& imageViews() const { return mImageViews; }
+			const vk::SurfaceKHR& getSurface() const { return mSurface; }
 
-            void present(vk::CommandBuffer& _cmdBuffer);
+			const std::vector<vk::Image>& getImages() const { return mImages; }
 
-        private:
-            vk::SwapchainKHR mSwapchain;
-            vk::SurfaceFormatKHR mSurfaceFormat;
-            vk::PresentModeKHR mPresentMode = vk::PresentModeKHR::eFifo;
-            vk::Extent2D mExtent;
-            size_t mCurrFrame = 0;
-            size_t mLastFrame = 0;
+			const std::vector<vk::ImageView>& getImageViews() const { return mImageViews; }
 
-            uint32_t mImageCount = 2;
-            std::vector<vk::Image> mImages;
-            std::vector<vk::ImageView> mImageViews;
+			const vk::Image& getCurrImage() const { return mImages[mCurrFrame]; }
 
-            std::vector<Semaphore> mImageAvlSph;
-            std::vector<Semaphore> mRenderFinishedSph;
-            std::vector<Fence> mInFlightFences;
+			const vk::ImageView& getCurrImageView() const { return mImageViews[mCurrFrame]; }
 
-            SwapchainSupportDetails mSupportDetails;
+			const vk::SurfaceFormatKHR& surfaceFormat() const { return mSurfaceFormat; }
 
-            vk::Extent2D chooseExtent(const vk::Extent2D& _rqExtent);
+			vk::PresentModeKHR presentMode() const { return mPresentMode; }
 
-            bool choosePresentMode(const std::vector<vk::PresentModeKHR>& _rqPresentModes,
-                                   vk::PresentModeKHR& _presentMode);
+			const vk::Extent2D& extent() const { return mExtent; }
 
-            bool chooseFormat(const std::vector<vk::SurfaceFormatKHR>& _rqFormats, VkSurfaceFormatKHR& _format);
+			uint32_t width() const { return mExtent.width; }
 
-            void createSwapchainImageView();
-        };
-    }
+			uint32_t height() const { return mExtent.height; }
+
+			uint32_t imageCount() const { return mImageCount; }
+
+			size_t currFrame() const { return mCurrFrame; }
+
+			vk::Result acquireNextImage();
+
+			/**
+			 * \brief Get the semaphore used to check whether "next" image is writable
+			 */
+			const vk::Semaphore& presentFinishedSph() const { return mImageAvlSph[mCurrFrame].get(); }
+
+			/**
+			 * \brief Get the semaphore used to notify the swap chain that
+			 * every write operations on "this" image are finished and that
+			 * swap chain can use "this" image to present
+			 */
+			const vk::Semaphore& renderFinishedSph() const { return mRenderFinishedSph[mCurrFrame].get(); }
+
+			vk::Result present();
+
+		private:
+			std::shared_ptr<Device> mDevice;
+			vk::SwapchainKHR mSwapchain;
+
+			vk::SurfaceKHR mSurface;
+			vk::SurfaceFormatKHR mSurfaceFormat;
+			vk::PresentModeKHR mPresentMode = vk::PresentModeKHR::eFifo;
+			vk::Extent2D mExtent;
+			size_t mCurrFrame = 0;
+			size_t mNextImage = 0;
+
+			uint32_t mImageCount = 2;
+			std::vector<vk::Image> mImages;
+			std::vector<vk::ImageView> mImageViews;
+
+			std::vector<Semaphore> mImageAvlSph;
+			std::vector<Semaphore> mRenderFinishedSph;
+
+			SwapchainSupportDetails mSupportDetails;
+
+			vk::Extent2D chooseExtent(const vk::Extent2D& _rqExtent) const;
+
+			bool choosePresentMode(const std::vector<vk::PresentModeKHR>& _rqPresentModes,
+								   vk::PresentModeKHR& _presentMode);
+
+			bool chooseFormat(const std::vector<vk::SurfaceFormatKHR>& _rqFormats, VkSurfaceFormatKHR& _format);
+
+			void createSwapchainImageView();
+		};
+	}
 }
 #endif // !MX_VK_SWAPCHAIN_H_

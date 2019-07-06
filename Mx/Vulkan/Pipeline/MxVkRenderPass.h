@@ -2,100 +2,142 @@
 #ifndef MX_VK_RENDERPASS_H_
 #define MX_VK_RENDERPASS_H_
 
-
-#include "../Core/MxVkCore.h"
-
+#include "../Device/MxVkDevice.h"
+#include <set>
 
 namespace Mix {
-    namespace Graphics {
-        class RenderPass :public GraphicsComponent {
-        public:
-            RenderPass() { mCore = nullptr; }
-            ~RenderPass() { destroy(); }
+	namespace Graphics {
+		class Attachment {
+		public:
+			enum class Type {
+				IMAGE, DEPTH_STENCIL, PRESENT
+			};
 
-            void init(std::shared_ptr<Core>& _core);
+			Attachment(const uint32_t _binding,
+					   const Type _type,
+					   const vk::Format _format = vk::Format::eR8G8B8A8Unorm,
+					   const vk::SampleCountFlagBits _sampleCount = vk::SampleCountFlagBits::e1,
+					   const vk::AttachmentLoadOp _loadOp = vk::AttachmentLoadOp::eDontCare,
+					   const vk::AttachmentStoreOp _storeOp = vk::AttachmentStoreOp::eDontCare,
+					   const vk::AttachmentLoadOp _stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+					   const vk::AttachmentStoreOp _stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+					   const vk::ImageLayout _initLayout = vk::ImageLayout::eUndefined,
+					   const vk::ImageLayout _finalLayout = vk::ImageLayout::eUndefined,
+					   const vk::AttachmentDescriptionFlags _flags = {});
 
-            void create();
+			bool operator<(const Attachment& _other) const {
+				return mBinding < _other.mBinding;
+			}
 
-            const vk::RenderPass& get() const { return mRenderPass; }
+			uint32_t binding() const { return mBinding; }
 
-            void beginRenderPass(const vk::CommandBuffer& _cmdBuffer,
-                                 const vk::Framebuffer& _frameBuffer,
-                                 std::vector<vk::ClearValue>& _clearValues,
-                                 const vk::Extent2D& _extent,
-                                 const vk::Offset2D& _offset = { 0,0 },
-                                 const vk::SubpassContents _subpassContent = vk::SubpassContents::eInline);
+			Type type() const { return mType; }
 
-            void endRenderPass(const vk::CommandBuffer& _cmdBuffer);
+			const vk::AttachmentDescription& get() const { return mDescription; }
 
-            void destroy();
+		private:
+			uint32_t mBinding;
+			Type mType;
+			vk::AttachmentDescription mDescription;
+		};
 
+		class AttachmentRef {
+		public:
+			enum class Type {
+				INPUT, COLOR, RESOLVE, DEPTH_STENCIL
+			};
 
+			AttachmentRef(const Type _type,
+						  const uint32_t _attach,
+						  const vk::ImageLayout _layout = vk::ImageLayout::eUndefined);
 
-            ArrayIndex addColorAttach(const vk::Format _format, 
-                                      const vk::SampleCountFlagBits _sampleCount,
-                                      const vk::AttachmentLoadOp _loadOp, 
-                                      const vk::AttachmentStoreOp _storeOp,
-                                      const vk::ImageLayout _initLayout, 
-                                      const vk::ImageLayout _finalLayout);
+			Type type() const { return mType; }
 
-            ArrayIndex addDepthStencilAttach(const vk::Format _format,
-                                             const vk::SampleCountFlagBits _sampleCount,
-                                             const vk::AttachmentLoadOp _loadOp = vk::AttachmentLoadOp::eClear,
-                                             const vk::AttachmentStoreOp _storeOp = vk::AttachmentStoreOp::eDontCare,
-                                             const vk::AttachmentLoadOp _stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
-                                             const vk::AttachmentStoreOp _stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-                                             const vk::ImageLayout _initLayout = vk::ImageLayout::eUndefined,
-                                             const vk::ImageLayout _finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal);
+			const vk::AttachmentReference& get() const { return mRef; }
 
-            ArrayIndex addColorAttachRef(const ArrayIndex _index,
-                                         const vk::ImageLayout _layout = vk::ImageLayout::eColorAttachmentOptimal);
+		private:
+			Type mType;
+			vk::AttachmentReference mRef;
+		};
 
-            ArrayIndex addDepthStencilAttachRef(const ArrayIndex _index,
-                                                const vk::ImageLayout _layout = vk::ImageLayout::eDepthStencilAttachmentOptimal);
+		class Subpass {
+		public:
+			explicit Subpass(const uint32_t _index,
+							 std::initializer_list<AttachmentRef> _refs = {},
+							 std::initializer_list<uint32_t> _preserves = {},
+							 const vk::SubpassDescriptionFlags _flags = {});
 
-            ArrayIndex addSubpass(const vk::PipelineBindPoint _bindPoint = vk::PipelineBindPoint::eGraphics);
+			bool operator<(const Subpass& _other) const { return mIndex < _other.mIndex; }
 
-            bool addSubpassColorRef(const ArrayIndex _subpassIndex, 
-                                    const std::vector<ArrayIndex>& _refIndices);
+			vk::SubpassDescription get() const;
 
-            bool addSubpassColorRef(const ArrayIndex _subpassIndex, 
-                                    const ArrayIndex _refIndex);
+			void addRef(std::initializer_list<AttachmentRef> _refs);
 
-            bool addSubpassDepthStencilRef(const ArrayIndex _subpassIndex, 
-                                           const ArrayIndex _refIndex);
+			void addRef(const AttachmentRef& _ref);
 
-            bool addSubpassResolveRef(ArrayIndex _subpassIndex, ArrayIndex _refIndex);
+			void addPreserve(std::initializer_list<uint32_t> _preserves);
 
-            ArrayIndex addDependency(const ArrayIndex _srcSubpass,
-                                     const ArrayIndex _dstSubpass,
-                                     const vk::PipelineStageFlags& _srcStage,
-                                     const vk::PipelineStageFlags& _dstStage,
-                                     const vk::AccessFlags& _srcAccess,
-                                     const vk::AccessFlags& _dstAccess);
+			void addPreserve(const uint32_t _preserve);
 
-        private:
-            vk::RenderPass mRenderPass;
+		private:
+			uint32_t mIndex;
+			vk::SubpassDescriptionFlags mFlags;
+			std::vector<vk::AttachmentReference> mInput;
+			std::vector<vk::AttachmentReference> mColor;
+			std::optional<vk::AttachmentReference> mResolve;
+			std::optional<vk::AttachmentReference> mDepthStencil;
+			std::vector<uint32_t> mPreserve;
+		};
 
-            struct SubpassContent {
-                vk::PipelineBindPoint bindPoint;
-                std::vector<vk::AttachmentReference> colorRef;
-                std::vector<vk::AttachmentReference> inputRef;
-                std::vector<vk::AttachmentReference> preserveRef;
-                bool hasDepthStencilRef = false;
-                vk::AttachmentReference depthStencilRef;
-                bool hasResolveRef = false;
-                vk::AttachmentReference resolveRef;
-            };
+		class RenderPass : public GeneralBase::NoCopyBase {
+		public:
+			explicit RenderPass(const std::shared_ptr<Device>& _device);
 
-            std::shared_ptr<std::vector<vk::AttachmentDescription>> mAttachments;
-            std::shared_ptr<std::vector<vk::AttachmentReference>> mAttachRefs;
-            std::shared_ptr<std::vector<vk::SubpassDependency>> mDependencies;
-            std::shared_ptr<std::vector<SubpassContent>> mSubpasses;
+			~RenderPass() { destroy(); }
 
-            void clear();
+			RenderPass(RenderPass&& _other) noexcept { swap(_other); }
 
-        };
-    }
+			RenderPass& operator=(RenderPass&& _other) noexcept { swap(_other); return *this; }
+
+			void swap(RenderPass& _other) noexcept;
+
+			void create();
+
+			const vk::RenderPass& get() const { return mRenderPass; }
+
+			std::shared_ptr<Device> getDevice() const { return mDevice; }
+
+			void beginRenderPass(const vk::CommandBuffer& _cmdBuffer,
+								 const vk::Framebuffer& _frameBuffer,
+								 std::vector<vk::ClearValue>& _clearValues,
+								 const vk::Extent2D& _extent,
+								 const vk::Offset2D& _offset = { 0,0 },
+								 const vk::SubpassContents _subpassContent = vk::SubpassContents::eInline);
+
+			void endRenderPass(const vk::CommandBuffer& _cmdBuffer);
+
+			void destroy();
+
+			void addAttachment(std::initializer_list<Attachment> _attachments);
+
+			void addAttachment(const Attachment& _attachment);
+
+			void addSubpass(std::initializer_list<Subpass> _subpasses);
+
+			void addSubpass(const Subpass& _subpass);
+
+			void addDependency(const vk::SubpassDependency& _dependency);
+
+			void addDependency(std::initializer_list<vk::SubpassDependency> _dependencies);
+
+		private:
+			std::shared_ptr<Device> mDevice;
+			vk::RenderPass mRenderPass;
+
+			std::shared_ptr<std::set<Attachment>> mAttachments;
+			std::shared_ptr<std::set<Subpass>> mSubpasses;
+			std::shared_ptr<std::vector<vk::SubpassDependency>> mDependencies;
+		};
+	}
 }
 #endif // !MX_VK_RENDERPASS_H_

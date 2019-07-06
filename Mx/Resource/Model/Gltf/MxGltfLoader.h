@@ -7,6 +7,8 @@
 #include "../MxModelData.h"
 
 #define STBI_MSC_SECURE_CRT
+#define TINYGLTF_NO_INCLUDE_JSON
+#include <nlohmann/json.hpp>
 #include <glTF/tiny_gltf.h>
 #include <filesystem>
 

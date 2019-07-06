@@ -38,7 +38,6 @@ namespace Mix {
             vk::PhysicalDeviceMemoryProperties memoryProperties;
             std::vector<vk::ExtensionProperties> extensions;
             std::vector<vk::QueueFamilyProperties> queueFamilies;
-            QueueFamilyIndexSet familyIndexSet;
         };
 
         struct SwapchainSupportDetails {

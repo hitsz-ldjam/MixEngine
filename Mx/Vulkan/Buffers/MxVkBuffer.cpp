@@ -1,222 +1,218 @@
 #include "MxVkBuffer.h"
+#include "../Device/MxVkDevice.h"
 
 namespace Mix {
-    namespace Graphics {
-        Buffer* Buffer::CreateBufferPtr(const std::shared_ptr<Core>& _core,
-                                        const std::shared_ptr<DeviceAllocator>& _allocator, const vk::BufferUsageFlags& _usage,
-                                        const vk::MemoryPropertyFlags& _memoryProperty, const vk::DeviceSize& _size,
-                                        const vk::SharingMode& _sharingMode, const void* _data) {
+	namespace Graphics {
+		Buffer::Buffer(const std::shared_ptr<DeviceAllocator>& _allocator,
+					   const vk::BufferUsageFlags& _usage,
+					   const vk::MemoryPropertyFlags& _memoryProperty,
+					   const vk::DeviceSize _size, 
+					   const void* _data,
+					   const vk::SharingMode _sharingMode)
+			: mAllocator(_allocator) {
 
-            auto buffer = new Buffer();
-            buffer->init(_core, _allocator);
+			vk::BufferCreateInfo createInfo;
+			createInfo.size = _size;
+			createInfo.usage = _usage;
+			createInfo.sharingMode = _sharingMode;
 
-            vk::BufferCreateInfo createInfo;
-            createInfo.size = _size;
-            createInfo.usage = _usage;
-            createInfo.sharingMode = _sharingMode;
+			mBuffer = _allocator->getDevice()->get().createBuffer(createInfo);
+			vk::MemoryRequirements memRequirements;
+			mMemory = _allocator->allocate(mBuffer, _memoryProperty, &memRequirements);
 
-            buffer->buffer = _core->getDevice().createBuffer(createInfo);
+			mAlignment = memRequirements.alignment;
+			mSize = _size;
+			mUsages = _usage;
+			mMemoryProperty = _memoryProperty;
 
-            vk::MemoryRequirements memRequirements;
-            buffer->memory = _allocator->allocate(buffer->buffer, _memoryProperty, &memRequirements);
+			setupDescriptor(_size, 0);
 
-            buffer->alignment = memRequirements.alignment;
-            buffer->size = _size;
-            buffer->usages = _usage;
-            buffer->memoryProperty = _memoryProperty;
+			// copy data to the buffer
+			if (_data) {
+				if (_memoryProperty & vk::MemoryPropertyFlagBits::eHostVisible) {
+					uploadData(_data, _size);
 
-            buffer->setupDescriptor(_size, 0);
+					//if not HOST_COHERENT then need to be flushed
+					if (!(_memoryProperty & vk::MemoryPropertyFlagBits::eHostCoherent))
+						flush();
+				}
+			}
+		}
 
-            // copy data to the buffer
-            if (_data) {
-                if (_memoryProperty & vk::MemoryPropertyFlagBits::eHostVisible) {
-                    buffer->copyTo(_data, _size);
+		void Buffer::swap(Buffer& _other) noexcept {
+			using std::swap;
+			swap(mBuffer, _other.mBuffer);
+			swap(mSize, _other.mSize);
+			swap(mAlignment, _other.mAlignment);
+			swap(mMemory, _other.mMemory);
+			swap(mDescriptor, _other.mDescriptor);
+			swap(mUsages, _other.mUsages);
+			swap(mMemoryProperty, _other.mMemoryProperty);
+			swap(mAllocator, _other.mAllocator);
+		}
 
-                    //if not HOST_COHERENT then need to be flushed
-                    if (!(_memoryProperty & vk::MemoryPropertyFlagBits::eHostCoherent))
-                        buffer->flush();
-                }
-            }
+		Buffer::~Buffer() {
+			if (mBuffer) {
+				mAllocator->getDevice()->get().destroyBuffer(mBuffer);
+				mAllocator->deallocate(mMemory);
+			}
+		}
 
-            return buffer;
-        }
+		void Buffer::setupDescriptor(const vk::DeviceSize _size, const vk::DeviceSize _offset) {
+			mDescriptor.offset = _offset;
+			mDescriptor.buffer = mBuffer;
+			mDescriptor.range = _size;
+		}
 
-        void Buffer::init(std::shared_ptr<Core> _core, std::shared_ptr<DeviceAllocator> _allocator) {
-            mCore = _core;
-            mAllocator = _allocator;
-        }
+		void Buffer::uploadData(const void * _data, const vk::DeviceSize& _size) const {
+			assert(_data);
+			memcpy(mMemory.ptr, _data, static_cast<size_t>(_size));
+		}
 
-        void Buffer::setupDescriptor(const vk::DeviceSize _size, const vk::DeviceSize _offset) {
-            descriptor.offset = _offset;
-            descriptor.buffer = buffer;
-            descriptor.range = _size;
-        }
+		void Buffer::uploadData(const void* _data, const vk::DeviceSize& _dstOffset, const vk::DeviceSize& _size) const {
+			assert(_data && _dstOffset + _size <= mSize);
+			memcpy(static_cast<char*>(mMemory.ptr) + _dstOffset, _data, static_cast<size_t>(_size));
+		}
 
-        void Buffer::copyTo(const void * _data, const vk::DeviceSize& _size) const {
-            assert(_data);
-            memcpy(memory.ptr, _data, static_cast<size_t>(_size));
-        }
+		void Buffer::flush(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
+			vk::MappedMemoryRange mappedRange;
+			mappedRange.memory = mMemory.memory;
+			mappedRange.offset = _offset;
+			mappedRange.size = _size;
+			mAllocator->getDevice()->get().flushMappedMemoryRanges(mappedRange);
+		}
 
-        void Buffer::copyTo(const void* _data, const vk::DeviceSize& _offset, const vk::DeviceSize& _size) const {
-            assert(_data && _offset + _size < size);
-            memcpy(static_cast<char*>(memory.ptr) + _offset, _data, static_cast<size_t>(_size));
-        }
-
-        void Buffer::flush(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
-            vk::MappedMemoryRange mappedRange;
-            mappedRange.memory = memory.memory;
-            mappedRange.offset = _offset;
-            mappedRange.size = _size;
-            mCore->getDevice().flushMappedMemoryRanges(mappedRange);
-        }
-
-        void Buffer::invalidate(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
-            vk::MappedMemoryRange mappedRange = {};
-            mappedRange.memory = memory.memory;
-            mappedRange.offset = _offset;
-            mappedRange.size = _size;
-            mCore->getDevice().invalidateMappedMemoryRanges(mappedRange);
-        }
-
-        void Buffer::destory() {
-            if (!mCore)
-                return;
-
-            if (buffer) {
-                mCore->getDevice().destroyBuffer(buffer);
-                buffer = nullptr;
-
-                mAllocator->deallocate(memory);
-                memory = MemoryBlock();
-            }
-
-            mCore = nullptr;
-            mAllocator = nullptr;
-        }
+		void Buffer::invalidate(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
+			vk::MappedMemoryRange mappedRange = {};
+			mappedRange.memory = mMemory.memory;
+			mappedRange.offset = _offset;
+			mappedRange.size = _size;
+			mAllocator->getDevice()->get().invalidateMappedMemoryRanges(mappedRange);
+		}
 
 #ifdef BUFFER_MANAGER_ENABLE
 
-        namespace Test {
-            void Buffer::copyTo(const void * _data, const vk::DeviceSize _size) const {
-                assert(_data);
-                memcpy(bufferBlock.memory.ptr, _data, static_cast<size_t>(_size));
-            }
+		namespace Test {
+			void Buffer::copyTo(const void * _data, const vk::DeviceSize _size) const {
+				assert(_data);
+				memcpy(bufferBlock.memory.ptr, _data, static_cast<size_t>(_size));
+			}
 
-            BufferChunk::BufferChunk(std::shared_ptr<Core> _core,
-                                     std::shared_ptr<DeviceAllocator> _allocator,
-                                     const vk::BufferUsageFlags _usage,
-                                     const vk::MemoryPropertyFlags _memoryProperty,
-                                     const vk::DeviceSize _size,
-                                     const vk::SharingMode _sharingMode) :
-                mCore(_core),
-                mAllocator(_allocator) {
-                vk::BufferCreateInfo createInfo;
-                createInfo.usage = _usage;
-                createInfo.size = _size;
-                createInfo.sharingMode = _sharingMode;
+			BufferChunk::BufferChunk(std::shared_ptr<Core> _core,
+									 std::shared_ptr<DeviceAllocator> _allocator,
+									 const vk::BufferUsageFlags _usage,
+									 const vk::MemoryPropertyFlags _memoryProperty,
+									 const vk::DeviceSize _size,
+									 const vk::SharingMode _sharingMode) :
+				mCore(_core),
+				mAllocator(_allocator) {
+				vk::BufferCreateInfo createInfo;
+				createInfo.usage = _usage;
+				createInfo.size = _size;
+				createInfo.sharingMode = _sharingMode;
 
-                mBuffer = mCore->getDevice().createBuffer(createInfo);
-                mMemBlock = mAllocator->allocate(mBuffer, _memoryProperty, &mMemReq);
-                mBufferUsage = _usage;
-                mMemProperty = _memoryProperty;
+				mBuffer = mCore->getDevice().createBuffer(createInfo);
+				mMemBlock = mAllocator->allocate(mBuffer, _memoryProperty, &mMemReq);
+				mBufferUsage = _usage;
+				mMemProperty = _memoryProperty;
 
-                BufferBlock block;
-                block.buffer = mBuffer;
-                block.offset = 0;
-                block.size = _size;
-                block.memory = mMemBlock;
+				BufferBlock block;
+				block.buffer = mBuffer;
+				block.offset = 0;
+				block.size = _size;
+				block.memory = mMemBlock;
 
-                mBufferBlocks.push_back(block);
-            }
+				mBufferBlocks.push_back(block);
+			}
 
-            BufferChunk & BufferChunk::operator=(BufferChunk && _chunk) {
-                mCore = _chunk.mCore;
-                mAllocator = _chunk.mAllocator;
-                mMemBlock = _chunk.mMemBlock;
+			BufferChunk & BufferChunk::operator=(BufferChunk && _chunk) {
+				mCore = _chunk.mCore;
+				mAllocator = _chunk.mAllocator;
+				mMemBlock = _chunk.mMemBlock;
 
-                mBufferBlocks = std::move(_chunk.mBufferBlocks);
+				mBufferBlocks = std::move(_chunk.mBufferBlocks);
 
-                _chunk.mBuffer = nullptr;
-                return *this;
-            }
+				_chunk.mBuffer = nullptr;
+				return *this;
+			}
 
-            BufferChunk::~BufferChunk() {
-                if (mBuffer) {
-                    mCore->getDevice().destroyBuffer(mBuffer);
-                    mAllocator->deallocate(mMemBlock);
-                }
-            }
+			BufferChunk::~BufferChunk() {
+				if (mBuffer) {
+					mCore->getDevice().destroyBuffer(mBuffer);
+					mAllocator->deallocate(mMemBlock);
+				}
+			}
 
-            bool BufferChunk::createBuffer(vk::DeviceSize _size, BufferBlock & _block) {
-                if (_size > mSize)
-                    return false;
+			bool BufferChunk::createBuffer(vk::DeviceSize _size, BufferBlock & _block) {
+				if (_size > mSize)
+					return false;
 
-                for (size_t i = 0; i < mBufferBlocks.size(); ++i) {
-                    // if block is unused
-                    if (mBufferBlocks[i].free) {
-                        // compute new size
-                        const vk::DeviceSize newSize = Utils::Align(_size, mMemReq.alignment);
+				for (size_t i = 0; i < mBufferBlocks.size(); ++i) {
+					// if block is unused
+					if (mBufferBlocks[i].free) {
+						// compute new size
+						const vk::DeviceSize newSize = Utils::Align(_size, mMemReq.alignment);
 
-                        // if block is suitable
-                        if (mBufferBlocks[i].size >= newSize) {
-                            // if block is perfect match
-                            if (mBufferBlocks[i].size == newSize) {
-                                mBufferBlocks[i].free = false;
-                                _block = mBufferBlocks[i];
-                                return true;
-                            }
+						// if block is suitable
+						if (mBufferBlocks[i].size >= newSize) {
+							// if block is perfect match
+							if (mBufferBlocks[i].size == newSize) {
+								mBufferBlocks[i].free = false;
+								_block = mBufferBlocks[i];
+								return true;
+							}
 
-                            // if there are space left
-                            BufferBlock nextBlock;
-                            nextBlock.free = true;
-                            nextBlock.buffer = mBufferBlocks[i].buffer;
-                            nextBlock.offset = mBufferBlocks[i].offset + newSize;
-                            nextBlock.size = mBufferBlocks[i].size - newSize;
+							// if there are space left
+							BufferBlock nextBlock;
+							nextBlock.free = true;
+							nextBlock.buffer = mBufferBlocks[i].buffer;
+							nextBlock.offset = mBufferBlocks[i].offset + newSize;
+							nextBlock.size = mBufferBlocks[i].size - newSize;
 
-                            nextBlock.memory = mBufferBlocks[i].memory;
-                            nextBlock.memory.offset += newSize;
-                            nextBlock.memory.size = mBufferBlocks[i].size - newSize;
-                            if (mBufferBlocks[i].memory.ptr)
-                                nextBlock.memory.ptr = static_cast<char*>(nextBlock.memory.ptr) + newSize;
+							nextBlock.memory = mBufferBlocks[i].memory;
+							nextBlock.memory.offset += newSize;
+							nextBlock.memory.size = mBufferBlocks[i].size - newSize;
+							if (mBufferBlocks[i].memory.ptr)
+								nextBlock.memory.ptr = static_cast<char*>(nextBlock.memory.ptr) + newSize;
 
-                            mBufferBlocks.emplace_back(nextBlock);
+							mBufferBlocks.emplace_back(nextBlock);
 
-                            mBufferBlocks[i].size = _size;
-                            mBufferBlocks[i].free = false;
+							mBufferBlocks[i].size = _size;
+							mBufferBlocks[i].free = false;
 
-                            _block = mBufferBlocks[i];
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
+							_block = mBufferBlocks[i];
+							return true;
+						}
+					}
+				}
+				return false;
+			}
 
-            void BufferChunk::destroyBuffer(const BufferBlock& _block) {
-                const auto it = std::find(mBufferBlocks.begin(), mBufferBlocks.end(), _block);
-                assert(it != mBufferBlocks.end());
+			void BufferChunk::destroyBuffer(const BufferBlock& _block) {
+				const auto it = std::find(mBufferBlocks.begin(), mBufferBlocks.end(), _block);
+				assert(it != mBufferBlocks.end());
 
-                it->free = true;
+				it->free = true;
 
-                if ((++mOperationCount) >= MaxOperationCount)
-                    sortOut();
-            }
+				if ((++mOperationCount) >= MaxOperationCount)
+					sortOut();
+			}
 
-            std::unique_ptr<BufferChunk> BufferChunkFactory::getChunk(const vk::BufferUsageFlags& _usage,
-                                                                      const vk::MemoryPropertyFlags& _memoryProperty,
-                                                                      vk::DeviceSize _size,
-                                                                      const vk::SharingMode _sharingMode) {
-                _size = (mMinChunkSize < _size) ? Utils::NextPowerOf2(_size) : mMinChunkSize;
+			std::unique_ptr<BufferChunk> BufferChunkFactory::getChunk(const vk::BufferUsageFlags& _usage,
+																	  const vk::MemoryPropertyFlags& _memoryProperty,
+																	  vk::DeviceSize _size,
+																	  const vk::SharingMode _sharingMode) {
+				_size = (mMinChunkSize < _size) ? Utils::NextPowerOf2(_size) : mMinChunkSize;
 
-                return std::make_unique<BufferChunk>(mCore,
-                                                     mAllocator,
-                                                     _usage,
-                                                     _memoryProperty,
-                                                     _size,
-                                                     _sharingMode);
-            }
-        }
+				return std::make_unique<BufferChunk>(mCore,
+													 mAllocator,
+													 _usage,
+													 _memoryProperty,
+													 _size,
+													 _sharingMode);
+			}
+		}
 
 #endif // BUFFER_MANAGER_ENABLE
-    }
+	}
 }

@@ -3,209 +3,205 @@
 #include "../../Log/MxLog.h"
 
 namespace Mix {
-    namespace Graphics {
-        void Swapchain::init(const std::shared_ptr<Core>& _core){
-            setCore(_core);
-            mSupportDetails.capabilities =
-                mCore->getPhysicalDevice().getSurfaceCapabilitiesKHR(mCore->getSurface());
+	namespace Graphics {
+		Swapchain::Swapchain(const std::shared_ptr<Device>& _device)
+			:mDevice(_device), mSurface(_device->getSurface().value()), mSurfaceFormat() {
+			auto physicalDevice = mDevice->getPhysicalDevice();
+			mSupportDetails.capabilities =
+				physicalDevice->get().getSurfaceCapabilitiesKHR(mSurface);
 
-            mSupportDetails.formats =
-                mCore->getPhysicalDevice().getSurfaceFormatsKHR(mCore->getSurface());
+			mSupportDetails.formats =
+				physicalDevice->get().getSurfaceFormatsKHR(mSurface);
 
-            mSupportDetails.presentModes =
-                mCore->getPhysicalDevice().getSurfacePresentModesKHR(mCore->getSurface());
-        }
+			mSupportDetails.presentModes =
+				physicalDevice->get().getSurfacePresentModesKHR(mSurface);
+		}
 
-        void Swapchain::destroy() {
-            if (!mCore)
-                return;
+		Swapchain::~Swapchain() {
+			if (!mSwapchain)
+				return;
 
-            for (auto& view : mImageViews)
-                mCore->getDevice().destroyImageView(view);
-            mCore->getDevice().destroySwapchainKHR(mSwapchain);
-            mCore = nullptr;
-        }
+			mDevice->get().destroySwapchainKHR(mSwapchain, nullptr, mDevice->getDynamicLoader());
+			for (auto& view : mImageViews)
+				mDevice->get().destroyImageView(view);
+		}
 
-        void  Swapchain::create(const std::vector<vk::SurfaceFormatKHR>& _rqFormats, 
-                                const std::vector<vk::PresentModeKHR>& _rqPresentMode, 
-                                const vk::Extent2D& _rqExtent) {
-            mImageAvlSph.resize(mImageCount);
-            mRenderFinishedSph.resize(mImageCount);
-            mInFlightFences.resize(mImageCount);
 
-            for (uint32_t i = 0; i < mImageCount; ++i) {
-                mImageAvlSph[i] = mCore->getSyncObjMgr().createSemaphore();
-                mRenderFinishedSph[i] = mCore->getSyncObjMgr().createSemaphore();
-                mInFlightFences[i] = mCore->getSyncObjMgr().createFence();
-            }
+		void Swapchain::swap(Swapchain& _rhs) noexcept {
+			using std::swap;
+			swap(mDevice, _rhs.mDevice);
+			swap(mSwapchain, _rhs.mSwapchain);
+			swap(mSurface, _rhs.mSurface);
+			swap(mSurfaceFormat, _rhs.mSurfaceFormat);
+			swap(mPresentMode, _rhs.mPresentMode);
+			swap(mExtent, _rhs.mExtent);
+			swap(mCurrFrame, _rhs.mCurrFrame);
+			swap(mNextImage, _rhs.mNextImage);
+			swap(mImageCount, _rhs.mImageCount);
+			swap(mImages, _rhs.mImages);
+			swap(mImageViews, _rhs.mImageViews);
+			swap(mImageAvlSph, _rhs.mImageAvlSph);
+			swap(mRenderFinishedSph, _rhs.mRenderFinishedSph);
+			swap(mSupportDetails, _rhs.mSupportDetails);
+		}
 
-            // to keep thins in present() right
-            for (uint32_t i = 1; i < mImageCount; ++i) {
-                mCore->getDevice().resetFences(mInFlightFences[i].get());
-            }
+		void  Swapchain::create(const std::vector<vk::SurfaceFormatKHR>& _rqFormats,
+								const std::vector<vk::PresentModeKHR>& _rqPresentMode,
+								const vk::Extent2D& _rqExtent) {
+			mImageAvlSph.resize(mImageCount);
+			mRenderFinishedSph.resize(mImageCount);
 
-            vk::SurfaceFormatKHR format;
-            if (!chooseFormat(_rqFormats, format))
-                throw SurfaceFormatUnsupported();
+			for (uint32_t i = 0; i < mImageCount; ++i) {
+				mImageAvlSph[i] = Semaphore(mDevice);
+				mRenderFinishedSph[i] = Semaphore(mDevice);
+			}
 
-            vk::PresentModeKHR presentMode;
-            if (!choosePresentMode(_rqPresentMode, presentMode))
-                throw PresentModeUnsupported();
+			vk::SurfaceFormatKHR format;
+			if (!chooseFormat(_rqFormats, format))
+				throw SurfaceFormatUnsupported();
 
-            VkExtent2D extent = chooseExtent(_rqExtent);
+			vk::PresentModeKHR presentMode;
+			if (!choosePresentMode(_rqPresentMode, presentMode))
+				throw PresentModeUnsupported();
 
-            vk::SwapchainCreateInfoKHR createInfo = {};
-            createInfo.surface = mCore->getSurface();
-            createInfo.presentMode = presentMode;
-            createInfo.minImageCount = mImageCount;
-            createInfo.imageFormat = format.format;
-            createInfo.imageColorSpace = format.colorSpace;
-            createInfo.imageExtent = extent;
-            createInfo.imageArrayLayers = 1;
-            createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
+			VkExtent2D extent = chooseExtent(_rqExtent);
 
-            uint32_t queueFamilyIndices[2] = {
-                mCore->getQueueFamilyIndices().graphics.value(),
-                mCore->getQueueFamilyIndices().present.value()
-            };
+			vk::SwapchainCreateInfoKHR createInfo;
+			createInfo.surface = mSurface;
+			createInfo.presentMode = presentMode;
+			createInfo.minImageCount = mImageCount;
+			createInfo.imageFormat = format.format;
+			createInfo.imageColorSpace = format.colorSpace;
+			createInfo.imageExtent = extent;
+			createInfo.imageArrayLayers = 1;
+			createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
 
-            if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
-                // if graphics queue and present queue belong to different queue family
-                createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
-                createInfo.pQueueFamilyIndices = queueFamilyIndices;
-                createInfo.queueFamilyIndexCount = 2;
-            } else { // graphics queue and present queue belong to same queue family
-                createInfo.imageSharingMode = vk::SharingMode::eExclusive;
-                createInfo.queueFamilyIndexCount = 0;
-                createInfo.pQueueFamilyIndices = nullptr;
-            }
+			uint32_t queueFamilyIndices[2] = {
+				mDevice->getQueueFamilyIndexSet().graphics.value(),
+				mDevice->getQueueFamilyIndexSet().present.value()
+			};
 
-            createInfo.preTransform = mSupportDetails.capabilities.currentTransform;
-            createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-            createInfo.clipped = true;
-            createInfo.oldSwapchain = nullptr;
+			if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
+				// if graphics queue and present queue belong to different queue family
+				createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
+				createInfo.pQueueFamilyIndices = queueFamilyIndices;
+				createInfo.queueFamilyIndexCount = 2;
+			}
+			else { // graphics queue and present queue belong to same queue family
+				createInfo.imageSharingMode = vk::SharingMode::eExclusive;
+				createInfo.queueFamilyIndexCount = 0;
+				createInfo.pQueueFamilyIndices = nullptr;
+			}
 
-            // create swapchain
-            mSwapchain = mCore->getDevice().createSwapchainKHR(createInfo, nullptr, mCore->dynamicLoader());
-            //acquire image in swapchain
-            mImages = mCore->getDevice().getSwapchainImagesKHR(mSwapchain, mCore->dynamicLoader());
-            //stroe
-            mSurfaceFormat = format;
-            mPresentMode = presentMode;
-            mExtent = extent;
-            createSwapchainImageView();
-        }
+			createInfo.preTransform = mSupportDetails.capabilities.currentTransform;
+			createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+			createInfo.clipped = true;
+			createInfo.oldSwapchain = nullptr;
 
-        vk::Extent2D  Swapchain::chooseExtent(const vk::Extent2D & _rqExtent) {
-            if (mSupportDetails.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-                return mSupportDetails.capabilities.currentExtent;
-            } else {
-                VkExtent2D actualExtent = { static_cast<uint32_t>(_rqExtent.width), static_cast<uint32_t>(_rqExtent.height) };
-                actualExtent.width = std::max(mSupportDetails.capabilities.minImageExtent.width,
-                                              std::min(mSupportDetails.capabilities.maxImageExtent.width, actualExtent.width));
-                actualExtent.height = std::max(mSupportDetails.capabilities.minImageExtent.height,
-                                               std::min(mSupportDetails.capabilities.maxImageExtent.height, actualExtent.height));
-                return actualExtent;
-            }
-        }
+			// create swapchain
+			mSwapchain = mDevice->get().createSwapchainKHR(createInfo, nullptr, mDevice->getDynamicLoader());
+			//acquire image in swapchain
+			mImages = mDevice->get().getSwapchainImagesKHR(mSwapchain, mDevice->getDynamicLoader());
+			//stroe
+			mSurfaceFormat = format;
+			mPresentMode = presentMode;
+			mExtent = extent;
+			createSwapchainImageView();
+		}
 
-        bool  Swapchain::choosePresentMode(const std::vector<vk::PresentModeKHR>& _rqPresentModes, vk::PresentModeKHR & _presentMode) {
-            for (auto rqPresentMode : _rqPresentModes) {
-                for (auto support : mSupportDetails.presentModes)
-                    if (rqPresentMode == support) {
-                        _presentMode = rqPresentMode;
-                        return true;
-                    }
-            }
-            return false;
-        }
+		vk::Extent2D  Swapchain::chooseExtent(const vk::Extent2D & _rqExtent) const {
+			if (mSupportDetails.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+				return mSupportDetails.capabilities.currentExtent;
+			}
+			else {
+				VkExtent2D actualExtent = { static_cast<uint32_t>(_rqExtent.width), static_cast<uint32_t>(_rqExtent.height) };
+				actualExtent.width = std::max(mSupportDetails.capabilities.minImageExtent.width,
+											  std::min(mSupportDetails.capabilities.maxImageExtent.width, actualExtent.width));
+				actualExtent.height = std::max(mSupportDetails.capabilities.minImageExtent.height,
+											   std::min(mSupportDetails.capabilities.maxImageExtent.height, actualExtent.height));
+				return actualExtent;
+			}
+		}
 
-        bool  Swapchain::chooseFormat(const std::vector<vk::SurfaceFormatKHR>& _rqFormats, VkSurfaceFormatKHR & _format) {
-            if (mSupportDetails.formats.size() == 1 &&
-                mSupportDetails.formats[0].format == vk::Format::eUndefined) {
-                _format = _rqFormats[0];
-                return true;
-            }
+		bool  Swapchain::choosePresentMode(const std::vector<vk::PresentModeKHR>& _rqPresentModes, vk::PresentModeKHR & _presentMode) {
+			for (auto rqPresentMode : _rqPresentModes) {
+				for (auto support : mSupportDetails.presentModes)
+					if (rqPresentMode == support) {
+						_presentMode = rqPresentMode;
+						return true;
+					}
+			}
+			return false;
+		}
 
-            for (const auto& rqFormat : _rqFormats) {
-                for (const auto& support : mSupportDetails.formats) {
-                    if (rqFormat.format == support.format && rqFormat.colorSpace == support.colorSpace) {
-                        _format = support;
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
+		bool  Swapchain::chooseFormat(const std::vector<vk::SurfaceFormatKHR>& _rqFormats, VkSurfaceFormatKHR & _format) {
+			if (mSupportDetails.formats.size() == 1 &&
+				mSupportDetails.formats[0].format == vk::Format::eUndefined) {
+				_format = _rqFormats[0];
+				return true;
+			}
 
-        void  Swapchain::createSwapchainImageView() {
-            mImageViews.resize(mImages.size());
-            for (size_t i = 0; i < mImages.size(); ++i)
-                mImageViews[i] = CreateImageView2D(mCore->getDevice(),
-                                                          mImages[i],
-                                                          mSurfaceFormat.format,
-                                                          vk::ImageAspectFlagBits::eColor,
-                                                          0, 1,
-                                                          0, 1);
-        }
+			for (const auto& rqFormat : _rqFormats) {
+				for (const auto& support : mSupportDetails.formats) {
+					if (rqFormat.format == support.format && rqFormat.colorSpace == support.colorSpace) {
+						_format = support;
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 
-        void Swapchain::present(vk::CommandBuffer& _cmdBuffer) {
-            mCore->getDevice().waitForFences(mInFlightFences[mLastFrame].get(),
-                                          VK_TRUE,
-                                          std::numeric_limits<uint64_t>::max());
+		void  Swapchain::createSwapchainImageView() {
+			mImageViews.resize(mImages.size());
+			for (size_t i = 0; i < mImages.size(); ++i)
+				mImageViews[i] = Image::CreateVkImageView2D(mDevice->get(),
+															mImages[i],
+															mSurfaceFormat.format,
+															vk::ImageAspectFlagBits::eColor,
+															0, 1,
+															0, 1);
+		}
 
-            mCore->getDevice().resetFences(mInFlightFences[mLastFrame].get());
+		vk::Result Swapchain::acquireNextImage() {
+			// Acquire next image
+			// The presentation engine may not have finished reading 
+			// from the image at the time it is acquired
+			// We use mImageAvlSph[mCurrFrame] semaphore check later whether next image is ready
+			auto acquireResult = mDevice->get().acquireNextImageKHR(mSwapchain,
+																	std::numeric_limits<uint64_t>::max(),
+																	mImageAvlSph[mCurrFrame].get(),
+																	nullptr);
 
-            auto acquireResult = mCore->getDevice().acquireNextImageKHR(mSwapchain,
-                                                                     std::numeric_limits<uint64_t>::max(),
-                                                                     mImageAvlSph[mCurrFrame].get(),
-                                                                     nullptr);
+			if (acquireResult.result != vk::Result::eSuccess &&
+				acquireResult.result != vk::Result::eSuboptimalKHR &&
+				acquireResult.result != vk::Result::eErrorOutOfDateKHR) {
+				throw Exception("Failed to acquire next image");
+			}
 
-            if (acquireResult.result == vk::Result::eErrorOutOfDateKHR ||
-                acquireResult.result == vk::Result::eSuboptimalKHR) {
-                Debug::Log::Error("Swapchain out of data");
-                return;
-            }
-            if (acquireResult.result != vk::Result::eSuccess)
-                throw SwapchainSwapFailed();
+			mNextImage = acquireResult.value;
+			return acquireResult.result;
+		}
 
-            //submit command buffer
-            vk::Semaphore waitSemaphores[] = { mImageAvlSph[mCurrFrame].get() };
-            vk::Semaphore signalSemaphores[] = { mRenderFinishedSph[mCurrFrame].get() };
-            vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+		vk::Result Swapchain::present() {
+			//swapchain present
+			vk::PresentInfoKHR presentInfo = {};
+			presentInfo.pWaitSemaphores = &mRenderFinishedSph[mCurrFrame].get();
+			presentInfo.waitSemaphoreCount = 1;
+			presentInfo.pSwapchains = &mSwapchain;
+			presentInfo.swapchainCount = 1;
+			presentInfo.pImageIndices = &mNextImage;
+			presentInfo.pResults = nullptr;
 
-            vk::SubmitInfo submitInfo = {};
-            submitInfo.pWaitSemaphores = waitSemaphores;
-            submitInfo.waitSemaphoreCount = 1;
-            submitInfo.pWaitDstStageMask = waitStages;
-            submitInfo.pSignalSemaphores = signalSemaphores;
-            submitInfo.signalSemaphoreCount = 1;
-            submitInfo.pCommandBuffers = &_cmdBuffer;
-            submitInfo.commandBufferCount = 1;
+			const auto result = mDevice->getQueueSet().present.value().presentKHR(presentInfo);
 
-            mCore->getQueues().graphics.value().submit(submitInfo, mInFlightFences[mCurrFrame].get());
+			if (result != vk::Result::eSuccess &&
+				result != vk::Result::eSuboptimalKHR &&
+				result != vk::Result::eErrorOutOfDateKHR)
+				throw Exception("Failed to present image");
 
-            //swapchain present
-            vk::PresentInfoKHR presentInfo = {};
-            presentInfo.pWaitSemaphores = signalSemaphores;
-            presentInfo.waitSemaphoreCount = 1;
-            presentInfo.pSwapchains = &mSwapchain;
-            presentInfo.swapchainCount = 1;
-            presentInfo.pImageIndices = &acquireResult.value;
-            presentInfo.pResults = nullptr;
-
-            auto result = mCore->getQueues().present.value().presentKHR(presentInfo);
-
-            if (result == vk::Result::eErrorOutOfDateKHR ||
-                result == vk::Result::eSuboptimalKHR) {
-                Debug::Log::Error("Swapchain out of data");
-                return;
-            }
-            if (acquireResult.result != vk::Result::eSuccess)
-                throw SwapchainSwapFailed();
-
-            mLastFrame = mCurrFrame;
-            mCurrFrame = (mCurrFrame + 1) % mImageCount;
-        }
-    }
+			mCurrFrame = (mCurrFrame + 1) % mImageCount;
+			return result;
+		}
+	}
 }

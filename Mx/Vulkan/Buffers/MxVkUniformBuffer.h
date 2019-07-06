@@ -1,91 +1,48 @@
 #pragma once
+#ifndef MX_VK_UNIFORMBUFFER_H_
+#define MX_VK_UNIFORMBUFFER_H_
+
 #include "../Core/MxVkCore.h"
 #include "MxVkBuffer.h"
 #include "../Descriptor/MxVkDescriptor.h"
 #include "../../Utils/MxOffsetSize.hpp"
 
-#include <cmath>
-
 namespace Mix {
-    namespace Graphics {
-        class DynamicUniformBuffer {
-        public:
-            explicit DynamicUniformBuffer(const std::shared_ptr<Core>& _core,
-                                          const std::shared_ptr<DeviceAllocator>& _allocator,
-                                          const uint32_t _sizePerObj,
-                                          const uint32_t _count) :mCurrCount(0) {
-                const auto align = _core->getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
-                const auto maxSize = _core->getPhysicalDeviceProperties().limits.maxUniformBufferRange;
+	namespace Graphics {
+		class DynamicUniformBuffer {
+		public:
+			explicit DynamicUniformBuffer(const std::shared_ptr<DeviceAllocator>& _allocator,
+										  const uint32_t _sizePerObj,
+										  const uint32_t _count);
 
-                const auto actualAlign = Math::Align(_sizePerObj, static_cast<uint32_t>(align));
+			void reset() {
+				mCurrCount = 0;
+			}
 
-                const auto maxCount = maxSize / actualAlign;
-                const auto actualCount = std::min(maxCount, _count);
+			void next() {
+				++mCurrCount;
+			}
 
-                mUniformSize = actualAlign;
-                mMaxUniformCount = actualCount;
+			WriteDescriptorSet getWriteDescriptorSet(const vk::DescriptorSet& _set,
+			                                         const uint32_t _binding,
+			                                         std::optional<Utils::OffsetSize<uint32_t>> _offsetSize = std::nullopt) const;
 
-                mBuffer = Buffer::CreateBufferUnique(_core,
-                                                     _allocator,
-                                                     vk::BufferUsageFlagBits::eUniformBuffer,
-                                                     vk::MemoryPropertyFlagBits::eHostVisible |
-                                                     vk::MemoryPropertyFlagBits::eHostCoherent,
-                                                     actualCount * actualAlign,
-                                                     vk::SharingMode::eExclusive);
-                mBuffer->setupDescriptor();
-            }
+			uint32_t getOffset() const { return mUniformSize * mCurrCount; }
 
-            void reset() {
-                mCurrCount = 0;
-            }
+			void pushBack(const void* _data, const vk::DeviceSize& _size) const { mBuffer->uploadData(_data, getOffset(), _size); }
 
-            void next() {
-                ++mCurrCount;
-            }
+			bool full() const { return mCurrCount >= mMaxUniformCount; }
 
-            WriteDescriptorSet getWriteDescriptorSet(const vk::DescriptorSet& _set,
-                                                     const uint32_t& _binding,
-                                                     std::optional<Utils::OffsetSize<uint32_t>> _offsetSize = std::nullopt) const {
-                vk::DescriptorBufferInfo bufferInfo = mBuffer->descriptor;
-                if (_offsetSize) {
-                    bufferInfo.offset = _offsetSize.value().offset;
-                    bufferInfo.range = _offsetSize.value().size;
-                }
+		private:
+			std::unique_ptr<Buffer> mBuffer;
 
-                vk::WriteDescriptorSet write;
-                write.dstSet = _set; //descriptor which will be write in
-                write.dstBinding = _binding; //destination binding
-                write.dstArrayElement = 0;
-                write.descriptorType = vk::DescriptorType::eUniformBufferDynamic; //the type of the descriptor that will be wirte in
-                write.descriptorCount = 1; //descriptor count
-                write.pBufferInfo = &bufferInfo; //descriptorBufferInfo
-                write.pImageInfo = nullptr;
-                write.pTexelBufferView = nullptr;
+			uint32_t mUniformSize;
+			uint32_t mMaxUniformCount;
 
-                return WriteDescriptorSet(write, bufferInfo);
-            }
+			uint32_t mCurrCount;
+		};
 
-            uint32_t getAlign() const {
-                return mUniformSize * mCurrCount;
-            }
-
-            void pushBack(const void* _data, const vk::DeviceSize& _size) const {
-                mBuffer->copyTo(_data, getAlign(), _size);
-            }
-
-            bool full() const {
-                return mCurrCount >= mMaxUniformCount;
-            }
-
-        private:
-            std::unique_ptr<Buffer> mBuffer;
-
-            uint32_t mUniformSize;
-            uint32_t mMaxUniformCount;
-
-            uint32_t mCurrCount;
-        };
-
-    };
+	};
 }
 
+#endif

@@ -8,6 +8,8 @@
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define TINYGLTF_NO_INCLUDE_JSON
+#include <nlohmann/json.hpp>
 #include <glTF/tiny_gltf.h>
 
 namespace Mix {
@@ -68,9 +70,9 @@ namespace Mix {
 				ModelData::TextureSampler samplerData;
 				samplerData.minFilter = ToVkFilter(sampler.minFilter);
 				samplerData.magFilter = ToVkFilter(sampler.magFilter);
-				samplerData.addressMode.U = ToVkAddressMode(sampler.wrapS);
-				samplerData.addressMode.V = ToVkAddressMode(sampler.wrapT);
-				samplerData.addressMode.W = samplerData.addressMode.V;
+				samplerData.addressMode.u = ToVkAddressMode(sampler.wrapS);
+				samplerData.addressMode.v = ToVkAddressMode(sampler.wrapT);
+				samplerData.addressMode.w = samplerData.addressMode.v;
 
 				_modelData.textureSamplers.emplace_back(samplerData);
 			}
@@ -353,8 +355,6 @@ namespace Mix {
 
 					primitiveData.vertexCount = _modelData.vertices.size() - primitiveData.firstVertex;
 					primitiveData.indexCount = _modelData.indices.size() - primitiveData.firstIndex;
-
-					meshData.primitives.emplace_back(primitiveData);
 				}
 			}
 		}

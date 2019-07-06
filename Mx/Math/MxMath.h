@@ -2,6 +2,7 @@
 #ifndef MX_MATH_H_
 #define MX_MATH_H_
 #include "../Definitions/MxGeneralBase.hpp"
+#include <cmath>
 
 namespace Mix {
     namespace Math {

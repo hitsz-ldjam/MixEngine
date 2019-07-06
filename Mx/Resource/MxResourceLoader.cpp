@@ -1,10 +1,11 @@
-#include "MxResource.h"
+#include "MxResourceLoader.h"
 
 #include "../Utils/MxGuid.h"
 #include "../Log/MxLog.h"
-#include "../Vulkan/MxVkGraphics.h"
 #include "../Utils/MxUtils.h"
 #include "Model/Gltf/MxGltfParser.h"
+#include "Texture/GLI/MxGliParser.h"
+#include "Shader/MxShaderParser.h"
 
 namespace Mix {
 	namespace Resource {
@@ -12,6 +13,8 @@ namespace Mix {
 			mLoaderRegister = std::make_shared<ParserRegister>();
 
 			mLoaderRegister->registerParser(std::make_shared<GltfParser>());
+			mLoaderRegister->registerParser(std::make_shared<GliParser>());
+			mLoaderRegister->registerParser(std::make_shared<ShaderParser>());
 		}
 
 		std::shared_ptr<ResourceBase> ResourceLoader::load(const std::string& _file) const {

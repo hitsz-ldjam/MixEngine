@@ -3,36 +3,33 @@
 
 namespace Mix {
     namespace Graphics {
-        const vk::DebugUtilsMessengerEXT& DebugUtils::setDebugCallback(const vk::DebugUtilsMessageSeverityFlagsEXT & _messageSeverity, const vk::DebugUtilsMessageTypeFlagsEXT & _messageType, PFN_vkDebugUtilsMessengerCallbackEXT _callback, void * _userData) {
+	    DebugUtils::~DebugUtils() {
+			if (!mDevice)
+				return;
+
+			for (const auto& messenger : mMessengers)
+				mInstance->get().destroyDebugUtilsMessengerEXT(messenger, nullptr, mDevice->getDynamicLoader());
+	    }
+
+        const vk::DebugUtilsMessengerEXT& DebugUtils::addDebugCallback(const vk::DebugUtilsMessageSeverityFlagsEXT & _messageSeverity, const vk::DebugUtilsMessageTypeFlagsEXT & _messageType, PFN_vkDebugUtilsMessengerCallbackEXT _callback, void * _userData) {
             vk::DebugUtilsMessengerCreateInfoEXT createInfo;
             createInfo.messageSeverity = _messageSeverity;
             createInfo.messageType = _messageType;
             createInfo.pfnUserCallback = _callback;
 
-            vk::DebugUtilsMessengerEXT messenger = mCore->getInstance().createDebugUtilsMessengerEXT(createInfo,
+            vk::DebugUtilsMessengerEXT messenger = mInstance->get().createDebugUtilsMessengerEXT(createInfo,
                                                                                                   nullptr,
-                                                                                                  mCore->dynamicLoader());
+                                                                                                  mDevice->getDynamicLoader());
 
             mMessengers.push_back(messenger);
             return mMessengers.back();
         }
 
         void DebugUtils::destroyDebugCallback(const vk::DebugUtilsMessengerEXT & _messenger) {
-            mCore->getInstance().destroyDebugUtilsMessengerEXT(_messenger, nullptr, mCore->dynamicLoader());
+            mInstance->get().destroyDebugUtilsMessengerEXT(_messenger, nullptr, mDevice->getDynamicLoader());
             mMessengers.erase(std::find(mMessengers.begin(),
                               mMessengers.end(),
                               _messenger));
-        }
-
-        void DebugUtils::destroy() {
-            if (!mCore)
-                return;
-
-            for (const auto& messenger : mMessengers)
-                mCore->getInstance().destroyDebugUtilsMessengerEXT(messenger, nullptr, mCore->dynamicLoader());
-
-            mMessengers.clear();
-            mCore = nullptr;
         }
 
         std::string DebugUtils::SeverityToString(const vk::DebugUtilsMessageSeverityFlagBitsEXT _severity) {

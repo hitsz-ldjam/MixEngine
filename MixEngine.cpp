@@ -6,6 +6,13 @@
 
 #include <iostream>
 #include "Mx/Resource/Model/MxModel.h"
+#include "Mx/Resource/Texture/MxTexture.h"
+#include "Mx/Resource/Shader/MxShaderSource.h"
+#include "Mx/Log/MxLog.h"
+#include "Mx/Vulkan/MxVkGraphics.h"
+#include "Mx/Resource/MxResourceLoader.h"
+#include "Mx/Vulkan/Renderer/PresetRenderer/MxVkStandardRenderer.h"
+#include "Mx/GUI/MxUi.h"
 
 namespace Mix {
 	MixEngine::MixEngine(int _argc, char** _argv) {
@@ -20,8 +27,6 @@ namespace Mix {
 
 		delete mCamera;
 		delete mGameObject;
-		delete mResources;
-		delete mVulkan;
 		delete mWindow;
 		SDL_Quit();
 	}
@@ -31,11 +36,21 @@ namespace Mix {
 			init();
 			SDL_Event event;
 			while (!mQuit) {
-				while (SDL_PollEvent(&event))
+				while (SDL_PollEvent(&event)) {
 					process(event);
+				}
 				update();
-				lateUpdate();
 				render();
+				lateUpdate();
+				++mFrameCount;
+				static auto lastTime = std::chrono::steady_clock::now();
+				if (mFrameCount > 10) {
+					auto now = std::chrono::steady_clock::now();
+					float duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTime).count();
+					mFramePerSecond = static_cast<float>(mFrameCount) * 1000 / duration;
+					lastTime = now;
+					mFrameCount = 0;
+				}
 			}
 		}
 		catch (const std::exception& e) {
@@ -69,22 +84,62 @@ namespace Mix {
 		// mScene.init();
 
 		//// todo test graphics
-		mWindow = new Window("Surprise! Mother Fucker!", { 680,400 }, SDL_WINDOW_VULKAN);
+		mWindow = new Window("Surprise! Mother Fucker!", { 1200,800 }, SDL_WINDOW_VULKAN);
+		auto instanceExtsReq = mWindow->getRequiredInstanceExts();
+		instanceExtsReq.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-		mVulkan = new Graphics::Vulkan();
-		mVulkan->init();
-		mVulkan->setTargetWindow(mWindow);
-		mVulkan->build();
+		std::vector<const char*> deviceExtsReq;
+		deviceExtsReq.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-		mResources = new Resource::ResourceLoader();
-		mResources->init();
+		std::vector<const char*> layersReq;
+		layersReq.push_back("VK_LAYER_LUNARG_standard_validation");
+
+		Graphics::VulkanSettings settings;
+		settings.appInfo.appName = "Fuck";
+		settings.appInfo.appVersion = Version::MakeVersion(0, 0, 1);
+		settings.debugMode = true;
+		settings.instanceExts = instanceExtsReq;
+		settings.deviceExts = deviceExtsReq;
+		settings.validationLayers = layersReq;
+		settings.physicalDeviceIndex = 0;
+
+		auto vulkan = mModuleHolder.add<Graphics::Vulkan>();
+		vulkan->init();
+
+		Debug::Log::Info("Instance Extensions:");
+
+		auto instanceExts = Graphics::Vulkan::GetAllSupportedInstanceExts();
+		for (auto& ext : instanceExts) {
+			Debug::Log::Info("--%s", ext.extensionName);
+		}
+
+		Debug::Log::Info("Validation Layers:");
+
+		auto layers = Graphics::Vulkan::GetAllSupportedLayers();
+		for (auto& layer : layers) {
+			Debug::Log::Info("--%s", layer.layerName);
+		}
+
+		vulkan->setTargetWindow(mWindow);
+		vulkan->build(settings);
+
+		auto ui = mModuleHolder.add<Ui>();
+		ui->init();
+
+		auto resourceLoader = mModuleHolder.add<Resource::ResourceLoader>();
+		resourceLoader->init();
+
+		auto mainRendererIndex = vulkan->addRenderer<Graphics::StandardRenderer>();
+		vulkan->setActiveRenderer(mainRendererIndex);
 
 		// add a model
 		mCamera = new GameObject("Camera");
-		auto model = mResources->load<Mix::Resource::Model>("E:/Git/vulkan-learning-master/res/models/gltfSample/BrainStem/glTF/BrainStem.gltf");
+		mCamera->transform().setPosition(Math::Vector3f(0.0f, 0.0f, -1.0f));
+
+		auto model = resourceLoader->load<Resource::Model>("E:/Git/vulkan-learning-master/res/models/gltfSample/DamagedHelmet/glTF/DamagedHelmet.gltf");
 		mGameObject = model->generateGameObject();
 		mGameObject->transform().setLocalScale(Math::Vector3f(0.5f, 0.5f, 0.5f));
-		mCamera->transform().setPosition(Math::Vector3f(0.0f, 0.0f, -1.0f));
+
 	}
 
 	void MixEngine::process(const SDL_Event& _event) {
@@ -124,7 +179,7 @@ namespace Mix {
 		{
 			int deltaY = _event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1;
 			deltaY *= _event.wheel.y;
-			Input::mouseScrollDelta += glm::ivec2(_event.wheel.x, deltaY);
+			Input::mouseScrollDelta += Math::Vector2i(_event.wheel.x, deltaY);
 			break;
 		}
 		case SDL_QUIT:
@@ -142,12 +197,46 @@ namespace Mix {
 
 	void MixEngine::update() {
 		Time::Tick();
+		mWindow->setTitle(std::to_string(mFramePerSecond));
+		auto tran = mCamera->getComponent<Mix::Transform>();
+		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_W)) {
+			tran->translate(Math::Vector3f::Forward * (Time::DeltaTime() * 5.0f), Mix::Space::SELF);
+			Debug::Log::Info("W");
+		}
+		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_S)) {
+			tran->translate(Math::Vector3f::Back * (Time::DeltaTime() * 5.0f), Mix::Space::SELF);
+			Debug::Log::Info("S");
+		}
+		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_D)) {
+			tran->translate(Math::Vector3f::Right * (Time::DeltaTime() * 5.0f), Mix::Space::SELF);
+			Debug::Log::Info("D");
+		}
+		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_A)) {
+			tran->translate(Math::Vector3f::Left * (Time::DeltaTime() * 5.0f), Mix::Space::SELF);
+			Debug::Log::Info("A");
+		}
+		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_SPACE)) {
+			tran->translate(Math::Vector3f::Up * (Time::DeltaTime() * 5.0f), Mix::Space::WORLD);
+			Debug::Log::Info("Space");
+		}
+		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_LCTRL)) {
+			tran->translate(Math::Vector3f::Down * (Time::DeltaTime() * 5.0f), Mix::Space::WORLD);
+			Debug::Log::Info("Ctrl");
+		}
+		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_Q)) {
+			tran->rotate(Math::Vector3f::Up, Math::Radians(Time::DeltaTime()*-45.0f));
+			Debug::Log::Info("Q");
+		}
+		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_E)) {
+			tran->rotate(Math::Vector3f::Up, Math::Radians(Time::DeltaTime()*45.0f));
+			Debug::Log::Info("E");
+		}
 
-		// update behaviours
-		// todo: delete debug code
-		// mScene.update();
+	// update behaviours
+	// todo: delete debug code
+	// mScene.update();
 
-		// todo: smooth and reset smoothing
+	// todo: smooth and reset smoothing
 		for (int i = 0; i < Time::sFixedClampedSteps; ++i) {
 			fixedUpdate();
 		}
@@ -173,23 +262,9 @@ namespace Mix {
 
 	// todo: call vulkan here
 	void MixEngine::render() {
-		auto tran = mCamera->getComponent<Mix::Transform>();
-		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_W))
-			tran->translate(Math::Vector3f::Forward * (Time::DeltaTime() * 5.0f), Mix::Space::SELF);
-		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_S))
-			tran->translate(Math::Vector3f::Back * (Time::DeltaTime() * 5.0f), Mix::Space::SELF);
-		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_D))
-			tran->translate(Math::Vector3f::Right * (Time::DeltaTime() * 5.0f), Mix::Space::SELF);
-		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_A))
-			tran->translate(Math::Vector3f::Left * (Time::DeltaTime() * 5.0f), Mix::Space::SELF);
-		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_SPACE))
-			tran->translate(Math::Vector3f::Up * (Time::DeltaTime() * 5.0f), Mix::Space::WORLD);
-		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_LCTRL))
-			tran->translate(Math::Vector3f::Down * (Time::DeltaTime() * 5.0f), Mix::Space::WORLD);
-		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_Q))
-			tran->rotate(Math::Vector3f::Up, Math::Radians(Time::DeltaTime()*-45.0f));
-		if (Mix::Input::GetAxisRaw(SDL_SCANCODE_E))
-			tran->rotate(Math::Vector3f::Up, Math::Radians(Time::DeltaTime()*45.0f));
-		mVulkan->update();
+		getModule<Ui>()->update();
+		getModule<Ui>()->render();
+		getModule<Graphics::Vulkan>()->update();
+		getModule<Graphics::Vulkan>()->render();
 	}
 }

@@ -25,6 +25,6 @@ layout(location = 1) out vec2 outUV;
 void main() 
 {
     gl_Position = camera.projMat * camera.viewMat * mesh.modelMat * vec4(inPosition, 1.0f);
-	outNormal=inNormal;
+	outNormal= mat3(mesh.normMat) * inNormal;
 	outUV=vec2(inTexCoord);
 }

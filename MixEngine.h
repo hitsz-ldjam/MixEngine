@@ -8,49 +8,62 @@
 
 #include <fmod/fmod.hpp>
 #include <SDL2/SDL.h>
-#include "Mx/Vulkan/MxVkGraphics.h"
-#include "Mx/Resource/MxResource.h"
+#include "Mx/Engine/MxModuleHolder.h"
 
 namespace Mix {
-    class MixEngine {
-        friend static FMOD::System* Audio::Core();
+	class MixEngine : public GeneralBase::SingletonBase<MixEngine> {
+		friend SingletonBase<MixEngine>;
+		friend static FMOD::System* Audio::Core();
+	public:
+		~MixEngine();
 
-    public:
-        ~MixEngine();
-        int exec();
+		int exec();
 
-        static MixEngine& Instance(int _argc = 0, char** _argv = nullptr) {
-            static MixEngine instance(_argc, _argv);
-            return instance;
-        }
+		ModuleHolder& getModuleHolder() { return mModuleHolder; }
 
-        MixEngine(const MixEngine&) = delete;
-        void operator=(const MixEngine&) = delete;
+		template<typename _Ty>
+		bool hasModule() const { return mModuleHolder.has<_Ty>(); }
 
-    private:
+		template<typename _Ty>
+		_Ty* getModule() const { return mModuleHolder.get<_Ty>(); }
 
-        // todo: delete debug code
-        // Scene mScene;
+		template<typename _Ty, typename... _Args>
+		_Ty* addModule(_Args&&... _args) { return mModuleHolder.add<_Ty>(std::forward<_Args>(_args)...); }
 
-        MixEngine(int _argc = 0, char** _argv = nullptr);
+		template<typename _Ty>
+		void removeModule() { mModuleHolder.remove<_Ty>(); };
 
-        bool mQuit;
-        FMOD::System* mFmodCore;
+		const Window& getWindow() const { return *mWindow; }
+		//static MixEngine& Instance(int _argc = 0, char** _argv = nullptr) {
+		//    static MixEngine instance(_argc, _argv);
+		//    return instance;
+		//}
+	private:
 
-        void init();
-        void process(const SDL_Event& _event);
-        void update();
-        void fixedUpdate();
-        void lateUpdate();
-        void render();
+		// todo: delete debug code
+		// Scene mScene;
 
-        // todo test add graphics here
-        Window* mWindow = nullptr;
-        Graphics::Vulkan* mVulkan = nullptr;
-        Resource::ResourceLoader* mResources = nullptr;
-        GameObject* mCamera = nullptr;
-        GameObject* mGameObject = nullptr;
-    };
+		explicit MixEngine(int _argc = 0, char** _argv = nullptr);
+
+		bool mQuit;
+		FMOD::System* mFmodCore;
+
+		void init();
+		void process(const SDL_Event& _event);
+		void update();
+		void fixedUpdate();
+		void lateUpdate();
+		void render();
+
+		Window* mWindow = nullptr;
+		GameObject* mCamera = nullptr;
+		GameObject* mGameObject = nullptr;
+
+		uint32_t mFrameCount = 0;
+		float mFramePerSecond = 0;
+
+		ModuleHolder mModuleHolder;
+	};
 }
 
 #endif

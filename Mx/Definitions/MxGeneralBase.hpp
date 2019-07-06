@@ -10,9 +10,10 @@ namespace Mix {
          * @brief Base for classes that is non-copyable
          */
         struct NoCopyBase {
+        protected:
             NoCopyBase() = default;
 
-            virtual ~NoCopyBase() = default;
+            ~NoCopyBase() = default;
 
             NoCopyBase(const NoCopyBase&) = delete;
 
@@ -75,7 +76,7 @@ namespace Mix {
 
             SingletonBase& operator=(SingletonBase&& _other) noexcept = delete;
 
-        private:
+        protected:
             SingletonBase() = default;
 
             ~SingletonBase() = default;

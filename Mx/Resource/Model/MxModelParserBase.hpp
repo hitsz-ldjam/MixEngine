@@ -8,9 +8,9 @@
 
 namespace Mix {
     namespace Resource {
-        class ModelParseBase :public ResourceParserBase {
+        class ModelParserBase :public ResourceParserBase {
         protected:
-			ModelParseBase() = default;
+			ModelParserBase() = default;
 
 			static std::shared_ptr<Mesh::DataType> GetMeshDataStruct(const Mesh& _mesh) {
 				return _mesh.mData;

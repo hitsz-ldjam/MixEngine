@@ -60,8 +60,8 @@ namespace Mix {
          *  @brief Construct a Component of type _Ty and add it to this GameObject
          *  @return The pointer to the Component
          */
-        template <typename _Ty, typename... Args>
-        _Ty* addComponent(Args&& ..._args);
+        template <typename _Ty, typename... _Args>
+        _Ty* addComponent(_Args&& ..._args);
 
         /**
          *  @brief Get the pointer to the Component of type _Ty that attached to this GameObject
@@ -219,24 +219,20 @@ namespace Mix {
     template <typename _Ty>
     inline _Ty* GameObject::addComponent() {
         // if type _Ty isn't derived from Component
-        _Ty* t = reinterpret_cast<_Ty*>(1);
-        if(!dynamic_cast<Component*>(t))
-            throw ComponentCastingError();
+		static_assert(std::is_base_of_v<Component, _Ty>, "A Component must be a derived class of Component");
 
-        t = new _Ty();
+        _Ty* t = new _Ty();
         t->setGameObject(this);
         mComponents.insert(t);
         return t;
     }
 
-    template <typename _T, typename ..._Args>
-    inline _T* GameObject::addComponent(_Args&& ..._args) {
+    template <typename _Ty, typename ..._Args>
+    inline _Ty* GameObject::addComponent(_Args&& ..._args) {
         // if type _Ty isn't derived from Component
-        _T* t = reinterpret_cast<_T*>(1);
-        if(!dynamic_cast<Component*>(t))
-            throw ComponentCastingError();
+		static_assert(std::is_base_of_v<Component, _Ty>, "A Component must be a derived class of Component");
 
-        t = new _T(std::forward<_Args>(_args)...);
+        _Ty* t = new _Ty(std::forward<_Args>(_args)...);
         t->setGameObject(this);
         mComponents.insert(t);
         return t;

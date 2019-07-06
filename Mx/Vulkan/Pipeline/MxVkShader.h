@@ -2,55 +2,43 @@
 #ifndef MX_VK_SHADER_H_
 #define MX_VK_SHADER_H_
 
-#include "../Core/MxVkCore.h"
-#include <string>
-#include <unordered_map>
-
+#include "../Device/MxVkDevice.h"
 
 namespace Mix {
-    namespace Graphics {
-        struct ShaderModule {
-            vk::ShaderModule module;
-            vk::ShaderStageFlagBits stage;
+	namespace Resource {
+		class ShaderSource;
+	}
 
-            ShaderModule() = default;
-            ShaderModule(const vk::ShaderModule _module, const vk::ShaderStageFlagBits _stage) :
-                module(_module),
-                stage(_stage) {
-            }
+	namespace Graphics {
+		class Shader : public GeneralBase::NoCopyBase {
+		public:
+			Shader(const std::shared_ptr<Device>& _device,
+				   const uint32_t* _data,
+				   const uint32_t& _size,
+				   const vk::ShaderStageFlagBits& _stage);
 
-            bool operator==(const ShaderModule& _shader) const {
-                return module == _shader.module;
-            }
+			Shader(const std::shared_ptr<Device>& _device,
+				   const Resource::ShaderSource& _source);
 
-            bool operator!=(const ShaderModule& _shader)const {
-                return !(*this == _shader);
-            }
-        };
+			~Shader();
 
+			Shader(Shader&& _other) noexcept { swap(_other); }
 
-        class ShaderMgr :public GraphicsComponent {
-        public:
-            ~ShaderMgr() { destroy(); };
+			Shader& operator=(Shader&& _other) noexcept { swap(_other); return *this; }
 
-            void init(const std::shared_ptr<Core>& _core) {
-                setCore(_core);
-            }
+			void swap(Shader& _other) noexcept;
 
-            void destroy();
+			const vk::ShaderModule& get() const { return mModule; }
 
-            void createShader(const std::string& _name,
-                              const char* _data,
-                              const size_t _size,
-                              vk::ShaderStageFlagBits _stage);
+			std::shared_ptr<Device> getDevice() const { return mDevice; }
 
-            const ShaderModule& getModule(const std::string& _name);
+			const vk::ShaderStageFlagBits& stage() const { return mStage; }
 
-            void destroyModule(const std::string& _name);
-
-        private:
-            std::unordered_map<std::string, ShaderModule> mModules;
-        };
-    }
+		private:
+			std::shared_ptr<Device> mDevice;
+			vk::ShaderModule mModule;
+			vk::ShaderStageFlagBits mStage;
+		};
+	}
 }
 #endif // !MX_VK_SHADER_H_

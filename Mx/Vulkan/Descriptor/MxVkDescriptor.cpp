@@ -2,6 +2,7 @@
 
 namespace Mix {
     namespace Graphics {
+
         void DescriptorSetLayout::addBindings(const uint32_t _binding,
                                               const vk::DescriptorType _type,
                                               const uint32_t _count,
@@ -13,21 +14,15 @@ namespace Mix {
             layoutBinding.descriptorCount = _count;
             layoutBinding.stageFlags = _stage;
             layoutBinding.pImmutableSamplers = _immutableSamplers;
-            mBindings.push_back(std::move(layoutBinding));
+            mBindings->push_back(std::move(layoutBinding));
         }
 
         void DescriptorSetLayout::create() {
             vk::DescriptorSetLayoutCreateInfo createInfo = {};
-            createInfo.pBindings = mBindings.data();
-            createInfo.bindingCount = static_cast<uint32_t>(mBindings.size());
+            createInfo.pBindings = mBindings->data();
+            createInfo.bindingCount = static_cast<uint32_t>(mBindings->size());
 
-            mLayout = mCore->getDevice().createDescriptorSetLayout(createInfo);
-        }
-
-        void DescriptorSetLayout::destroy() {
-            mCore->getDevice().destroyDescriptorSetLayout(mLayout);
-            clear();
-            mCore = nullptr;
+            mLayout = mDevice->get().createDescriptorSetLayoutUnique(createInfo);
         }
 
         void DescriptorPool::addPoolSize(vk::DescriptorType _type, uint32_t _count) {
@@ -37,12 +32,25 @@ namespace Mix {
                 mPoolSizes[_type] += _count;
         }
 
-        void DescriptorPool::create(uint32_t _maxSets) {
+        DescriptorPool::~DescriptorPool() {
+			if(mDescriptorPool) {
+				mDevice->get().destroyDescriptorPool(mDescriptorPool);
+			}
+        }
+
+        void DescriptorPool::swap(DescriptorPool& _other) noexcept {
+	        using std::swap;
+	        swap(mDescriptorPool, _other.mDescriptorPool);
+	        swap(mDevice, _other.mDevice);
+	        swap(mPoolSizes, _other.mPoolSizes);
+        }
+
+        void DescriptorPool::create(const uint32_t _maxSets) {
             std::vector<vk::DescriptorPoolSize> poolSizes;
             poolSizes.reserve(mPoolSizes.size());
 
             for (const auto& size : mPoolSizes) {
-                poolSizes.push_back({ size.first, size.second });
+                poolSizes.emplace_back(size.first, size.second);
             }
 
             vk::DescriptorPoolCreateInfo createInfo;
@@ -50,7 +58,7 @@ namespace Mix {
             createInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
             createInfo.maxSets = _maxSets;
 
-            mDescriptorPool = mCore->getDevice().createDescriptorPool(createInfo);
+            mDescriptorPool = mDevice->get().createDescriptorPool(createInfo);
         }
 
         std::vector<vk::DescriptorSet> DescriptorPool::allocDescriptorSet(const std::vector<vk::DescriptorSetLayout>& _layouts) const {
@@ -59,7 +67,7 @@ namespace Mix {
             allocInfo.pSetLayouts = _layouts.data();
             allocInfo.descriptorSetCount = static_cast<uint32_t>(_layouts.size());
 
-            return mCore->getDevice().allocateDescriptorSets(allocInfo);
+            return mDevice->get().allocateDescriptorSets(allocInfo);
         }
 
         vk::DescriptorSet DescriptorPool::allocDescriptorSet(const vk::DescriptorSetLayout _layout) const {
@@ -68,7 +76,7 @@ namespace Mix {
             allocInfo.pSetLayouts = &_layout;
             allocInfo.descriptorSetCount = 1;
 
-            return mCore->getDevice().allocateDescriptorSets(allocInfo)[0];
+            return mDevice->get().allocateDescriptorSets(allocInfo)[0];
         }
 
         std::vector<vk::DescriptorSet> DescriptorPool::allocDescriptorSet(const vk::DescriptorSetLayout _layout, const uint32_t _count) const {
@@ -88,17 +96,16 @@ namespace Mix {
             return allocDescriptorSet(_layout.get());
         }
 
-        std::vector<vk::DescriptorSet> DescriptorPool::allocDescriptorSet(const DescriptorSetLayout & _layout, const uint32_t _count) const {
-            return allocDescriptorSet(_layout.get(), _count);
+        void DescriptorPool::dealloc(const vk::DescriptorSet& _set) const {
+			mDevice->get().freeDescriptorSets(mDescriptorPool, _set);
         }
 
-        void DescriptorPool::destroy() {
-            if (!mCore)
-                return;
+        void DescriptorPool::dealloc(const std::vector<vk::DescriptorSet>& _sets) const {
+			mDevice->get().freeDescriptorSets(mDescriptorPool, _sets);
+        }
 
-            mCore->getDevice().destroyDescriptorPool(mDescriptorPool);
-            mDescriptorPool = nullptr;
-            mCore = nullptr;
+        std::vector<vk::DescriptorSet> DescriptorPool::allocDescriptorSet(const DescriptorSetLayout & _layout, const uint32_t _count) const {
+            return allocDescriptorSet(_layout.get(), _count);
         }
     }
 }

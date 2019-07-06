@@ -5,22 +5,34 @@
 
 #include <cstdint>
 #include <string>
+#include <cstdint>
 
+#ifndef MX_ENGINE_NAME
 #define MX_ENGINE_NAME "MixEngine"
+#endif
+
+#ifndef MX_ENGINE_VERSION_MAJOR
 #define MX_ENGINE_VERSION_MAJOR 0
+#endif
+
+#ifndef MX_ENGINE_VERSION_MINOR
 #define MX_ENGINE_VERSION_MINOR 0
+#endif
+
+#ifndef MX_ENGINE_VERSION_PATCH
 #define MX_ENGINE_VERSION_PATCH 1
+#endif
+
+#ifndef MX_ASSERT
+#define MX_ASSERT assert	
+#endif
+
 
 namespace Mix {
     typedef uint32_t VersionInt;
     typedef uint32_t LayerIndex;
     typedef std::string Tag;
     typedef long long Guid;
-
-    //typedef vk::DeviceSize Id;
-    //typedef vk::DeviceSize IdStep;
-    //typedef Id MeshId;
-    //typedef Id ModelId;
 
     namespace Version {
         static VersionInt MakeVersion(const uint32_t _major, const uint32_t _minor, const uint32_t _patch) {

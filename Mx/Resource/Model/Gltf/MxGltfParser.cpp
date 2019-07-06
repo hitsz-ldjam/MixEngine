@@ -1,6 +1,7 @@
 #include "../../../GameObject/MxGameObject.h"
 #include "MxGltfParser.h"
 #include "../../../Vulkan/MxVkGraphics.h"
+#include "../../../Vulkan/CommandBuffer/MxVkCommandPool.h"
 #include "../../../Vulkan/Buffers/MxVkBuffer.h"
 #include "../../../Utils/MxGuid.h"
 
@@ -43,62 +44,57 @@ namespace Mix {
 		}
 
 		GltfParser::MeshBufferPtrSet GltfParser::sendToVulkan(const ModelData::Model& _modelData) {
-			const auto vulkan = Object::FindObjectOfType<Graphics::Vulkan>();
+			const auto vulkan = MixEngine::Instance().getModule<Graphics::Vulkan>();
 			const auto vkAllocator = vulkan->getAllocator();
-			auto cmd = vulkan->getCommandMgr()->allocCommandBuffer();
+			const auto vkDevice = vulkan->getLogicalDevice();
+			auto cmd = vulkan->getTransferCommandPool()->allocateUnique();
 
 			// upload vertex data
 			vk::DeviceSize byteSize = _modelData.vertices.size() * sizeof(Graphics::Vertex);
-			const auto vertexStaging = Graphics::Buffer::CreateBuffer(vulkan->getCore(),
-																	  vkAllocator,
-																	  vk::BufferUsageFlagBits::eTransferSrc,
-																	  vk::MemoryPropertyFlagBits::eHostVisible |
-																	  vk::MemoryPropertyFlagBits::eHostCoherent,
-																	  byteSize,
-																	  vk::SharingMode::eExclusive,
-																	  _modelData.vertices.data());
+			const auto vertexStaging = std::make_shared<Graphics::Buffer>(vkAllocator,
+																		  vk::BufferUsageFlagBits::eTransferSrc,
+																		  vk::MemoryPropertyFlagBits::eHostVisible |
+																		  vk::MemoryPropertyFlagBits::eHostCoherent,
+																		  byteSize,
+																		  _modelData.vertices.data());
 
-			const auto vertexBuffer = Graphics::Buffer::CreateBuffer(vulkan->getCore(),
-																	 vkAllocator,
-																	 vk::BufferUsageFlagBits::eVertexBuffer |
-																	 vk::BufferUsageFlagBits::eTransferDst,
-																	 vk::MemoryPropertyFlagBits::eDeviceLocal,
-																	 byteSize);
+			const auto vertexBuffer = std::make_shared<Graphics::Buffer>(vkAllocator,
+																		 vk::BufferUsageFlagBits::eVertexBuffer |
+																		 vk::BufferUsageFlagBits::eTransferDst,
+																		 vk::MemoryPropertyFlagBits::eDeviceLocal,
+																		 byteSize);
 
 			const vk::BufferCopy vertexBufferCopy(0, 0, byteSize);
 
 			// upload index data
 			byteSize = _modelData.indices.size() * sizeof(uint32_t);
-			const auto indexStaging = Graphics::Buffer::CreateBuffer(vulkan->getCore(),
-																	 vkAllocator,
-																	 vk::BufferUsageFlagBits::eTransferSrc,
-																	 vk::MemoryPropertyFlagBits::eHostVisible |
-																	 vk::MemoryPropertyFlagBits::eHostCoherent,
-																	 byteSize,
-																	 vk::SharingMode::eExclusive,
-																	 _modelData.indices.data());
+			const auto indexStaging = std::make_shared<Graphics::Buffer>(vkAllocator,
+																		 vk::BufferUsageFlagBits::eTransferSrc,
+																		 vk::MemoryPropertyFlagBits::eHostVisible |
+																		 vk::MemoryPropertyFlagBits::eHostCoherent,
+																		 byteSize,
+																		 _modelData.indices.data());
 
-			const auto indexBuffer = Graphics::Buffer::CreateBuffer(vulkan->getCore(),
-																	vkAllocator,
-																	vk::BufferUsageFlagBits::eTransferDst |
-																	vk::BufferUsageFlagBits::eIndexBuffer,
-																	vk::MemoryPropertyFlagBits::eDeviceLocal,
-																	byteSize);
+			const auto indexBuffer = std::make_shared<Graphics::Buffer>(vkAllocator,
+																		vk::BufferUsageFlagBits::eTransferDst |
+																		vk::BufferUsageFlagBits::eIndexBuffer,
+																		vk::MemoryPropertyFlagBits::eDeviceLocal,
+																		byteSize);
 
 			const vk::BufferCopy indexBufferCopy(0, 0, byteSize);
 
-			cmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
-			cmd.copyBuffer(vertexStaging->buffer, vertexBuffer->buffer, vertexBufferCopy);
-			cmd.copyBuffer(indexStaging->buffer, indexBuffer->buffer, indexBufferCopy);
-			cmd.end();
+			cmd->begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+			cmd->copyBuffer(vertexStaging->get(), vertexBuffer->get(), vertexBufferCopy);
+			cmd->copyBuffer(indexStaging->get(), indexBuffer->get(), indexBufferCopy);
+			cmd->end();
 
 			vk::SubmitInfo submitInfo;
 			submitInfo.commandBufferCount = 1;
-			submitInfo.pCommandBuffers = &cmd;
+			submitInfo.pCommandBuffers = &(*cmd);
 
-			vulkan->getCore()->getQueues().transfer.value().submit(submitInfo, mFence.get());
-			vulkan->getLogicalDevice().waitForFences(mFence.get(), VK_TRUE, std::numeric_limits<uint64_t>::max());
-			vulkan->getLogicalDevice().resetFences(mFence.get());
+			vkDevice->getQueueSet().transfer.value().submit(submitInfo, mFence.get());
+			mFence.wait();
+			mFence.reset();
 
 			return { vertexBuffer, indexBuffer };
 		}

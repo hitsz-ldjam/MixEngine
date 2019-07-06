@@ -13,7 +13,7 @@ namespace Mix {
 
 	namespace Resource {
 		class Model :public ResourceBase {
-			friend class ModelParseBase;
+			friend class ModelParserBase;
 		public:
 			Model() :mData(std::make_shared<DataType>()) {}
 

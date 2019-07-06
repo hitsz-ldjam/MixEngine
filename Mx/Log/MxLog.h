@@ -29,25 +29,19 @@ namespace Mix {
                 return sOutputMode;
             }
 
-            static void Info(const std::string& _str, const uint32_t _out = 0);
-
             template<const uint32_t _Out = 0, typename... _Args>
             static void Info(const std::string& _format, _Args... _args) {
-                Info(Utils::StringFormat(_format, _args...), _Out);
+                Info(_Out, Utils::StringFormat(_format, _args...));
             }
-
-            static void Error(const std::string& _str, const uint32_t _out = 0);
 
             template<const uint32_t _Out = 0, typename... _Args>
             static void Error(const std::string& _format, _Args... _args) {
-                Error(Utils::StringFormat(_format, _args...), _Out);
+                Error(_Out, Utils::StringFormat(_format, _args...));
             }
-
-            static void Warning(const std::string& _str, const uint32_t _out = 0);
 
             template<const uint32_t _Out = 0, typename... _Args>
             static void Warning(const std::string& _format, _Args... _args) {
-                Warning(Utils::StringFormat(_format, _args...), _Out);
+                Warning(_Out, Utils::StringFormat(_format, _args...));
             }
 
             static void OpenLogFile(const std::filesystem::path& _path);
@@ -65,6 +59,12 @@ namespace Mix {
             }
 
         private:
+			static void Info(const uint32_t _out, const std::string& _str);
+
+			static void Error(const uint32_t _out, const std::string& _str);
+
+			static void Warning(const uint32_t _out, const std::string& _str);
+
             static std::mutex sMutex;
             static std::ofstream sFileStream;
 

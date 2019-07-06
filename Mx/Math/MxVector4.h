@@ -28,6 +28,8 @@ namespace Mix {
 				};
 
 				glm::vec<4, _Ty, glm::defaultp> vec;
+
+				_Ty linear[4];
 			};
 
 			static const Vector4 Zero;

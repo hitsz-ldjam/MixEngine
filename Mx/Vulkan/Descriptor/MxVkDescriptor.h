@@ -2,97 +2,104 @@
 #ifndef MX_VK_DESCRIPTOR_H_
 #define MX_VK_DESCRIPTOR_H_
 
-#include "../Core/MxVkCore.h"
-
+#include "../Device/MxVkDevice.h"
 #include <map>
 
 namespace Mix {
-    namespace Graphics {
-        class  WriteDescriptorSet {
-        public:
-            WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorImageInfo &_imageInfo) :
-                mWriteDescriptorSet(_writeDescriptorSet),
-                mImageInfo(std::make_unique<vk::DescriptorImageInfo>(_imageInfo)),
-                mBufferInfo(nullptr) {
-                mWriteDescriptorSet.pImageInfo = mImageInfo.get();
-            }
+	namespace Graphics {
+		class  WriteDescriptorSet {
+		public:
+			WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorImageInfo &_imageInfo) :
+				mWriteDescriptorSet(_writeDescriptorSet),
+				mImageInfo(std::make_unique<vk::DescriptorImageInfo>(_imageInfo)),
+				mBufferInfo(nullptr) {
+				mWriteDescriptorSet.pImageInfo = mImageInfo.get();
+			}
 
-            WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorBufferInfo &_bufferInfo) :
-                mWriteDescriptorSet(_writeDescriptorSet),
-                mImageInfo(nullptr),
-                mBufferInfo(std::make_unique<vk::DescriptorBufferInfo>(_bufferInfo)) {
-                mWriteDescriptorSet.pBufferInfo = mBufferInfo.get();
-            }
+			WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorBufferInfo &_bufferInfo) :
+				mWriteDescriptorSet(_writeDescriptorSet),
+				mImageInfo(nullptr),
+				mBufferInfo(std::make_unique<vk::DescriptorBufferInfo>(_bufferInfo)) {
+				mWriteDescriptorSet.pBufferInfo = mBufferInfo.get();
+			}
 
-            const VkWriteDescriptorSet &get() const { return mWriteDescriptorSet; }
+			const VkWriteDescriptorSet &get() const { return mWriteDescriptorSet; }
 
-        private:
-            vk::WriteDescriptorSet mWriteDescriptorSet;
-            std::unique_ptr<vk::DescriptorImageInfo> mImageInfo;
-            std::unique_ptr<vk::DescriptorBufferInfo> mBufferInfo;
-        };
+		private:
+			vk::WriteDescriptorSet mWriteDescriptorSet;
+			std::unique_ptr<vk::DescriptorImageInfo> mImageInfo;
+			std::unique_ptr<vk::DescriptorBufferInfo> mBufferInfo;
+		};
 
-        class DescriptorSetLayout :public GraphicsComponent {
-        public:
-            ~DescriptorSetLayout() { destroy(); }
+		class DescriptorSetLayout : public GeneralBase::NoCopyBase {
+		public:
+			explicit DescriptorSetLayout(const std::shared_ptr<Device>& _device)
+				:mDevice(_device), mBindings(new std::vector<vk::DescriptorSetLayoutBinding>()) {
+			}
 
-            void init(const std::shared_ptr<Core>& _core) {
-                setCore(_core);
-            }
+			void addBindings(const uint32_t _binding,
+							 const vk::DescriptorType _type,
+							 const uint32_t _count,
+							 const vk::ShaderStageFlags _stage,
+							 const vk::Sampler* _immutableSamplers = nullptr);
 
-            void create();
+			void create();
 
-            void addBindings(const uint32_t _binding,
-                             const vk::DescriptorType _type,
-                             const uint32_t _count,
-                             const vk::ShaderStageFlags _stage,
-                             const vk::Sampler* _immutableSamplers = nullptr);
+			const vk::DescriptorSetLayout& get() const { return *mLayout; }
 
-            const vk::DescriptorSetLayout& get() const { return mLayout; };
+			std::shared_ptr<Device> getDevice() const { return mDevice; }
 
-            void destroy();
+			const std::vector<vk::DescriptorSetLayoutBinding>& getBindings() const { return *mBindings; }
 
-        private:
-            vk::DescriptorSetLayout mLayout;
-            std::vector<vk::DescriptorSetLayoutBinding> mBindings;
-
-            void clear() { mBindings.clear(); }
-        };
-
+		private:
+			std::shared_ptr<Device> mDevice;
+			vk::UniqueDescriptorSetLayout mLayout;
+			std::shared_ptr<std::vector<vk::DescriptorSetLayoutBinding>> mBindings;
+		};
 
 
-        class DescriptorPool :public GraphicsComponent {
-        public:
-            virtual ~DescriptorPool() { destroy(); }
 
-            void init(const std::shared_ptr<Core>& _core) {
-                setCore(_core);
-            }
+		class DescriptorPool :public GeneralBase::NoCopyBase {
+		public:
+			~DescriptorPool();
 
-            void create(uint32_t _maxSets);
+			explicit DescriptorPool(const std::shared_ptr<Device>& _device) :mDevice(_device) {}
 
-            void addPoolSize(vk::DescriptorType _type, uint32_t _count);
+			DescriptorPool(DescriptorPool&& _other) noexcept { swap(_other); }
 
-            vk::DescriptorPool get() const { return mDescriptorPool; }
+			DescriptorPool& operator=(DescriptorPool&& _other) noexcept { swap(_other); return *this; }
 
-            std::vector<vk::DescriptorSet> allocDescriptorSet(const std::vector<vk::DescriptorSetLayout>& _layouts) const;
+			void swap(DescriptorPool& _other) noexcept;
 
-            std::vector<vk::DescriptorSet> allocDescriptorSet(const vk::DescriptorSetLayout _layout, const uint32_t _count) const;
+			void create(uint32_t _maxSets);
 
-            vk::DescriptorSet allocDescriptorSet(const vk::DescriptorSetLayout _layout) const;
+			void addPoolSize(vk::DescriptorType _type, uint32_t _count);
 
-            std::vector<vk::DescriptorSet> allocDescriptorSet(const std::vector<DescriptorSetLayout>& _layouts) const;
+			const vk::DescriptorPool& get() const { return mDescriptorPool; }
 
-            std::vector<vk::DescriptorSet> allocDescriptorSet(const DescriptorSetLayout& _layout, const uint32_t _count) const;
+			std::shared_ptr<Device> getDevice() const { return mDevice; }
 
-            vk::DescriptorSet allocDescriptorSet(const DescriptorSetLayout& _layout) const;
+			std::vector<vk::DescriptorSet> allocDescriptorSet(const std::vector<vk::DescriptorSetLayout>& _layouts) const;
 
-            void destroy();
+			std::vector<vk::DescriptorSet> allocDescriptorSet(const vk::DescriptorSetLayout _layout, const uint32_t _count) const;
 
-        private:
-            vk::DescriptorPool mDescriptorPool;
-            std::map<vk::DescriptorType, uint32_t> mPoolSizes;
-        };
-    }
+			vk::DescriptorSet allocDescriptorSet(const vk::DescriptorSetLayout _layout) const;
+
+			std::vector<vk::DescriptorSet> allocDescriptorSet(const std::vector<DescriptorSetLayout>& _layouts) const;
+
+			std::vector<vk::DescriptorSet> allocDescriptorSet(const DescriptorSetLayout& _layout, const uint32_t _count) const;
+
+			vk::DescriptorSet allocDescriptorSet(const DescriptorSetLayout& _layout) const;
+
+			void dealloc(const vk::DescriptorSet& _set) const;
+
+			void dealloc(const std::vector<vk::DescriptorSet>& _sets) const;
+
+		private:
+			vk::DescriptorPool mDescriptorPool;
+			std::shared_ptr<Device> mDevice;
+			std::map<vk::DescriptorType, uint32_t> mPoolSizes;
+		};
+	}
 }
 #endif // !MX_VK_DESCRIPTOR_H_

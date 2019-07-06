@@ -4,12 +4,13 @@
 
 #include "MxResourceParserBase.hpp"
 #include "MxParserRegister.hpp"
+#include "../Engine/MxModuleBase.h"
 
 namespace Mix {
 	namespace Resource {
 		class ResourceBase;
 
-		class ResourceLoader {
+		class ResourceLoader : public ModuleBase {
 		public:
 			/**
 			 * \brief Initialize the Resources

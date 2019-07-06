@@ -44,9 +44,9 @@ namespace Mix {
 				vk::Filter magFilter = vk::Filter::eLinear;
 
 				struct {
-					vk::SamplerAddressMode U = vk::SamplerAddressMode::eClampToEdge;
-					vk::SamplerAddressMode V = vk::SamplerAddressMode::eClampToEdge;
-					vk::SamplerAddressMode W = vk::SamplerAddressMode::eClampToEdge;
+					vk::SamplerAddressMode u = vk::SamplerAddressMode::eClampToEdge;
+					vk::SamplerAddressMode v = vk::SamplerAddressMode::eClampToEdge;
+					vk::SamplerAddressMode w = vk::SamplerAddressMode::eClampToEdge;
 				}addressMode;
 			};
 

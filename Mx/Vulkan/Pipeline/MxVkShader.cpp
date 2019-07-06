@@ -1,43 +1,44 @@
 #include "MxVkShader.h"
 
-#include "../Core/MxVkExcept.hpp"
+#include "../../Exceptions/MxExceptions.hpp"
+#include "shaderc/shaderc.hpp"
+#include "../../Log/MxLog.h"
+#include "../../Resource/Shader/MxShaderSource.h"
 
 namespace Mix {
-    namespace Graphics {
-        void ShaderMgr::destroy() {
-            if (!mCore)
-                return;
+	namespace Graphics {
+		Shader::Shader(const std::shared_ptr<Device>& _device,
+					   const uint32_t* _data,
+					   const uint32_t& _size,
+					   const vk::ShaderStageFlagBits& _stage) :mDevice(_device) {
+			assert(_data && _size > 0);
+			vk::ShaderModuleCreateInfo createInfo;
+			createInfo.pCode = _data;
+			createInfo.codeSize = _size;
 
-            for (auto& pair : mModules) {
-                mCore->getDevice().destroyShaderModule(pair.second.module);
-            }
-            mModules.clear();
-            mCore = nullptr;
-        }
+			mModule = mDevice->get().createShaderModule(createInfo);
+			mStage = _stage;
+		}
 
-        void ShaderMgr::createShader(const std::string & _name, const char * _data, const size_t _size, vk::ShaderStageFlagBits _stage) {
-            if (mModules.count(_name) != 0)
-                throw ShaderAlreadyExist(_name);
+		Shader::Shader(const std::shared_ptr<Device>& _device, const Resource::ShaderSource& _source):mDevice(_device) {
+			vk::ShaderModuleCreateInfo createInfo;
+			createInfo.pCode = _source.getSprvData();
+			createInfo.codeSize = _source.getSprvDataSize();
+			
+			mModule = mDevice->get().createShaderModule(createInfo);
+			mStage = _source.getStage();
+		}
 
-            vk::ShaderModuleCreateInfo createInfo;
-            createInfo.codeSize = _size;
-            createInfo.pCode = reinterpret_cast<const uint32_t*>(_data);
+		Shader::~Shader() {
+			if (mModule)
+				mDevice->get().destroyShaderModule(mModule);
+		}
 
-            const vk::ShaderModule temp = mCore->getDevice().createShaderModule(createInfo);
-            mModules.insert(std::make_pair(_name, ShaderModule(temp, _stage)));
-        }
-
-        const ShaderModule & ShaderMgr::getModule(const std::string & _name) {
-            if (mModules.count(_name) == 0)
-                throw ShaderNotFound(_name);
-
-            return mModules[_name];
-        }
-        void ShaderMgr::destroyModule(const std::string & _name) {
-            if (mModules.count(_name) == 0)
-                throw ShaderNotFound(_name);
-
-            mCore->getDevice().destroyShaderModule(mModules[_name].module);
-        }
-    }
+		void Shader::swap(Shader& _other) noexcept {
+			using std::swap;
+			swap(mDevice, _other.mDevice);
+			swap(mModule, _other.mModule);
+			swap(mStage, _other.mStage);
+		}
+	}
 }

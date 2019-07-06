@@ -11,5 +11,5 @@ void main()
 {
 	//outColor=texture(mySampler,vec2(inUV));
 	vec3 normal=normalize(inNormal);
-	outColor=vec4(normal,1.0f);
+	outColor=vec4(inNormal,1.0f);
 }

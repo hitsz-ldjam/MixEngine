@@ -8,6 +8,7 @@
 #include <glm/vec2.hpp>
 
 #include <string>
+#include "../Math/MxVector2.h"
 
 namespace Mix {
 
@@ -104,8 +105,8 @@ namespace Mix {
             return position;
         }
 
-        static glm::ivec2 MousePositionDelta() {
-            glm::ivec2 delta;
+        static Math::Vector2i MousePositionDelta() {
+			Math::Vector2i delta;
             SDL_GetRelativeMouseState(&delta.x, &delta.y);
             return delta;
         }
@@ -116,7 +117,7 @@ namespace Mix {
         }
 
         /** @return Positive for upwards, negative for downwards. */
-        static glm::ivec2 MouseScrollDelta() {
+        static Math::Vector2i MouseScrollDelta() {
             return mouseScrollDelta;
         }
 
@@ -141,7 +142,7 @@ namespace Mix {
         static bool anyKey;
         static bool anyKeyDown;
 
-        static glm::ivec2 mouseScrollDelta;
+        static Math::Vector2i mouseScrollDelta;
         // FIRST_PRESSED | PRESSED | RELEASED
         static Uint8 mouseButtonEvent[SDL_BUTTON_X2];
 
