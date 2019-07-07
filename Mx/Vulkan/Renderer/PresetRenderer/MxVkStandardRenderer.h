@@ -36,8 +36,6 @@ namespace Mix {
 			std::shared_ptr<Pipeline> mPipeline;
 			std::shared_ptr<RenderPass> mRenderPass;
 
-			std::map<std::string, std::shared_ptr<DescriptorSetLayout>> mDescriptorSetLayout;
-
 			std::vector<FrameBuffer> mFrameBuffers;
 
 			std::shared_ptr<Image> mDepthStencil;
@@ -46,7 +44,6 @@ namespace Mix {
 
 			// test GUI
 			Ui* mUi = nullptr;
-			std::shared_ptr<DescriptorSetLayout> mGuiDescriptorSetLayout;
 			vk::DescriptorSet mGuiDescriptorSet;
 
 			std::shared_ptr<Pipeline> mGuiPipeline;

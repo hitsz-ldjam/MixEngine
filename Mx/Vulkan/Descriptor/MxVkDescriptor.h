@@ -4,6 +4,7 @@
 
 #include "../Device/MxVkDevice.h"
 #include <map>
+#include "../../Utils/MxArrayProxy.h"
 
 namespace Mix {
 	namespace Graphics {
@@ -42,6 +43,8 @@ namespace Mix {
 							 const uint32_t _count,
 							 const vk::ShaderStageFlags _stage,
 							 const vk::Sampler* _immutableSamplers = nullptr);
+
+			void addBindings(ArrayProxy<const vk::DescriptorSetLayoutBinding> _bindings);
 
 			void create();
 

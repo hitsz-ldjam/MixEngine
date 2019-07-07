@@ -42,28 +42,10 @@ namespace Mix {
 											 sizeof(Uniform::CameraUniform));
 			}
 
-			buildDescriptor();
 			buildRenderPass();
 			buildFrameBuffer();
-
-			// Test Gui
-			mUi = MixEngine::Instance().getModule<Ui>();
-			mGuiDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(mDevice);
-			mGuiDescriptorSetLayout->addBindings(0, vk::DescriptorType::eCombinedImageSampler, 1,
-												 vk::ShaderStageFlagBits::eFragment);
-			mGuiDescriptorSetLayout->create();
-
-			mGuiDescriptorSet = mVulkan->getDescriptorPool()->allocDescriptorSet(mGuiDescriptorSetLayout->get());
-
-			vk::DescriptorImageInfo info;
-			info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-			info.sampler = mUi->getFontTexture().getSampler();
-			info.imageView = mUi->getFontTexture().getImageView();
-
-			vk::WriteDescriptorSet write{ mGuiDescriptorSet, 0, 0, 1, vk::DescriptorType::eCombinedImageSampler, &info };
-			mDevice->get().updateDescriptorSets(write, nullptr);
-
 			buildPipeline();
+			buildDescriptor();
 		}
 
 		void StandardRenderer::update(const uint32_t _currFrame) {
@@ -213,14 +195,7 @@ namespace Mix {
 		}
 
 		void StandardRenderer::buildDescriptor() {
-			auto layout = std::make_shared<DescriptorSetLayout>(mDevice);
-			layout->addBindings(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
-			layout->addBindings(1, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eVertex);
-			layout->create();
-
-			mDescriptorSetLayout["Layout"] = layout;
-
-			mDescriptorSets = mVulkan->getDescriptorPool()->allocDescriptorSet(mDescriptorSetLayout["Layout"]->get(),
+			mDescriptorSets = mVulkan->getDescriptorPool()->allocDescriptorSet(mPipeline->descriptorSetLayouts()[0]->get(),
 																			   mSwapchain->imageCount());
 
 			// update descriptor sets
@@ -232,7 +207,7 @@ namespace Mix {
 				descriptorWrites[0].dstArrayElement = 0;
 				descriptorWrites[0].descriptorType = vk::DescriptorType::eUniformBuffer;
 				//the type of the descriptor that will be wirte in
-				descriptorWrites[0].descriptorCount = 1;                                    //descriptor count
+				descriptorWrites[0].descriptorCount = 1;                                //descriptor count
 				descriptorWrites[0].pBufferInfo = &mCameraUniforms[i].descriptorInfo(); //descriptorBufferInfo
 				descriptorWrites[0].pImageInfo = nullptr;
 				descriptorWrites[0].pTexelBufferView = nullptr;
@@ -244,7 +219,16 @@ namespace Mix {
 				mDevice->get().updateDescriptorSets(descriptorWrites, nullptr);
 			}
 
+			mGuiDescriptorSet = mVulkan->getDescriptorPool()->allocDescriptorSet(mGuiPipeline->descriptorSetLayouts()[0]->get());
 
+			mUi = MixEngine::Instance().getModule<Ui>();
+			vk::DescriptorImageInfo info;
+			info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			info.sampler = mUi->getFontTexture().getSampler();
+			info.imageView = mUi->getFontTexture().getImageView();
+
+			vk::WriteDescriptorSet write{ mGuiDescriptorSet, 0, 0, 1, vk::DescriptorType::eCombinedImageSampler, &info };
+			mDevice->get().updateDescriptorSets(write, nullptr);
 		}
 
 		void StandardRenderer::buildRenderPass() {
@@ -294,18 +278,6 @@ namespace Mix {
 		}
 
 		void StandardRenderer::buildPipeline() {
-			PipelineFactory factory;
-			factory.begin();
-			// pipeline
-			auto loader = MixEngine::Instance().getModule<Resource::ResourceLoader>();
-			// load shader
-			auto vert = std::make_shared<Shader>(mDevice,
-												 *loader->load<Resource::ShaderSource
-												 >("TestResources/Shaders/vShader.vert"));
-			auto frag = std::make_shared<Shader>(mDevice,
-												 *loader->load<Resource::ShaderSource
-												 >("TestResources/Shaders/fShader.frag"));
-
 			vk::Viewport viewport{
 				0.0f, 0.0f,
 				static_cast<float>(mSwapchain->width()),
@@ -315,71 +287,33 @@ namespace Mix {
 
 			vk::Rect2D scissor{ {0, 0}, mSwapchain->extent() };
 
-			std::vector<vk::VertexInputBindingDescription> binding = { {0, 32} };
-			std::vector<vk::VertexInputAttributeDescription> attribute = {
-				{0, 0, vk::Format::eR32G32B32Sfloat, 0},
-				{1, 0, vk::Format::eR32G32B32Sfloat, 12},
-				{2, 0, vk::Format::eR32G32Sfloat, 24}
-			};
+			std::ifstream inFile;
+			inFile.open("TestResources/pipeline/pipeline.json");
+			nlohmann::json json = nlohmann::json::parse(inFile);
+			mPipeline = PipelineFactory::CreatePipelineFromJson(mRenderPass, 0, json, viewport, scissor);
 
-			factory.setShader(*vert);
-			factory.setShader(*frag);
-			factory.setVertexInput(binding, attribute);
-			factory.setViewport(viewport);
-			factory.setScissor(scissor);
-			factory.setDepthTest(true);
-			factory.setDescriptorSetLayout(mDescriptorSetLayout["Layout"]);
-			mPipeline = factory.createPipeline(mRenderPass, 0);
-
+			inFile.close();
 			// Test Gui
-			binding = { {0, 20} };
-
-			attribute = {
-				{0, 0, vk::Format::eR32G32Sfloat, 0},
-				{1, 0, vk::Format::eR32G32Sfloat, 8},
-				{2, 0, vk::Format::eR8G8B8A8Unorm, 16 }
-			};
-
-			vert = std::make_shared<Shader>(mDevice,
-											*loader->load<Resource::ShaderSource
-											>("TestResources/Shaders/GuiShader.vert"));
-
-			frag = std::make_shared<Shader>(mDevice,
-											*loader->load<Resource::ShaderSource
-											>("TestResources/Shaders/GuiShader.frag"));
-
-			factory.setShader(*vert);
-			factory.setShader(*frag);
-			factory.setVertexInput(binding, attribute);
-			factory.setPushConstantRanges({ {vk::ShaderStageFlagBits::eVertex , 0, sizeof(float) * 6} });
-			factory.setViewport(viewport);
-			factory.setScissor(scissor);
-			factory.setRasterization(vk::PolygonMode::eFill, vk::CullModeFlagBits::eNone,
-									 vk::FrontFace::eCounterClockwise);
-
-			vk::PipelineColorBlendAttachmentState blend;
-			blend.blendEnable = true;
-			blend.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
-			blend.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
-			blend.colorBlendOp = vk::BlendOp::eAdd;
-			blend.srcAlphaBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
-			blend.dstAlphaBlendFactor = vk::BlendFactor::eZero;
-			blend.alphaBlendOp = vk::BlendOp::eAdd;
-			blend.colorWriteMask =
-				vk::ColorComponentFlagBits::eR |
-				vk::ColorComponentFlagBits::eG |
-				vk::ColorComponentFlagBits::eB |
-				vk::ColorComponentFlagBits::eA;
-			factory.setBlendAttachments(blend);
-			factory.setDepthTest(false);
-			factory.setDescriptorSetLayout(mGuiDescriptorSetLayout);
-			factory.setDynamicState({
-				vk::DynamicState::eViewport,
-				vk::DynamicState::eScissor
-									});
-
-			mGuiPipeline = factory.createPipeline(mRenderPass, 0);
+			inFile.open("TestResources/pipeline/gui_pipeline.json");
+			json = nlohmann::json::parse(inFile);
+			mGuiPipeline = PipelineFactory::CreatePipelineFromJson(mRenderPass, 0, json, viewport, scissor);
 		}
+		/*"attachments": [
+			{
+				"blendEnable": false,
+				"color": {
+					"srcFactor": "SrcAlpha",
+					"dstFactor": "OneMinusSrcAlpha",
+					"blendOp": "Add"
+				},
+				"alpha": {
+					"srcFactor": "OneMinusSrcAlpha",
+					"dstFactor": "Zero",
+					"blendOp": "Add"
+				},
+				"colorWriteMask": 15
+			}
+		]*/
 
 	}
 }

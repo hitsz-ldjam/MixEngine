@@ -8,10 +8,6 @@
 #include <vulkan/vulkan.hpp>
 #include <map>
 
-namespace nlohmann {
-	class json;
-}
-
 namespace Mix {
 	namespace Graphics {
 		class Pipeline;
@@ -24,7 +20,9 @@ namespace Mix {
 		public:
 			static std::shared_ptr<Pipeline> CreatePipelineFromJson(const std::shared_ptr<RenderPass>& _renderPass,
 																	const uint32_t _subpassIndex,
-																	const nlohmann::json& _json);
+																	const nlohmann::json& _json,
+																	ArrayProxy<const vk::Viewport> _viewports = {},
+																	ArrayProxy<const vk::Rect2D> _scissors = {});
 
 			void begin();
 
@@ -75,7 +73,7 @@ namespace Mix {
 			void setBlendAttachments(ArrayProxy<const vk::PipelineColorBlendAttachmentState> _attachments) const;
 
 			void setBlend(const bool _logicalOpEnable = false,
-						  const vk::LogicOp _logicOp = vk::LogicOp::eCopy,
+						  const vk::LogicOp _logicOp = vk::LogicOp::eClear,
 						  const float _constantR = 0.0,
 						  const float _constantG = 0.0,
 						  const float _constantB = 0.0,
@@ -101,8 +99,18 @@ namespace Mix {
 			static void CreateDepthStencilFromJson(const nlohmann::json& _json, PipelineFactory& _factory);
 			static void CreateBlendFromJson(const nlohmann::json& _json, PipelineFactory& _factory);
 			static void CreateDynamicStateFromJson(const nlohmann::json& _json, PipelineFactory& _factory);
-			static void CreateDescriptorSetLayoutFromJson(const nlohmann::json& _json, PipelineFactory& _factory);
-			static vk::Format GetVkFormatFromJson(const std::string& _str);
+			static void CreatePushConstantFromJson(const nlohmann::json& _json, PipelineFactory& _factory);
+			static void CreateDescriptorSetLayoutFromJson(const nlohmann::json& _json, PipelineFactory& _factory, const std::shared_ptr<Device>& _device);
+
+			static vk::ShaderStageFlagBits GetVkShaderStageFromStr(const std::string& _str);
+			static vk::DescriptorType GetVkDescriptorTypeFromStr(const std::string& _str);
+			static vk::DynamicState GetVkDynamicStateFromStr(const std::string& _str);
+			static vk::BlendOp GetVkBlendOpFromStr(const std::string& _str);
+			static vk::BlendFactor GetVkBlendFactorFromStr(const std::string& _str);
+			static vk::LogicOp GetVkLogicOpFromStr(const std::string& _str);
+			static vk::Format GetVkFormatFromStr(const std::string& _str);
+			static vk::CompareOp GetVkCompareOpFromStr(const std::string& _str);
+			static vk::StencilOp GetVkStencilOpFromStr(const std::string& _str);
 
 			struct PipelineStates {
 				std::map<vk::ShaderStageFlagBits, vk::PipelineShaderStageCreateInfo> shaders;
@@ -111,7 +119,7 @@ namespace Mix {
 				vk::PipelineInputAssemblyStateCreateInfo inputAssembly = { {},vk::PrimitiveTopology::eTriangleList };
 				std::vector<vk::Viewport> viewports;
 				std::vector<vk::Rect2D> scissors;
-				vk::PipelineRasterizationStateCreateInfo rasterization = { {},false,false,vk::PolygonMode::eFill,vk::CullModeFlagBits::eBack,vk::FrontFace::eCounterClockwise,false,0.0f,0.0f,0.0f,1.0f };
+				vk::PipelineRasterizationStateCreateInfo rasterization = { {},false,false,vk::PolygonMode::eFill,vk::CullModeFlagBits::eNone,vk::FrontFace::eCounterClockwise,false,0.0f,0.0f,0.0f,1.0f };
 				vk::PipelineMultisampleStateCreateInfo multisample;
 				vk::PipelineDepthStencilStateCreateInfo depthStencil;
 				std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachments;

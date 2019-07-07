@@ -224,6 +224,13 @@ namespace Mix {
 			std::swap(mSubpassIndex, _other.mSubpassIndex);
 		}
 
+		Pipeline::~Pipeline() {
+			if(mPipeline) {
+				mRenderPass->getDevice()->get().destroyPipeline(mPipeline);
+				mRenderPass->getDevice()->get().destroyPipelineLayout(mPipelineLayout);
+			}
+		}
+
 		Pipeline::Pipeline(std::shared_ptr<RenderPass> _renderPass,
 						   ArrayProxy<std::shared_ptr<DescriptorSetLayout>> _descriptorSetLayout,
 						   const uint32_t _subpassIndex,

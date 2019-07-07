@@ -1,0 +1,78 @@
+{
+    "$schema": "./pipeline_schema.json",
+    "shaderStage": {
+        "vert": "TestResources/Shaders/GuiShader.vert",
+        "frag": "TestResources/Shaders/GuiShader.frag"
+    },
+    "vertexInput": [
+        {
+            "inputRate": "vertex",
+            "stride": 20,
+            "attribute": [
+                {
+                    "offset": 0,
+                    "format": "R32G32_Sfloat"
+                },
+                {
+                    "offset": 8,
+                    "format": "R32G32_Sfloat"
+                },
+                {
+                    "offset": 16,
+                    "format": "R8G8B8A8_Unorm"
+                }
+            ]
+        }
+    ],
+    "inputAssembly": {
+        "topology": "TriangleList"
+    },
+    "rasterization": {
+        "polygon": "Fill",
+        "cullMode": "None",
+        "frontFace": "CounterClockWise"
+    },
+    "blend": {
+        "attachments": [
+            {
+                "blendEnable": true,
+                "color": {
+                    "srcFactor": "SrcAlpha",
+                    "dstFactor": "OneMinusSrcAlpha",
+                    "blendOp": "Add"
+                },
+                "alpha": {
+                    "srcFactor": "OneMinusSrcAlpha",
+                    "dstFactor": "Zero",
+                    "blendOp": "Add"
+                },
+                "colorWriteMask": 15
+            }
+        ]
+    },
+    "depthStencil": {
+        "depthTest": {
+            "enable": false
+        }
+    },
+    "descriptorSetLayout": [
+        [
+            {
+                "type": "CombinedImageSampler",
+                "count": 1,
+                "stage": "frag"
+            }
+        ]
+    ],
+    "dynamicState": [
+        "Viewport",
+        "Scissor"
+    ],
+    "pushConstant": [
+        {
+            "stage": "vert",
+            "offset": 0,
+            "size": 24
+        }
+    ]
+}

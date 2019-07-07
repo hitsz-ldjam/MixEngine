@@ -1,0 +1,56 @@
+{
+    "$schema": "./pipeline_schema.json",
+    "shaderStage": {
+        "vert": "TestResources/Shaders/vShader.vert",
+        "frag": "TestResources/Shaders/fShader.frag"
+    },
+    "vertexInput": [
+        {
+            "inputRate": "vertex",
+            "stride": 32,
+            "attribute": [
+                {
+                    "offset": 0,
+                    "format": "R32G32B32_Sfloat"
+                },
+                {
+                    "offset": 12,
+                    "format": "R32G32B32_Sfloat"
+                },
+                {
+                    "offset": 24,
+                    "format": "R32G32_Sfloat"
+                }
+            ]
+        }
+    ],
+    "inputAssembly": {
+        "topology": "TriangleList"
+    },
+    "rasterization": {
+        "polygon": "Fill",
+        "cullMode": "Back",
+        "frontFace": "CounterClockWise"
+    },
+    "depthStencil": {
+        "depthTest": {
+            "enable": true,
+            "writeEnable": true,
+            "compareOp": "Less"
+        }
+    },
+    "descriptorSetLayout": [
+        [
+            {
+                "type": "UniformBuffer",
+                "count": 1,
+                "stage": "vert"
+            },
+            {
+                "type": "UniformBufferDynamic",
+                "count": 1,
+                "stage": "vert"
+            }
+        ]
+    ]
+}

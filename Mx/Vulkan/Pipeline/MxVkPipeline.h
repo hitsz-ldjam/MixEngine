@@ -6,10 +6,6 @@
 #include "../../Utils/MxArrayProxy.h"
 #include <map>
 
-namespace nlohmann {
-	class json;
-}
-
 namespace Mix {
 	namespace Graphics {
 		class Shader;
@@ -29,6 +25,8 @@ namespace Mix {
 			Pipeline& operator=(Pipeline&& _other) noexcept { swap(_other); return *this; }
 
 			void swap(Pipeline& _other) noexcept;
+
+			~Pipeline();
 
 			/*void addShader(const Shader& _shader, const vk::SpecializationInfo* _specInfo = nullptr) const;
 
