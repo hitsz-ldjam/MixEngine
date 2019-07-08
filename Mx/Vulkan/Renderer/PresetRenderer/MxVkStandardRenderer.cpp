@@ -4,9 +4,7 @@
 #include "../../Swapchain/MxVkSwapchain.h"
 #include "../../Pipeline/MxVkRenderPass.h"
 #include "../../../../MixEngine.h"
-#include "../../../Resource/MxResourceLoader.h"
 #include "../../Pipeline/MxVkPipeline.h"
-#include "../../Pipeline/MxVkShader.h"
 #include "../../FrameBuffer/MxVkFramebuffer.h"
 #include "../../../Component/MeshFilter/MxMeshFilter.h"
 #include "../../../Resource/Shader/MxShaderSource.h"
@@ -196,7 +194,7 @@ namespace Mix {
 		}
 
 		void StandardRenderer::buildDescriptor() {
-			mDescriptorSets = mVulkan->getDescriptorPool()->allocDescriptorSet(mPipeline->descriptorSetLayouts()[0]->get(),
+			mDescriptorSets = mVulkan->getDescriptorPool()->allocDescriptorSet(mPipeline->descriptorSetLayouts()[0].get(),
 																			   mSwapchain->imageCount());
 
 			// update descriptor sets
@@ -220,7 +218,7 @@ namespace Mix {
 				mDevice->get().updateDescriptorSets(descriptorWrites, nullptr);
 			}
 
-			mGuiDescriptorSet = mVulkan->getDescriptorPool()->allocDescriptorSet(mGuiPipeline->descriptorSetLayouts()[0]->get());
+			mGuiDescriptorSet = mVulkan->getDescriptorPool()->allocDescriptorSet(mGuiPipeline->descriptorSetLayouts()[0].get());
 
 			mUi = MixEngine::Instance().getModule<Ui>();
 			vk::DescriptorImageInfo info;
@@ -299,22 +297,5 @@ namespace Mix {
 			json = nlohmann::json::parse(inFile);
 			mGuiPipeline = PipelineFactory::CreatePipelineFromJson(mRenderPass, 0, json, viewport, scissor);
 		}
-		/*"attachments": [
-			{
-				"blendEnable": false,
-				"color": {
-					"srcFactor": "SrcAlpha",
-					"dstFactor": "OneMinusSrcAlpha",
-					"blendOp": "Add"
-				},
-				"alpha": {
-					"srcFactor": "OneMinusSrcAlpha",
-					"dstFactor": "Zero",
-					"blendOp": "Add"
-				},
-				"colorWriteMask": 15
-			}
-		]*/
-
 	}
 }

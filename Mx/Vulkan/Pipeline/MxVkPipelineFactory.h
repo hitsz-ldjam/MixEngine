@@ -3,6 +3,7 @@
 #define MX_VK_PIPELINE_FACTORY_H_
 
 #include "../../Utils/MxArrayProxy.h"
+#include "../Descriptor/MxVkDescriptor.h"
 #include <nlohmann/json.hpp>
 #include <memory>
 #include <vulkan/vulkan.hpp>
@@ -81,7 +82,7 @@ namespace Mix {
 
 			void setDynamicState(ArrayProxy<const vk::DynamicState> _dynamicStates) const;
 
-			void setDescriptorSetLayout(ArrayProxy<std::shared_ptr<DescriptorSetLayout>> _setLayouts) const;
+			void setDescriptorSetLayout(ArrayProxy<DescriptorSetLayout> _setLayouts) const;
 
 			void setPushConstantRanges(ArrayProxy<const vk::PushConstantRange> _ranges) const;
 
@@ -125,7 +126,7 @@ namespace Mix {
 				std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachments;
 				vk::PipelineColorBlendStateCreateInfo colorBlend;
 				std::vector<vk::DynamicState> dynamicStates;
-				std::vector<std::shared_ptr<DescriptorSetLayout>> descriptorSetLayouts;
+				std::vector<DescriptorSetLayout> descriptorSetLayouts;
 				std::vector<vk::PushConstantRange> pushConstantRanges;
 			};
 

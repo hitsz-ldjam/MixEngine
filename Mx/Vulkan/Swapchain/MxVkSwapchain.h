@@ -68,7 +68,7 @@ namespace Mix {
 
 			uint32_t imageCount() const { return mImageCount; }
 
-			size_t currFrame() const { return mCurrFrame; }
+			uint32_t currFrame() const { return mCurrFrame; }
 
 			vk::Result acquireNextImage();
 
@@ -94,8 +94,8 @@ namespace Mix {
 			vk::SurfaceFormatKHR mSurfaceFormat;
 			vk::PresentModeKHR mPresentMode = vk::PresentModeKHR::eFifo;
 			vk::Extent2D mExtent;
-			size_t mCurrFrame = 0;
-			size_t mNextImage = 0;
+			uint32_t mCurrFrame = 0;
+			uint32_t mNextImage = 0;
 
 			uint32_t mImageCount = 2;
 			std::vector<vk::Image> mImages;

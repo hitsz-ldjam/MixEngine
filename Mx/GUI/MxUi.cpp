@@ -87,8 +87,8 @@ namespace Mix {
 								  static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y));
 		{
 			auto mousePos = Input::MousePosition();
-			io.MousePos.x = mousePos.x;
-			io.MousePos.y = mousePos.y;
+			io.MousePos.x = static_cast<float>(mousePos.x);
+			io.MousePos.y = static_cast<float>(mousePos.y);
 		}
 
 		{

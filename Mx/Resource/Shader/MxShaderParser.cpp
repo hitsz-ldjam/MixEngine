@@ -40,9 +40,9 @@ namespace Mix {
 				}
 
 				auto spvCode = compileGlslToSpv(reinterpret_cast<const char*>(fileData.data()),
-												size,
-												kind,
-												_path.filename().string());
+				                                size,
+				                                kind,
+				                                _path.filename().string());
 
 				return std::make_shared<ShaderSource>(std::move(spvCode), stage);
 			}
@@ -95,9 +95,9 @@ namespace Mix {
 		}
 
 		std::vector<uint32_t> ShaderParser::compileGlslToSpv(const char* _data,
-															 const uint32_t _size,
-															 const shaderc_shader_kind _kind,
-															 const std::string& _name) const {
+		                                                     const size_t _size,
+		                                                     const shaderc_shader_kind _kind,
+		                                                     const std::string& _name) const {
 			shaderc::CompileOptions option;
 			option.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
 			option.SetSourceLanguage(shaderc_source_language_glsl);

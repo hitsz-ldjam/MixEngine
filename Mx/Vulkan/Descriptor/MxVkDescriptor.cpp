@@ -3,6 +3,36 @@
 namespace Mix {
 	namespace Graphics {
 
+		DescriptorSetLayout::DescriptorSetLayout(const DescriptorSetLayout& _other)
+			:mDevice(_other.mDevice), mBindings(_other.mBindings) {
+			create();
+		}
+
+		DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& _other) noexcept {
+			swap(_other);
+		}
+
+		DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout _other) {
+			swap(_other);
+			return *this;
+		}
+
+		DescriptorSetLayout& DescriptorSetLayout::operator=(DescriptorSetLayout&& _other) noexcept {
+			swap(_other);
+			return *this;
+		}
+
+		void DescriptorSetLayout::swap(DescriptorSetLayout& _other) noexcept {
+			std::swap(mDevice, _other.mDevice);
+			std::swap(mDescriptorSetLayout, _other.mDescriptorSetLayout);
+			std::swap(mBindings, _other.mBindings);
+		}
+
+		DescriptorSetLayout::~DescriptorSetLayout() {
+			if (mDescriptorSetLayout)
+				mDevice->get().destroyDescriptorSetLayout(mDescriptorSetLayout);
+		}
+
 		void DescriptorSetLayout::addBindings(const uint32_t _binding,
 											  const vk::DescriptorType _type,
 											  const uint32_t _count,
@@ -14,19 +44,21 @@ namespace Mix {
 			layoutBinding.descriptorCount = _count;
 			layoutBinding.stageFlags = _stage;
 			layoutBinding.pImmutableSamplers = _immutableSamplers;
-			mBindings->push_back(std::move(layoutBinding));
+			mBindings.push_back(std::move(layoutBinding));
 		}
 
 		void DescriptorSetLayout::addBindings(ArrayProxy<const vk::DescriptorSetLayoutBinding> _bindings) {
-			mBindings->insert(mBindings->end(), _bindings.begin(), _bindings.end());
+			mBindings.insert(mBindings.end(), _bindings.begin(), _bindings.end());
 		}
 
 		void DescriptorSetLayout::create() {
-			vk::DescriptorSetLayoutCreateInfo createInfo = {};
-			createInfo.pBindings = mBindings->data();
-			createInfo.bindingCount = static_cast<uint32_t>(mBindings->size());
+			if (mDevice) {
+				vk::DescriptorSetLayoutCreateInfo createInfo = {};
+				createInfo.pBindings = mBindings.data();
+				createInfo.bindingCount = static_cast<uint32_t>(mBindings.size());
 
-			mLayout = mDevice->get().createDescriptorSetLayoutUnique(createInfo);
+				mDescriptorSetLayout = mDevice->get().createDescriptorSetLayout(createInfo);
+			}
 		}
 
 		void DescriptorPool::addPoolSize(vk::DescriptorType _type, uint32_t _count) {

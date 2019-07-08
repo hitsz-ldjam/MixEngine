@@ -4,7 +4,6 @@
 #include "../../../MixEngine.h"
 #include "../../Resource/MxResourceLoader.h"
 #include "../../Resource/Shader/MxShaderSource.h"
-#include "../Descriptor/MxVkDescriptor.h"
 #include <nlohmann/json.hpp>
 
 namespace Mix {
@@ -312,12 +311,12 @@ namespace Mix {
 				}
 			}
 
-			std::vector<std::shared_ptr<DescriptorSetLayout>> descriptorSetLayouts;
+			std::vector<DescriptorSetLayout> descriptorSetLayouts;
 			for (auto& set : sets) {
-				auto setLayout = std::make_shared<DescriptorSetLayout>(_device);
-				setLayout->addBindings(set);
-				setLayout->create();
-				descriptorSetLayouts.push_back(setLayout);
+				auto setLayout = DescriptorSetLayout(_device);
+				setLayout.addBindings(set);
+				setLayout.create();
+				descriptorSetLayouts.push_back(std::move(setLayout));
 			}
 
 			_factory.setDescriptorSetLayout(descriptorSetLayouts);
@@ -619,7 +618,7 @@ namespace Mix {
 				mPipelineStates->dynamicStates.assign(_dynamicStates.begin(), _dynamicStates.end());
 		}
 
-		void PipelineFactory::setDescriptorSetLayout(ArrayProxy<std::shared_ptr<DescriptorSetLayout>> _setLayouts) const {
+		void PipelineFactory::setDescriptorSetLayout(ArrayProxy<DescriptorSetLayout> _setLayouts) const {
 			if (mPipelineStates)
 				mPipelineStates->descriptorSetLayouts.assign(_setLayouts.begin(), _setLayouts.end());
 		}
@@ -635,7 +634,7 @@ namespace Mix {
 			std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
 			descriptorSetLayouts.reserve(mPipelineStates->descriptorSetLayouts.size());
 			for (auto& layout : mPipelineStates->descriptorSetLayouts)
-				descriptorSetLayouts.emplace_back(layout->get());
+				descriptorSetLayouts.emplace_back(layout.get());
 
 			vk::PipelineLayoutCreateInfo layoutCreateInfo = {};
 			layoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();

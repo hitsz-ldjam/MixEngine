@@ -28,7 +28,7 @@ namespace Mix {
 
 			void clear();
 
-			uint32_t rendererCount() const { return mRenderers.size(); }
+			uint32_t rendererCount() const { return static_cast<uint32_t>(mRenderers.size()); }
 
 		private:
 			std::unordered_map<uint32_t, RendererBase*> mRenderers;

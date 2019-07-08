@@ -5,8 +5,6 @@
 #include "../../Resource/Model/MxMesh.h"
 
 namespace Mix {
-
-
 	class MeshFilter :public Component {
 		MX_DECLARE_RTTI;
 		MX_DECLARE_CLASS_FACTORY;

@@ -25,7 +25,7 @@ namespace Mix {
 			std::shared_ptr<Device> getDevice() const { return mDevice; }
 
 			explicit operator bool() const {
-				return mSemaphore != nullptr;
+				return static_cast<bool>(mSemaphore);
 			}
 
 		private:
@@ -58,7 +58,7 @@ namespace Mix {
 			bool isSignaled() const { return mDevice->get().getFenceStatus(mFence) == vk::Result::eSuccess; }
 
 			explicit operator bool() const {
-				return mFence != nullptr;
+				return static_cast<bool>(mFence);
 			}
 
 		private:

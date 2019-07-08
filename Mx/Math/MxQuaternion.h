@@ -7,130 +7,133 @@
 #include <glm/gtc/quaternion.hpp>
 
 namespace Mix {
-    namespace Math {
-        class Matrix4;
+	namespace Math {
+		class Matrix4;
 
-        class Quaternion {
-        public:
-            union {
-                struct {
-                    float x, y, z, w;
-                };
+		class Quaternion {
+		public:
+			union {
+				struct {
+					float x, y, z, w;
+				};
 
-                glm::quat qua;
-            };
+				glm::quat qua;
+			};
 
-            static const Quaternion Identity;
+			static const Quaternion Identity;
 
-            Quaternion() :x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
+			Quaternion() :x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
 
-            explicit Quaternion(const glm::quat& _quat) :qua(_quat) {}
+			explicit Quaternion(const glm::quat& _quat) :qua(_quat) {}
 
-            Quaternion(const float _w, const float _x, const float _y, const float _z);
+			Quaternion(const float _w, const float _x, const float _y, const float _z);
 
-            explicit Quaternion(const Vector4f& _source);
+			template<typename _W, typename _X, typename _Y, typename _Z>
+			Quaternion(_W const& _w, _X const& _x, _Y const& _y, _Z const& _z) :Quaternion(static_cast<float>(_w), static_cast<float>(_x), static_cast<float>(_y), static_cast<float>(_z)) {}
 
-            explicit Quaternion(const float _source[4]);
+			explicit Quaternion(const Vector4f& _source);
 
-            explicit Quaternion(const Matrix4& _source);
+			explicit Quaternion(const float _source[4]);
 
-            Quaternion multiply(const Quaternion& _other) const;
+			explicit Quaternion(const Matrix4& _source);
 
-            Vector3f multiply(const Vector3f& _point) const;
+			Quaternion multiply(const Quaternion& _other) const;
 
-            float dot(const Quaternion& _other) const;
+			Vector3f multiply(const Vector3f& _point) const;
 
-            Quaternion lerp(const Quaternion& _other, const float _step) const;
+			float dot(const Quaternion& _other) const;
 
-            Quaternion slerp(const Quaternion& _other, const float _step) const;
+			Quaternion lerp(const Quaternion& _other, const float _step) const;
 
-            Quaternion inverse() const;
+			Quaternion slerp(const Quaternion& _other, const float _step) const;
 
-            float length() const;
+			Quaternion inverse() const;
 
-            Quaternion normalize() const;
+			float length() const;
 
-            Matrix4 toMatrix() const;
+			Quaternion normalize() const;
 
-            Vector3f toEuler() const;
+			Matrix4 toMatrix() const;
 
-            void toAxisAngle(float& _angle, Vector3f& _axis) const;
+			Vector3f toEuler() const;
 
-            float getAngle() const;
+			void toAxisAngle(float& _angle, Vector3f& _axis) const;
 
-            Vector3f getAxis() const;
+			float getAngle() const;
 
-            bool operator==(const Quaternion& _other) const {
-                return x == _other.x && y == _other.y && z == _other.z && w == _other.w;
-            }
+			Vector3f getAxis() const;
 
-            bool operator!=(const Quaternion& _other) const {
-                return !(*this == _other);
-            }
+			bool operator==(const Quaternion& _other) const {
+				return x == _other.x && y == _other.y && z == _other.z && w == _other.w;
+			}
 
-            const float& operator[](const uint32_t _index) const;
+			bool operator!=(const Quaternion& _other) const {
+				return !(*this == _other);
+			}
 
-            float& operator[](const uint32_t _index) {
-                return const_cast<float&>(static_cast<const Quaternion&>(*this)[_index]);
-            }
+			const float& operator[](const uint32_t _index) const;
 
-            Quaternion operator-() const {
-                return Quaternion(-w, -x, -y, -z);
-            }
+			float& operator[](const uint32_t _index) {
+				return const_cast<float&>(static_cast<const Quaternion&>(*this)[_index]);
+			}
 
-            Quaternion operator*(const Quaternion& _right) const;
+			Quaternion operator-() const {
+				return Quaternion(-w, -x, -y, -z);
+			}
 
-            Quaternion& operator*=(const Quaternion& _other);
+			Quaternion operator*(const Quaternion& _right) const;
 
-            Vector3f operator*(const Vector3f& _point) const;
+			Quaternion& operator*=(const Quaternion& _other);
 
-            std::string toString() const;
+			Vector3f operator*(const Vector3f& _point) const;
 
-            static Quaternion Euler(const float _xAngle, const float _yAngle, const float _zAngle);
+			std::string toString() const;
 
-            static Quaternion Euler(const Vector3f& _euler);
+			static Quaternion Euler(const float _xAngle, const float _yAngle, const float _zAngle);
 
-            static Quaternion AngleAxis(const float _angle, const Vector3f& _axis);
+			static Quaternion Euler(const Vector3f& _euler);
 
-            static Quaternion FromToRotation(const Vector3f& _fromDir, const Vector3f& _toDir);
+			static Quaternion AngleAxis(const float _angle, const Vector3f& _axis);
 
-            static Quaternion LookRotation(const Vector3f& _forward, const Vector3f& _up = Vector3f::Up);
+			static Quaternion FromToRotation(const Vector3f& _fromDir, const Vector3f& _toDir);
+
+			static Quaternion LookRotation(const Vector3f& _forward, const Vector3f& _up = Vector3f::Up);
 
 #ifdef MX_QUATERNION_MORE_OPERATION
-        public:
+		public:
 #else
-        private:
+		private:
 #endif // MX_QUATERNION_MORE_OPERATION
-            Quaternion scale(const float _other) const;
+			Quaternion scale(const float _other) const;
 
-            Quaternion add(const Quaternion& _other) const;
+			Quaternion add(const Quaternion& _other) const;
 
-            Quaternion minus(const Quaternion& _other) const;
+			Quaternion minus(const Quaternion& _other) const;
 
-            Quaternion operator+(const Quaternion& _right) const;
+			Quaternion operator+(const Quaternion& _right) const;
 
-            Quaternion operator-(const Quaternion& _right) const;
+			Quaternion operator-(const Quaternion& _right) const;
 
-            Quaternion operator/(const Quaternion& _right) const;
+			Quaternion operator/(const Quaternion& _right) const;
 
-            Quaternion operator*(const float _a) const;
+			Quaternion operator*(const float _a) const;
 
-            Quaternion operator/(const float _a) const;
+			Quaternion operator/(const float _a) const;
 
-            Quaternion& operator*=(const float _a);
+			Quaternion& operator*=(const float _a);
 
 #ifdef MX_QUATERNION_MORE_OPERATION
-            friend Quaternion operator*(const float _a, const Quaternion& _q);
+			friend Quaternion operator*(const float _a, const Quaternion& _q);
 #endif // MX_QUATERNION_MORE_OPERATION
 
-        };
+		};
 
-        template<typename _Os>
-        _Os& operator<<(_Os& _os, const Quaternion& _q) {
-            _os << _q.toString();
-            return _os;
-        }
-    }
+		template<typename _Os>
+		_Os& operator<<(_Os& _os, const Quaternion& _q) {
+			_os << _q.toString();
+			return _os;
+		}
+	}
 }
 
 #endif

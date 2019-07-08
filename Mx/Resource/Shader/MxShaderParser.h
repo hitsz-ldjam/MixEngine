@@ -65,7 +65,7 @@ namespace Mix {
 
 			std::vector<uint32_t> compileGlslToSpv(
 				const char* _data,
-				const uint32_t _size,
+				const size_t _size,
 				const shaderc_shader_kind _kind, const std::string& _name) const;
 
 			bool static IsGlsl(const ResourceType _type);

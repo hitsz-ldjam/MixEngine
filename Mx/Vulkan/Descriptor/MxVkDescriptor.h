@@ -3,8 +3,9 @@
 #define MX_VK_DESCRIPTOR_H_
 
 #include "../Device/MxVkDevice.h"
-#include <map>
+#include <unordered_map>
 #include "../../Utils/MxArrayProxy.h"
+#include <map>
 
 namespace Mix {
 	namespace Graphics {
@@ -32,11 +33,22 @@ namespace Mix {
 			std::unique_ptr<vk::DescriptorBufferInfo> mBufferInfo;
 		};
 
-		class DescriptorSetLayout : public GeneralBase::NoCopyBase {
+		class DescriptorSetLayout {
 		public:
-			explicit DescriptorSetLayout(const std::shared_ptr<Device>& _device)
-				:mDevice(_device), mBindings(new std::vector<vk::DescriptorSetLayoutBinding>()) {
+			explicit DescriptorSetLayout(std::shared_ptr<Device> _device) :mDevice(_device) {
 			}
+
+			DescriptorSetLayout(const DescriptorSetLayout& _other);
+
+			DescriptorSetLayout(DescriptorSetLayout&& _other) noexcept;
+
+			DescriptorSetLayout& operator=(DescriptorSetLayout _other);
+
+			DescriptorSetLayout& operator=(DescriptorSetLayout&& _other) noexcept;
+
+			void swap(DescriptorSetLayout& _other) noexcept;
+
+			~DescriptorSetLayout();
 
 			void addBindings(const uint32_t _binding,
 							 const vk::DescriptorType _type,
@@ -48,19 +60,17 @@ namespace Mix {
 
 			void create();
 
-			const vk::DescriptorSetLayout& get() const { return *mLayout; }
+			const vk::DescriptorSetLayout& get() const { return mDescriptorSetLayout; }
 
 			std::shared_ptr<Device> getDevice() const { return mDevice; }
 
-			const std::vector<vk::DescriptorSetLayoutBinding>& getBindings() const { return *mBindings; }
+			const std::vector<vk::DescriptorSetLayoutBinding>& getBindings() const { return mBindings; }
 
 		private:
 			std::shared_ptr<Device> mDevice;
-			vk::UniqueDescriptorSetLayout mLayout;
-			std::shared_ptr<std::vector<vk::DescriptorSetLayoutBinding>> mBindings;
+			vk::DescriptorSetLayout mDescriptorSetLayout;
+			std::vector<vk::DescriptorSetLayoutBinding> mBindings;
 		};
-
-
 
 		class DescriptorPool :public GeneralBase::NoCopyBase {
 		public:
