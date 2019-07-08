@@ -1,14 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_INPUT_H_
 #define MX_INPUT_H_
 
+#include "../Math/MxVector2.h"
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_mouse.h>
-#include <glm/vec2.hpp>
-
-#include <string>
-#include "../Math/MxVector2.h"
 
 namespace Mix {
 
@@ -106,7 +103,7 @@ namespace Mix {
         }
 
         static Math::Vector2i MousePositionDelta() {
-			Math::Vector2i delta;
+            Math::Vector2i delta;
             SDL_GetRelativeMouseState(&delta.x, &delta.y);
             return delta;
         }

@@ -2,7 +2,7 @@
 #ifndef MX_VK_DEVICE_H_
 #define MX_VK_DEVICE_H_
 
-#include "../../Definitions/MxGeneralBase.hpp"
+#include "../../Utils/MxGeneralBase.hpp"
 #include "MxVkPhysicalDevice.h"
 #include "../Core/MxVkDef.h"
 

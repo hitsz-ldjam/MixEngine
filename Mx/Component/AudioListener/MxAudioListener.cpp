@@ -1,8 +1,9 @@
-#include "MxAudioListener.h"
+﻿#include "MxAudioListener.h"
 
 #include "../../GameObject/MxGameObject.h"
+#include "../RigidBody/MxRigidBody.h"
 #include "../../Time/MxTime.h"
-#include "../Transform/MxTransform.h"
+#include "../../../MixEngine.h"
 
 namespace Mix {
     MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(AudioListener, Behaviour)
@@ -13,10 +14,10 @@ namespace Mix {
             return;
         if(!mGameObject)
             throw IndependentComponentError(getTypeName());
-        mCore = Audio::Core();
+        mCore = MixEngine::Instance().getModule<Audio::Core>()->getCore();
         mLastPos = mGameObject->transform().getPosition().vec;
-        mUseFixedUpdate = velocityUpdateMode == Audio::VelocityUpdateMode::FIXED ||
-                          velocityUpdateMode == Audio::VelocityUpdateMode::AUTO /*&& mGameObject->getComponent<Rigidbody>()*/;
+        mUseFixedUpdate = mVelocityUpdateMode == Audio::VelocityUpdateMode::FIXED ||
+                          mVelocityUpdateMode == Audio::VelocityUpdateMode::AUTO && mGameObject->getComponent<RigidBody>();
 
         // mListenerIdx = sListenerNum++;
     }
@@ -24,14 +25,13 @@ namespace Mix {
     void AudioListener::lateUpdate() {
         if(!mUseFixedUpdate)
             updatePosAndVel(Time::DeltaTime());
-    }
-
-    void AudioListener::fixedUpdate() {
-        if(mUseFixedUpdate)
+        else
+            // todo: use motion state instead
             updatePosAndVel(Time::FixedDeltaTime());
     }
 
     void AudioListener::updatePosAndVel(const float _deltaTime) {
+
         auto trans = mGameObject->transform();
 
         auto pos = trans.getPosition().vec;

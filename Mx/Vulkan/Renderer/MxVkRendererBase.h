@@ -2,7 +2,7 @@
 #ifndef MX_VK_RENDERER_BASE_H_
 #define MX_VK_RENDERER_BASE_H_
 
-#include "../../Definitions/MxGeneralBase.hpp"
+#include "../../Utils/MxGeneralBase.hpp"
 
 namespace Mix {
 	namespace Graphics {

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_DEFINITIONS_H_
 #define MX_DEFINITIONS_H_
@@ -29,10 +29,8 @@
 
 
 namespace Mix {
-    typedef uint32_t VersionInt;
-    typedef uint32_t LayerIndex;
-    typedef std::string Tag;
-    typedef long long Guid;
+    using VersionInt = uint32_t;
+    using Guid = long long;
 
     namespace Version {
         static VersionInt MakeVersion(const uint32_t _major, const uint32_t _minor, const uint32_t _patch) {

@@ -1,4 +1,4 @@
-#include "MxInput.h"
+﻿#include "MxInput.h"
 
 namespace Mix {
     const Uint8* Input::keyboardState = nullptr;

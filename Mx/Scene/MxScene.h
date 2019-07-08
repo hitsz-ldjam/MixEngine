@@ -1,46 +1,57 @@
-#pragma once
+﻿#pragma once
+
 #ifndef MX_SCENE_H_
 #define MX_SCENE_H_
 
-#include "../Window/MxWindow.h"
-#include "../GameObject/MxGameObject.h"
+#include <string>
+#include <set>
 
 namespace Mix {
-    // todo: temp demo scene
-    class Scene {
+    class GameObject;
+
+    class Scene final {
+        friend class SceneManagerFactory;
+
     public:
-        explicit Scene(const std::string &_str);
+        // todo: create through SceneMgr
+        explicit Scene(std::string _name, const size_t _buildIdx = 0);
 
-        ~Scene();
+        // todo: implement copy ctor
+        Scene(const Scene& _other) = delete;
 
-        void init();
+        ~Scene() = default;
 
-        void update();
+        void awake() const;
+        void init() const;
+        void update() const;
+        void fixedUpate() const;
+        void lateUpate() const;
 
-        void fixedUpate();
+        void addGameObject(GameObject* _obj) { if(_obj) mHierarchy.insert(_obj); }
+        void removeGameObject(GameObject* _obj) { mHierarchy.erase(_obj); }
 
-        void lateUpate();
+        std::string& name() noexcept { return mName; }
+        const std::string& name() const noexcept { return mName; }
+        size_t buildIndex() const noexcept { return mBuildIndex; }
+        bool isLoaded() const noexcept { return mIsLoaded; }
 
-        void addGameObject(GameObject* _obj);
+        auto begin() noexcept { return mHierarchy.begin(); }
+        auto begin() const noexcept { return mHierarchy.begin(); }
+        auto end() noexcept { return mHierarchy.end(); }
+        auto end() const noexcept { return mHierarchy.end(); }
 
-        void removeGameObject(GameObject* _obj);
+        bool operator==(const Scene& _right) { return mHierarchy == _right.mHierarchy; }
+        bool operator!=(const Scene& _right) { return !operator==(_right); }
 
-        void getLoaded();
-
-        std::vector<GameObject*> getRootGameObject();
-
-        bool isLoad();
-
-        size_t buildIndex() const;
-
-        std::string getName() const;
     private:
-        std::vector<GameObject*> mHierarchy;
+        std::string mName;
         size_t mBuildIndex;
         bool mIsLoaded;
-        std::string mName;
+        std::set<GameObject*> mHierarchy;
 
-        Window* mWindow;
+        // todo: further set ups
+        void load() noexcept { mIsLoaded = true; }
+        void unload() noexcept { mIsLoaded = false; }
     };
 }
 

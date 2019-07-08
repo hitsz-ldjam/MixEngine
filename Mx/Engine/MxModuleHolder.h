@@ -2,7 +2,7 @@
 #ifndef MX_MODULE_HOLDER_H_
 #define MX_MODULE_HOLDER_H_
 
-#include "../Definitions/MxGeneralBase.hpp"
+#include "../Utils/MxGeneralBase.hpp"
 #include <typeindex>
 #include <unordered_map>
 #include "MxModuleBase.h"

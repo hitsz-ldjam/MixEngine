@@ -7,7 +7,7 @@ namespace Mix {
 		GameObject* Model::generateGameObject() const {
 			if (!mData)
 				return nullptr;
-			auto obj = new GameObject(mData->rootNode.name);
+            auto obj = new GameObject({mData->rootNode.name});
 			recurBuildGameObj(*obj, mData->rootNode);
 			return obj;
 		}
@@ -26,7 +26,7 @@ namespace Mix {
 			// if node has children
 			if(_node.children) {
 				for(auto& child:_node.children.value()) {
-					auto p = new GameObject(child.name);
+                    auto p = new GameObject({child.name});
 					recurBuildGameObj(*p, child);
 					_obj.addChild(p);
 				}

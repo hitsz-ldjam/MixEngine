@@ -1,69 +1,67 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MIX_ENGINE_H_
 #define MIX_ENGINE_H_
 
-#include "Mx/Definitions/MxAudio.h"
-#include "Mx/Scene/MxScene.h"
-
-#include <fmod/fmod.hpp>
-#include <SDL2/SDL.h>
 #include "Mx/Engine/MxModuleHolder.h"
+#include "Mx/Scene/MxScene.h"
+#include <SDL2/SDL_events.h>
 
 namespace Mix {
-	class MixEngine : public GeneralBase::SingletonBase<MixEngine> {
-		friend SingletonBase<MixEngine>;
-		friend static FMOD::System* Audio::Core();
-	public:
-		~MixEngine();
+    class Window;
 
-		int exec();
+    class MixEngine : public GeneralBase::SingletonBase<MixEngine> {
+        friend SingletonBase<MixEngine>;
 
-		ModuleHolder& getModuleHolder() { return mModuleHolder; }
+    public:
+        ~MixEngine();
 
-		template<typename _Ty>
-		bool hasModule() const { return mModuleHolder.has<_Ty>(); }
+        int exec();
 
-		template<typename _Ty>
-		_Ty* getModule() const { return mModuleHolder.get<_Ty>(); }
+        bool& quit() noexcept { return mQuit; }
 
-		template<typename _Ty, typename... _Args>
-		_Ty* addModule(_Args&&... _args) { return mModuleHolder.add<_Ty>(std::forward<_Args>(_args)...); }
+        const Window& getWindow() const { return *mWindow; }
 
-		template<typename _Ty>
-		void removeModule() { mModuleHolder.remove<_Ty>(); };
+        // ----- ModuleHolder -----
+        
+        template<typename _Ty>
+        bool hasModule() const { return mModuleHolder.has<_Ty>(); }
 
-		const Window& getWindow() const { return *mWindow; }
-		//static MixEngine& Instance(int _argc = 0, char** _argv = nullptr) {
-		//    static MixEngine instance(_argc, _argv);
-		//    return instance;
-		//}
-	private:
+        template<typename _Ty>
+        _Ty* getModule() const { return mModuleHolder.get<_Ty>(); }
 
-		// todo: delete debug code
-		// Scene mScene;
+        //template<typename _Ty, typename... _Args>
+        //_Ty* addModule(_Args&&... _args) { return mModuleHolder.add<_Ty>(std::forward<_Args>(_args)...); }
 
-		explicit MixEngine(int _argc = 0, char** _argv = nullptr);
+        //template<typename _Ty>
+        //void removeModule() { mModuleHolder.remove<_Ty>(); }
 
-		bool mQuit;
-		FMOD::System* mFmodCore;
+        //ModuleHolder& getModuleHolder() { return mModuleHolder; }
 
-		void init();
-		void process(const SDL_Event& _event);
-		void update();
-		void fixedUpdate();
-		void lateUpdate();
-		void render();
+    private:
+        explicit MixEngine(int _argc = 0, char** _argv = nullptr);
 
-		Window* mWindow = nullptr;
-		GameObject* mCamera = nullptr;
-		GameObject* mGameObject = nullptr;
+        bool mQuit;
 
-		uint32_t mFrameCount = 0;
-		float mFramePerSecond = 0;
+        Window* mWindow;
+        ModuleHolder mModuleHolder;
 
-		ModuleHolder mModuleHolder;
-	};
+        // todo: debug code
+        Scene mDebugScene;
+
+        // todo: make this a utility class
+        uint32_t mFrameCount = 0u,
+                 mFrameSampleRate = 10u;
+        float mFramePerSecond = .0f;
+
+        void awake();
+        void init();
+        void process(const SDL_Event& _event);
+        void update();
+        void fixedUpdate();
+        void lateUpdate();
+        void render();
+    };
 }
 
 #endif

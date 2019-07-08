@@ -2,7 +2,7 @@
 #ifndef MX_VK_FRAMEBUFFER_H_
 #define MX_VK_FRAMEBUFFER_H_
 
-#include "../../Definitions/MxGeneralBase.hpp"
+#include "../../Utils/MxGeneralBase.hpp"
 #include "../Pipeline/MxVkRenderPass.h"
 
 namespace Mix {

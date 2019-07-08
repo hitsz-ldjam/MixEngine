@@ -5,7 +5,7 @@
 #include <memory>
 #include "../Core/MxVkCore.h"
 #include "../Memory/MxVkAllocator.h"
-#include "../../Definitions/MxGeneralBase.hpp"
+#include "../../Utils/MxGeneralBase.hpp"
 
 // #define BUFFER_MANAGER_ENABLE
 

@@ -1,15 +1,13 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_AUDIO_CLIP_H_
 #define MX_AUDIO_CLIP_H_
 
-#include "../../Definitions/MxAudio.h"
-
+#include "MxAudio.hpp"
 #include <filesystem>
 
 namespace Mix {
     class AudioClip final {
-        // AudioSource requires a non-const FMOD::Sound pointer.
         friend class AudioSource;
 
     public:
@@ -26,6 +24,8 @@ namespace Mix {
             if(preloadAudioData)
                 loadAudioData();
         }
+
+        AudioClip(const AudioClip&) = delete;
 
         ~AudioClip();
 

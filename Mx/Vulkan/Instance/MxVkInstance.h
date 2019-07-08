@@ -2,7 +2,7 @@
 #ifndef MX_VK_INSTANCE_H_
 #define MX_VK_INSTANCE_H_
 
-#include "../../Definitions/MxGeneralBase.hpp"
+#include "../../Utils/MxGeneralBase.hpp"
 #include <vulkan/vulkan.hpp>
 
 namespace Mix {

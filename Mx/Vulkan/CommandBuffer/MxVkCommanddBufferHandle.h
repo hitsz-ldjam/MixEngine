@@ -2,7 +2,7 @@
 #ifndef MX_VK_CMD_BUFFER_SUBMITTER_H_
 #define MX_VK_CMD_BUFFER_SUBMITTER_H_
 
-#include "../../Definitions/MxGeneralBase.hpp"
+#include "../../Utils/MxGeneralBase.hpp"
 #include <vulkan/vulkan.hpp>
 #include <functional>
 

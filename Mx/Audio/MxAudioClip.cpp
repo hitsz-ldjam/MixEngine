@@ -1,4 +1,5 @@
-#include "MxAudioClip.h"
+﻿#include "MxAudioClip.h"
+#include "../../MixEngine.h"
 
 namespace Mix {
     AudioClip::~AudioClip() {
@@ -8,8 +9,7 @@ namespace Mix {
     }
 
     void AudioClip::loadAudioData() {
-        if(!mCore)
-            mCore = Audio::Core();
+        mCore = MixEngine::Instance().getModule<Audio::Core>()->getCore();
 
         if(mSound) {
             mSound->release();

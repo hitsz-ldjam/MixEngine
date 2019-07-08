@@ -2,7 +2,7 @@
 #ifndef MX_VK_RENDERER_HOLDER_H_
 #define MX_VK_RENDERER_HOLDER_H_
 
-#include "../../Definitions/MxGeneralBase.hpp"
+#include "../../Utils/MxGeneralBase.hpp"
 #include "MxVkRendererBase.h"
 #include <unordered_map>
 

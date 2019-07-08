@@ -1,10 +1,9 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_EXCEPTION_HPP_
 #define MX_EXCEPTION_HPP_
 
 #include "../Utils/MxUtils.h"
-
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -35,15 +34,14 @@ namespace Mix {
     };
 
 
-    class Exception :std::exception {
+    class Exception : std::exception {
     public:
         template<typename ... _Args>
-        explicit Exception(const std::string& _format, _Args &&... _args) {
+        explicit Exception(const std::string& _format, _Args&&... _args) {
             mWhat = Utils::StringFormat(_format, std::forward<_Args>(_args)...);
         }
 
-        explicit Exception(std::string _str) :mWhat(std::move((_str))) {
-        }
+        explicit Exception(std::string _str) : mWhat(std::move((_str))) { }
 
         char const* what() const override {
             return mWhat.c_str();
@@ -55,18 +53,21 @@ namespace Mix {
 
     MX_DECLARE_RUNTIME_ERROR(ComponentCastingError, [ERROR] Cannot cast type to Component)
 
-        class IndependentComponentError final : public std::runtime_error {
-        public:
-            explicit IndependentComponentError(const std::string& _name) : std::runtime_error("[ERROR] Component [" + _name + "] not attached to a GameObject") {}
+    class IndependentComponentError final : public std::runtime_error {
+    public:
+        explicit IndependentComponentError(const std::string& _name)
+            : std::runtime_error("[ERROR] Component [" + _name + "] is not attached to a GameObject") {}
     };
 
-    MX_DECLARE_RUNTIME_ERROR(SdlInitializationError, [ERROR] Failed to initialize SDL2)
+    class ThirdPartyLibInitError final : public std::runtime_error {
+    public:
+        explicit ThirdPartyLibInitError(const std::string& _libName)
+            : std::runtime_error("[ERROR] Failed to initialize " + _libName) {}
+    };
 
-        MX_DECLARE_RUNTIME_ERROR(WindowCreationError, [ERROR] Failed to create window)
+    MX_DECLARE_RUNTIME_ERROR(WindowCreationError, [ERROR] Failed to create window)
 
-        MX_DECLARE_RUNTIME_ERROR(WindowIconLoadingError, [ERROR] Failed to load icon image)
-
-        MX_DECLARE_RUNTIME_ERROR(FmodInitializationError, [ERROR] Failed to initialize FMOD)
+    MX_DECLARE_RUNTIME_ERROR(WindowIconLoadingError, [ERROR] Failed to load icon image)
 }
 
 #endif

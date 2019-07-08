@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_SCRIPT_H_
 #define MX_SCRIPT_H_

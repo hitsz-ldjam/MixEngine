@@ -2,7 +2,7 @@
 #ifndef MX_RESOURCEBASE_H_
 #define MX_RESOURCEBASE_H_
 
-#include "../Definitions/MxGeneralBase.hpp"
+#include "../Utils/MxGeneralBase.hpp"
 
 namespace Mix {
 	namespace Resource {

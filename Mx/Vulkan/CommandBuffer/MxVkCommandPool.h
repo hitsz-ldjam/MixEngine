@@ -3,7 +3,7 @@
 #define MX_VK_COMMANDBUFF_POOL_H_
 
 #include "../Device/MxVkDevice.h"
-#include "../../Definitions/MxGeneralBase.hpp"
+#include "../../Utils/MxGeneralBase.hpp"
 
 namespace Mix {
 	namespace Graphics {

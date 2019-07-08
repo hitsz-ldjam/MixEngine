@@ -1,43 +1,69 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_AUDIO_SOURCE_H_
 #define MX_AUDIO_SOURCE_H_
 
 #include "../Behaviour/MxBehaviour.h"
-#include "MxAudioClip.h"
-
-// todo: Coordinate with Rigidbody
+#include "../../Audio/MxAudioClip.h"
 
 namespace Mix {
-    /*class Rigidbody;*/
-
     // todo: add 3d roll off
     class AudioSource final : public Behaviour {
     MX_DECLARE_RTTI
     MX_DECLARE_CLASS_FACTORY
 
     public:
-        AudioSource(AudioClip* _clip = nullptr) : playOnAwake(true),
-                                                  velocityUpdateMode(Audio::VelocityUpdateMode::AUTO),
-                                                  mClip(_clip),
-                                                  mChannel(nullptr),
-                                                  mLastPos(0),
-                                                  mUseFixedUpdate(false),
-                                                  mDopplerLevel(1.0f),
-                                                  mLoop(false),
-                                                  mMute(false),
-                                                  mPan(0.0f),
-                                                  mPitch(1.0f),
-                                                  mPriority(128),
-                                                  mVolume(1.0f) {}
+        /** @note Default ctor is for RTTI. DO NOT use this ctor. */
+        AudioSource() : mPlayOnAwake(true),
+                        mVelocityUpdateMode(Audio::VelocityUpdateMode::AUTO),
+                        mClip(nullptr),
+                        mChannel(nullptr),
+                        mLastPos(0),
+                        mUseFixedUpdate(false),
+                        mDopplerLevel(1.0f),
+                        mLoop(false),
+                        mMute(false),
+                        mPan(0.0f),
+                        mPitch(1.0f),
+                        mPriority(128),
+                        mVolume(1.0f) {}
+
+        AudioSource(AudioClip* _clip,
+                    const bool _playOnAwake = true,
+                    const Audio::VelocityUpdateMode _mode = Audio::VelocityUpdateMode::AUTO)
+            : mPlayOnAwake(_playOnAwake),
+              mVelocityUpdateMode(_mode),
+              mClip(_clip),
+              mChannel(nullptr),
+              mLastPos(0),
+              mUseFixedUpdate(false),
+              mDopplerLevel(1.0f),
+              mLoop(false),
+              mMute(false),
+              mPan(0.0f),
+              mPitch(1.0f),
+              mPriority(128),
+              mVolume(1.0f) {}
+
+        /** @note Copy constructed AudioSources are initially stopped. */
+        AudioSource(const AudioSource& _other) : Behaviour(),
+                                                 mPlayOnAwake(_other.mPlayOnAwake),
+                                                 mVelocityUpdateMode(_other.mVelocityUpdateMode),
+                                                 mClip(_other.mClip),
+                                                 mChannel(nullptr),
+                                                 mLastPos(_other.mLastPos),
+                                                 mUseFixedUpdate(_other.mUseFixedUpdate),
+                                                 mDopplerLevel(_other.mDopplerLevel),
+                                                 mLoop(_other.mLoop),
+                                                 mMute(_other.mMute),
+                                                 mPan(_other.mPan),
+                                                 mPitch(_other.mPitch),
+                                                 mPriority(_other.mPriority),
+                                                 mVolume(_other.mVolume) {}
 
         ~AudioSource() { stop(); }
 
         // ----- Properties -----
-
-        bool playOnAwake;
-
-        Audio::VelocityUpdateMode velocityUpdateMode;
 
         const AudioClip* clip() const { return mClip; }
 
@@ -146,6 +172,9 @@ namespace Mix {
         }
 
     private:
+        bool mPlayOnAwake;
+        Audio::VelocityUpdateMode mVelocityUpdateMode;
+
         AudioClip* mClip;
         FMOD::Channel* mChannel;
 
@@ -163,9 +192,7 @@ namespace Mix {
 
         void init() override;
         void lateUpdate() override;
-        void fixedUpdate() override;
 
-        void updatePosAndVel(const float _deltaTime);
         void initChannelParameters();
     };
 }

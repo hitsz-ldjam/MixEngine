@@ -14,6 +14,7 @@
 #include "../../../Resource/Texture/MxTexture.h"
 #include "../../../GUI/imgui/imgui.h"
 #include "../../Pipeline/MxVkPipelineFactory.h"
+#include "../../../GameObject/MxGameObject.h"
 
 namespace Mix {
 	namespace Graphics {
