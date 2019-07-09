@@ -4,23 +4,24 @@
 #include <cstdint>
 
 namespace Mix {
-    namespace Utils {
-        template<typename _Ty = uint32_t>
-        struct OffsetSize {
-            using ValueType = _Ty;
+	template<typename _Ty>
+	struct BasicOffsetSize {
+		using ValueType = _Ty;
 
-            OffsetSize() = default;
+		BasicOffsetSize() = default;
 
-            OffsetSize(ValueType const& _offset, ValueType const& _size) :offset(_offset), size(_size) {}
+		BasicOffsetSize(ValueType const& _offset, ValueType const& _size) :offset(_offset), size(_size) {}
 
-            bool operator==(OffsetSize const& _other) { return offset == _other.offset && size == _other.size; }
+		bool operator==(BasicOffsetSize const& _other) { return offset == _other.offset && size == _other.size; }
 
-            bool operator!=(OffsetSize const& _other) { return !*this == _other; }
+		bool operator!=(BasicOffsetSize const& _other) { return !*this == _other; }
 
-            ValueType offset = 0;
-            ValueType size = 0;
-        };
-    }
+		ValueType offset = 0;
+		ValueType size = 0;
+	};
+
+	using OffsetSize32 = BasicOffsetSize<uint32_t>;
+	using OffsetSize64 = BasicOffsetSize<uint64_t>;
 }
 
 #endif

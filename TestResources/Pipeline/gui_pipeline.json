@@ -58,6 +58,7 @@
     "descriptorSetLayout": [
         [
             {
+                "name": "sTexture",
                 "type": "CombinedImageSampler",
                 "count": 1,
                 "stage": "frag"

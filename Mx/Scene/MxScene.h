@@ -21,11 +21,11 @@ namespace Mix {
 
         ~Scene() = default;
 
-        void awake() const;
-        void init() const;
-        void update() const;
-        void fixedUpate() const;
-        void lateUpate() const;
+        void awake();
+        void init();
+        void update();
+        void fixedUpate();
+        void lateUpate();
 
         void addGameObject(GameObject* _obj) { if(_obj) mHierarchy.insert(_obj); }
         void removeGameObject(GameObject* _obj) { mHierarchy.erase(_obj); }

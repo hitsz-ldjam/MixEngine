@@ -4,7 +4,7 @@
 
 #include "../Core/MxVkCore.h"
 #include "MxVkBuffer.h"
-#include "../Descriptor/MxVkDescriptor.h"
+#include "../Descriptor/MxVkDescriptorSet.h"
 #include "../../Utils/MxOffsetSize.hpp"
 
 namespace Mix {
@@ -23,9 +23,7 @@ namespace Mix {
 				++mCurrCount;
 			}
 
-			WriteDescriptorSet getWriteDescriptorSet(const vk::DescriptorSet& _set,
-			                                         const uint32_t _binding,
-			                                         std::optional<Utils::OffsetSize<uint32_t>> _offsetSize = std::nullopt) const;
+			WriteDescriptorSet getWriteDescriptorSet(const uint32_t _binding) const;
 
 			uint32_t getOffset() const { return mUniformSize * mCurrCount; }
 

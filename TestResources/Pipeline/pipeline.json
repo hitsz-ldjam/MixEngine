@@ -42,11 +42,13 @@
     "descriptorSetLayout": [
         [
             {
+                "name": "CameraUniform",
                 "type": "UniformBuffer",
                 "count": 1,
                 "stage": "vert"
             },
             {
+                "name": "MeshUniform",
                 "type": "UniformBufferDynamic",
                 "count": 1,
                 "stage": "vert"

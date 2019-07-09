@@ -6,6 +6,7 @@
 #include "../Core/MxVkCore.h"
 #include "../Memory/MxVkAllocator.h"
 #include "../../Utils/MxGeneralBase.hpp"
+#include "../Descriptor/MxVkDescriptor.h"
 
 // #define BUFFER_MANAGER_ENABLE
 
@@ -13,7 +14,7 @@ namespace Mix {
 	namespace Graphics {
 		class Device;
 
-		class Buffer : public GeneralBase::NoCopyBase {
+		class Buffer : public GeneralBase::NoCopyBase, public Descriptor {
 		public:
 			Buffer(const std::shared_ptr<DeviceAllocator>& _allocator,
 				   const vk::BufferUsageFlags& _usage,
@@ -36,7 +37,7 @@ namespace Mix {
 
 			const vk::DeviceSize& alignment() const { return mAlignment; }
 
-			const vk::DescriptorBufferInfo& descriptorInfo() const { return mDescriptor; };
+			WriteDescriptorSet getWriteDescriptor(const uint32_t& _binding, const vk::DescriptorType& _descriptorType, const std::optional<OffsetSize64>& _offsetSize = std::nullopt) const override;
 
 			void uploadData(const void* _data, const vk::DeviceSize& _size) const;
 
@@ -46,19 +47,15 @@ namespace Mix {
 
 			void invalidate(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0) const;
 
-		private:
+		protected:
 			vk::Buffer mBuffer;
 			vk::DeviceSize mSize{};
 			vk::DeviceSize mAlignment{};
 			MemoryBlock mMemory;
-			vk::DescriptorBufferInfo mDescriptor;
 			vk::BufferUsageFlags mUsages;
 			vk::MemoryPropertyFlags mMemoryProperty;
 
 			std::shared_ptr<DeviceAllocator> mAllocator;
-
-			void setupDescriptor(const vk::DeviceSize _size = VK_WHOLE_SIZE, const vk::DeviceSize _offset = 0);
-
 		};
 
 #ifdef BUFFER_MANAGER_ENABLE
@@ -180,9 +177,9 @@ namespace Mix {
 
 			};
 
-		}
+	}
 
 #endif // BUFFER_MANAGER_ENABLE
-	}
+}
 }
 #endif // !MX_VK_BUFFER_H_

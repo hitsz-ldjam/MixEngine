@@ -297,7 +297,7 @@ namespace Mix {
 			if (!_json.contains("descriptorSetLayout"))
 				throw Exception("Pipeline description file does not contain key: descriptorSetLayout");
 
-			std::vector<std::vector<vk::DescriptorSetLayoutBinding>> sets;
+			std::vector<std::vector<std::pair<std::string, vk::DescriptorSetLayoutBinding>>> sets;
 			for (auto& setJs : _json["descriptorSetLayout"]) {
 				uint32_t bdIndex = 0;
 				sets.emplace_back();
@@ -307,14 +307,15 @@ namespace Mix {
 					binding.descriptorType = GetVkDescriptorTypeFromStr(bindingJs["type"].get<std::string>());
 					binding.descriptorCount = bindingJs["count"].get<uint32_t>();
 					binding.stageFlags = GetVkShaderStageFromStr(bindingJs["stage"].get<std::string>());
-					sets.back().push_back(binding);
+					sets.back().emplace_back(bindingJs["name"].get<std::string>(), binding);
 				}
 			}
 
 			std::vector<DescriptorSetLayout> descriptorSetLayouts;
 			for (auto& set : sets) {
 				auto setLayout = DescriptorSetLayout(_device);
-				setLayout.addBindings(set);
+				for (auto& pair : set)
+					setLayout.addBinding(pair.first, pair.second);
 				setLayout.create();
 				descriptorSetLayouts.push_back(std::move(setLayout));
 			}

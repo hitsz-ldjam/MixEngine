@@ -6,7 +6,7 @@ namespace Mix {
 		Buffer::Buffer(const std::shared_ptr<DeviceAllocator>& _allocator,
 					   const vk::BufferUsageFlags& _usage,
 					   const vk::MemoryPropertyFlags& _memoryProperty,
-					   const vk::DeviceSize _size, 
+					   const vk::DeviceSize _size,
 					   const void* _data,
 					   const vk::SharingMode _sharingMode)
 			: mAllocator(_allocator) {
@@ -24,8 +24,6 @@ namespace Mix {
 			mSize = _size;
 			mUsages = _usage;
 			mMemoryProperty = _memoryProperty;
-
-			setupDescriptor(_size, 0);
 
 			// copy data to the buffer
 			if (_data) {
@@ -45,7 +43,6 @@ namespace Mix {
 			swap(mSize, _other.mSize);
 			swap(mAlignment, _other.mAlignment);
 			swap(mMemory, _other.mMemory);
-			swap(mDescriptor, _other.mDescriptor);
 			swap(mUsages, _other.mUsages);
 			swap(mMemoryProperty, _other.mMemoryProperty);
 			swap(mAllocator, _other.mAllocator);
@@ -58,10 +55,16 @@ namespace Mix {
 			}
 		}
 
-		void Buffer::setupDescriptor(const vk::DeviceSize _size, const vk::DeviceSize _offset) {
-			mDescriptor.offset = _offset;
-			mDescriptor.buffer = mBuffer;
-			mDescriptor.range = _size;
+		WriteDescriptorSet Buffer::getWriteDescriptor(const uint32_t& _binding, const vk::DescriptorType& _descriptorType, const std::optional<OffsetSize64>& _offsetSize) const {
+			vk::DescriptorBufferInfo bufferInfo{ mBuffer,0,mSize };
+
+			if (_offsetSize) {
+				bufferInfo.offset = _offsetSize.value().offset;
+				bufferInfo.range = _offsetSize.value().size;
+			}
+
+			vk::WriteDescriptorSet write{ nullptr,_binding,0,1,_descriptorType };
+			return WriteDescriptorSet(write, bufferInfo);
 		}
 
 		void Buffer::uploadData(const void * _data, const vk::DeviceSize& _size) const {

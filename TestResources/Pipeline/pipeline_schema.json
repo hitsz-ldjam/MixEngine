@@ -114,6 +114,9 @@
         "descriptor": {
             "type": "object",
             "properties": {
+                "name": {
+                    "type": "string"
+                },
                 "type": {
                     "type": "string",
                     "enum": [
@@ -130,18 +133,19 @@
                         "InputAttachment"
                     ]
                 },
-                "count":{
-                    "type":"integer",
+                "count": {
+                    "type": "integer",
                     "minimum": 1
                 },
-                "stage":{
+                "stage": {
                     "$ref": "#definitions/shaderStage"
                 }
             },
             "required": [
+                "name",
                 "type",
                 "count",
-                "stage"  
+                "stage"
             ]
         },
         "descriptorSet": {

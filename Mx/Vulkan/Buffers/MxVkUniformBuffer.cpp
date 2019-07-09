@@ -24,30 +24,8 @@ namespace Mix {
 											   actualCount * actualAlign);
 		}
 
-		WriteDescriptorSet DynamicUniformBuffer::getWriteDescriptorSet(const vk::DescriptorSet& _set,
-																	   const uint32_t _binding,
-																	   std::optional<Utils::OffsetSize<uint32_t>>
-																	   _offsetSize) const {
-			vk::DescriptorBufferInfo bufferInfo = mBuffer->descriptorInfo();
-			bufferInfo.range = mUniformSize;
-
-			if (_offsetSize) {
-				bufferInfo.offset = _offsetSize.value().offset;
-				bufferInfo.range = _offsetSize.value().size;
-			}
-
-			vk::WriteDescriptorSet write;
-			write.dstSet = _set;     //descriptor which will be write in
-			write.dstBinding = _binding; //destination binding
-			write.dstArrayElement = 0;
-			write.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
-			//the type of the descriptor that will be wirte in
-			write.descriptorCount = 1;           //descriptor count
-			write.pBufferInfo = &bufferInfo; //descriptorBufferInfo
-			write.pImageInfo = nullptr;
-			write.pTexelBufferView = nullptr;
-
-			return WriteDescriptorSet(write, bufferInfo);
+		WriteDescriptorSet DynamicUniformBuffer::getWriteDescriptorSet(const uint32_t _binding) const {
+			return mBuffer->getWriteDescriptor(_binding, vk::DescriptorType::eUniformBufferDynamic, OffsetSize64{ 0,mUniformSize });
 		}
 	}
 }

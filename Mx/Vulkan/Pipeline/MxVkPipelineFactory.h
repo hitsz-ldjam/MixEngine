@@ -3,7 +3,7 @@
 #define MX_VK_PIPELINE_FACTORY_H_
 
 #include "../../Utils/MxArrayProxy.h"
-#include "../Descriptor/MxVkDescriptor.h"
+#include "../Descriptor/MxVkDescriptorSet.h"
 #include <nlohmann/json.hpp>
 #include <memory>
 #include <vulkan/vulkan.hpp>

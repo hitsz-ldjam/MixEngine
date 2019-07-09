@@ -4,7 +4,7 @@
 #include "../Vulkan/MxVkGraphics.h"
 #include "../Vulkan/CommandBuffer/MxVkCommandPool.h"
 #include "../Resource/Texture/MxTexture.h"
-#include "../Vulkan/Descriptor/MxVkDescriptor.h"
+#include "../Vulkan/Descriptor/MxVkDescriptorSet.h"
 #include "../Input/MxInput.h"
 #include "../Vulkan/Buffers/MxVkBuffer.h"
 #include "../Vulkan/Swapchain/MxVkSwapchain.h"
@@ -21,17 +21,10 @@ namespace Mix {
 		ImGui::CreateContext();
 		ImGui::StyleColorsLight();
 
-		mapImGui();
+		setImGui();
 		createFontTexture();
 		mVertexBuffers.resize(mVulkan->getSwapchain()->imageCount());
 		mIndexBuffers.resize(mVulkan->getSwapchain()->imageCount());
-	}
-
-	void Ui::update() {
-		updateExtent();
-		updateMouse();
-		updateMouseCursor();
-		updateKeyEvent();
 	}
 
 	void Ui::render() {
@@ -67,86 +60,6 @@ namespace Mix {
 		return ImGui::GetDrawData();
 	}
 
-	void Ui::updateExtent() {
-		auto& io = ImGui::GetIO();
-		assert(io.Fonts->IsBuilt());
-
-		auto extent = MixEngine::Instance().getWindow().extent();
-		auto drawableExtent = MixEngine::Instance().getWindow().drawableSize();
-		io.DisplaySize = ImVec2(static_cast<float>(extent.x), static_cast<float>(extent.y));
-		if (extent.x > 0 && extent.y > 0)
-			io.DisplayFramebufferScale = ImVec2(static_cast<float>(drawableExtent.x) / extent.x,
-												static_cast<float>(drawableExtent.y) / extent.y);
-	}
-
-	void Ui::updateMouse() {
-		auto& io = ImGui::GetIO();
-
-		if (io.WantSetMousePos)
-			SDL_WarpMouseInWindow(MixEngine::Instance().getWindow().window(),
-								  static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y));
-		{
-			auto mousePos = Input::MousePosition();
-			io.MousePos.x = static_cast<float>(mousePos.x);
-			io.MousePos.y = static_cast<float>(mousePos.y);
-		}
-
-		{
-			io.MouseDown[0] = Input::MouseButtonState() & SDL_BUTTON_LMASK;
-			io.MouseDown[1] = Input::MouseButtonState() & SDL_BUTTON_RMASK;
-			io.MouseDown[2] = Input::MouseButtonState() & SDL_BUTTON_MMASK;
-		}
-
-		{
-			auto scroll = Input::MouseScrollDelta();
-			if (scroll.x > 0) io.MouseWheelH += 1;
-			if (scroll.x < 0) io.MouseWheelH -= 1;
-			if (scroll.y > 0) io.MouseWheel += 1;
-			if (scroll.y < 0) io.MouseWheel -= 1;
-		}
-
-		io.KeyCtrl = Input::GetKeyDown(SDL_SCANCODE_LCTRL) || Input::GetKeyDown(SDL_SCANCODE_RCTRL);
-		io.KeyShift = Input::GetKeyDown(SDL_SCANCODE_LSHIFT) || Input::GetKeyDown(SDL_SCANCODE_RSHIFT);
-		io.KeyAlt = Input::GetKeyDown(SDL_SCANCODE_LALT) || Input::GetKeyDown(SDL_SCANCODE_RALT);
-		io.KeySuper = Input::GetKeyDown(SDL_SCANCODE_LGUI);
-
-		// ImVec2      MousePos;                       // Mouse position, in pixels. Set to ImVec2(-FLT_MAX,-FLT_MAX) if mouse is unavailable (on another screen, etc.)
-		// bool        MouseDown[5];                   // Mouse buttons: 0=left, 1=right, 2=middle + extras. ImGui itself mostly only uses left button (BeginPopupContext** are using right button). Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
-		// float       MouseWheel;                     // Mouse wheel Vertical: 1 unit scrolls about 5 lines text.
-		// float       MouseWheelH;                    // Mouse wheel Horizontal. Most users don't have a mouse with an horizontal wheel, may not be filled by all back-ends.
-		// bool        KeyCtrl;                        // Keyboard modifier pressed: Control
-		// bool        KeyShift;                       // Keyboard modifier pressed: Shift
-		// bool        KeyAlt;                         // Keyboard modifier pressed: Alt
-		// bool        KeySuper;                       // Keyboard modifier pressed: Cmd/Super/Windows
-		// bool        KeysDown[512];                  // Keyboard keys that are pressed (ideally left in the "native" order your engine has access to keyboard keys, so you can use your own defines/enums for keys).
-		// float       NavInputs[ImGuiNavInput_COUNT]; // Gamepad inputs. Cleared back to zero by EndFrame(). Keyboard keys will be auto-mapped and be written here by NewFrame().
-
-
-	}
-
-	void Ui::updateMouseCursor() {
-		auto& io = ImGui::GetIO();
-
-		if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
-			return;
-
-		ImGuiMouseCursor cursor = ImGui::GetMouseCursor();
-		if (io.MouseDrawCursor || cursor == ImGuiMouseCursor_None) {
-			SDL_ShowCursor(SDL_FALSE);
-		}
-		else {
-			// Show OS mouse cursor
-			SDL_SetCursor(mMouseCursors[cursor] ? mMouseCursors[cursor] : mMouseCursors[ImGuiMouseCursor_Arrow]);
-			SDL_ShowCursor(SDL_TRUE);
-		}
-	}
-
-	void Ui::updateKeyEvent() {
-		auto& io = ImGui::GetIO();
-
-
-	}
-
 	void Ui::checkBuffers(const size_t _vertex, const size_t _index) {
 		if (!mVertexBuffers[mCurrFrame] || mVertexBuffers[mCurrFrame]->size() < _vertex)
 			mVertexBuffers[mCurrFrame] = std::make_shared<Graphics::Buffer>(mVulkan->getAllocator(),
@@ -180,13 +93,14 @@ namespace Mix {
 		return sClipboardTextData;
 	}
 
-	void Ui::mapImGui() {
+	void Ui::setImGui() {
 		auto& io = ImGui::GetIO();
 
 		io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 		io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.MouseDrawCursor = true;
 
 		io.BackendPlatformName = "MixEngine ImGui";
 
@@ -226,6 +140,14 @@ namespace Mix {
 		mMouseCursors[ImGuiMouseCursor_ResizeNESW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENESW);
 		mMouseCursors[ImGuiMouseCursor_ResizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENWSE);
 		mMouseCursors[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
+
+		// size
+		auto extent = MixEngine::Instance().getWindow().extent();
+		auto drawableExtent = MixEngine::Instance().getWindow().drawableSize();
+		io.DisplaySize = ImVec2(static_cast<float>(extent.x), static_cast<float>(extent.y));
+		if (extent.x > 0 && extent.y > 0)
+			io.DisplayFramebufferScale = ImVec2(static_cast<float>(drawableExtent.x) / extent.x,
+												static_cast<float>(drawableExtent.y) / extent.y);
 	}
 
 	void Ui::createFontTexture() {
@@ -255,7 +177,114 @@ namespace Mix {
 			return Math::Vector2f::Zero; // (0, 0);
 
 		auto scale = getScale();
-		return { -1.0f - drawData->DisplayPos.x * scale[0],
-		-1.0f - drawData->DisplayPos.y * scale[1] };
+		return { -1.0f - drawData->DisplayPos.x * scale[0],-1.0f - drawData->DisplayPos.y * scale[1] };
+	}
+
+	void Ui::update() {
+		updateMouseCursor();
+	}
+
+	void Ui::updateMouseCursor() {
+		auto& io = ImGui::GetIO();
+
+		if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
+			return;
+
+		ImGuiMouseCursor cursor = ImGui::GetMouseCursor();
+		if (io.MouseDrawCursor || cursor == ImGuiMouseCursor_None) {
+			SDL_ShowCursor(SDL_FALSE);
+		}
+		else {
+			// Show OS mouse cursor
+			SDL_SetCursor(mMouseCursors[cursor] ? mMouseCursors[cursor] : mMouseCursors[ImGuiMouseCursor_Arrow]);
+			SDL_ShowCursor(SDL_TRUE);
+		}
+	}
+
+	bool Ui::process(const SDL_Event& _event) {
+		auto& io = ImGui::GetIO();
+		bool result = false;
+
+		switch (_event.type) {
+		case SDL_MOUSEWHEEL:
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		case SDL_MOUSEMOTION:
+			result = processMouse(_event);
+			break;
+		case SDL_TEXTINPUT:
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			result = processKey(_event);
+			break;
+		case SDL_WINDOWEVENT_SHOWN:
+		case SDL_WINDOWEVENT_RESIZED:
+			auto extent = MixEngine::Instance().getWindow().extent();
+			auto drawableExtent = MixEngine::Instance().getWindow().drawableSize();
+			io.DisplaySize = ImVec2(static_cast<float>(extent.x), static_cast<float>(extent.y));
+			if (extent.x > 0 && extent.y > 0)
+				io.DisplayFramebufferScale = ImVec2(static_cast<float>(drawableExtent.x) / extent.x,
+													static_cast<float>(drawableExtent.y) / extent.y);
+			break;
+		}
+
+		if (io.WantSetMousePos) {
+			SDL_WarpMouseInWindow(MixEngine::Instance().getWindow().window(),
+								  static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y));
+			auto mousePos = Input::MousePosition();
+			io.MousePos.x = static_cast<float>(mousePos.x);
+			io.MousePos.y = static_cast<float>(mousePos.y);
+		}
+
+		return result;
+	}
+
+	bool Ui::processMouse(const SDL_Event& _event) {
+		auto& io = ImGui::GetIO();
+		switch (_event.type) {
+		case SDL_MOUSEWHEEL:
+			if (_event.wheel.x > 0) io.MouseWheelH += 1;
+			if (_event.wheel.x < 0) io.MouseWheelH -= 1;
+			if (_event.wheel.y > 0) io.MouseWheel += 1;
+			if (_event.wheel.y < 0) io.MouseWheel -= 1;
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			if (_event.button.button == SDL_BUTTON_LEFT) io.MouseDown[0] = true;
+			if (_event.button.button == SDL_BUTTON_RIGHT) io.MouseDown[1] = true;
+			if (_event.button.button == SDL_BUTTON_MIDDLE) io.MouseDown[2] = true;
+			break;
+		case SDL_MOUSEBUTTONUP:
+			if (_event.button.button == SDL_BUTTON_LEFT) io.MouseDown[0] = false;
+			if (_event.button.button == SDL_BUTTON_RIGHT) io.MouseDown[1] = false;
+			if (_event.button.button == SDL_BUTTON_MIDDLE) io.MouseDown[2] = false;
+			break;
+		case SDL_MOUSEMOTION:
+			io.MousePos.x = static_cast<float>(_event.motion.x);
+			io.MousePos.y = static_cast<float>(_event.motion.y);
+			break;
+		}
+
+		return io.WantCaptureMouse;
+	}
+
+	bool Ui::processKey(const SDL_Event& _event) {
+		auto& io = ImGui::GetIO();
+		switch (_event.type) {
+		case SDL_TEXTINPUT:
+			io.AddInputCharactersUTF8(_event.text.text);
+			break;
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			int key = _event.key.keysym.scancode;
+			IM_ASSERT(key >= 0 && key < IM_ARRAYSIZE(io.KeysDown));
+			io.KeysDown[key] = (_event.type == SDL_KEYDOWN);
+			io.KeyShift = ((SDL_GetModState() & KMOD_SHIFT) != 0);
+			io.KeyCtrl = ((SDL_GetModState() & KMOD_CTRL) != 0);
+			io.KeyAlt = ((SDL_GetModState() & KMOD_ALT) != 0);
+			io.KeySuper = ((SDL_GetModState() & KMOD_GUI) != 0);
+			break;
+		}
+
+		return io.WantCaptureKeyboard;
 	}
 }

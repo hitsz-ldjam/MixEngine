@@ -24,8 +24,6 @@ namespace Mix {
 	public:
 		void init();
 
-		void update();
-
 		void render();
 
 		ImDrawData* getDrawData();
@@ -42,20 +40,17 @@ namespace Mix {
 
 		Math::Vector2f getTranslate() const;
 
+		void update();
+
+		/**
+		 * \brief Process event from SDL
+		 * \return true if Ui wants to intercept this event
+		 */
+		bool process(const SDL_Event& _event);
+
 	private:
-		static char* sClipboardTextData;
-
-		static void SetClipboardText(void*, const char* _text);
-
-		static const char* GetClipboardText(void*);
-
-		void mapImGui();
+		void setImGui();
 		void createFontTexture();
-		void updateExtent();
-		void updateMouse();
-		void updateMouseCursor();
-		void updateKeyEvent();
-
 		void checkBuffers(const size_t _vertex, const size_t _index);
 
 		Graphics::Vulkan* mVulkan = nullptr;
@@ -66,6 +61,14 @@ namespace Mix {
 		std::vector<std::shared_ptr<Graphics::Buffer>> mVertexBuffers;
 		std::vector<std::shared_ptr<Graphics::Buffer>> mIndexBuffers;
 
+		static char* sClipboardTextData;
+		static void SetClipboardText(void*, const char* _text);
+		static const char* GetClipboardText(void*);
+
+		void updateMouseCursor();
+
+		bool processMouse(const SDL_Event& _event);
+		bool processKey(const SDL_Event& _event);
 	};
 }
 

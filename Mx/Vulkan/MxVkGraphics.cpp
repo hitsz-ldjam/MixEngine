@@ -6,7 +6,7 @@
 #include "Debug/MxVkDebug.h"
 #include "Swapchain/MxVkSwapchain.h"
 #include "CommandBuffer/MxVkCommandPool.h"
-#include "Descriptor/MxVkDescriptor.h"
+#include "Descriptor/MxVkDescriptorSet.h"
 
 namespace Mix {
 	namespace Graphics {

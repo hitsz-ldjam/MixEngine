@@ -4,10 +4,10 @@
 
 namespace Mix {
 	namespace Resource {
-		GameObject* Model::generateGameObject() const {
+		GameObject* Model::generateGameObject(const GameObjectConstructionInfo& _info) const {
 			if (!mData)
 				return nullptr;
-            auto obj = new GameObject({mData->rootNode.name});
+            auto obj = new GameObject(_info);
 			recurBuildGameObj(*obj, mData->rootNode);
 			return obj;
 		}

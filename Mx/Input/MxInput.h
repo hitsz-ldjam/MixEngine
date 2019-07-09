@@ -6,6 +6,7 @@
 #include "../Math/MxVector2.h"
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_mouse.h>
+#include <SDL2/SDL.h>
 
 namespace Mix {
 
@@ -15,8 +16,6 @@ namespace Mix {
      *  (which represents the physical location) and an 'A' keycode.
      */
     class Input final {
-        friend class MixEngine;
-
     public:
         Input() = delete;
 
@@ -30,12 +29,12 @@ namespace Mix {
             return anyKeyDown;
         }
 
-        static bool GetAxisRaw(const SDL_Scancode _scancode) {
+        static bool GetKeyState(const SDL_Scancode _scancode) {
             return keyboardState[_scancode];
         }
 
-        static bool GetAxisRaw(const std::string& _name) {
-            return GetAxisRaw(SDL_GetScancodeFromName(_name.c_str()));
+        static bool GetKeyState(const std::string& _name) {
+            return GetKeyState(SDL_GetScancodeFromName(_name.c_str()));
         }
 
         static bool GetButton(const SDL_Scancode _scancode) {
@@ -96,16 +95,14 @@ namespace Mix {
 
         // ----- Mouse -----
 
-        static glm::ivec2 MousePosition() {
-            glm::ivec2 position;
+        static Math::Vector2i MousePosition() {
+            Math::Vector2i position;
             SDL_GetMouseState(&position.x, &position.y);
             return position;
         }
 
         static Math::Vector2i MousePositionDelta() {
-            Math::Vector2i delta;
-            SDL_GetRelativeMouseState(&delta.x, &delta.y);
-            return delta;
+            return mousePosDelta;
         }
 
         /** @return Button state. Can be tested using the @code SDL_BUTTON_MASK @endcode macros. */
@@ -128,6 +125,11 @@ namespace Mix {
             return mouseButtonEvent[_button - 1] & RELEASED_MASK;
         }
 
+		static bool Process(const SDL_Event& _event);
+
+		static void Reset();
+
+		static void Init();
     private:
         static const Uint8 FIRST_PRESSED_MASK = (1 << 2);
         static const Uint8 PRESSED_MASK = (1 << 1);
@@ -140,12 +142,9 @@ namespace Mix {
         static bool anyKeyDown;
 
         static Math::Vector2i mouseScrollDelta;
+		static Math::Vector2i mousePosDelta;
         // FIRST_PRESSED | PRESSED | RELEASED
         static Uint8 mouseButtonEvent[SDL_BUTTON_X2];
-
-        static void Init();
-
-        static void Reset();
     };
 }
 

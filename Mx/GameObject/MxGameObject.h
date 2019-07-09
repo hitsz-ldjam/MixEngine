@@ -8,273 +8,279 @@
 #include <set>
 
 namespace Mix {
-    class Scene;
+	class Scene;
 
-    using LayerIndex = uint32_t;
-    using Tag = std::string;
+	using LayerIndex = uint32_t;
+	using Tag = std::string;
 
-    class GameObject : public Object {
-    MX_DECLARE_RTTI
-    MX_DECLARE_CLASS_FACTORY
+	struct GameObjectConstructionInfo {
+		std::string name = "";
+		Tag tag = "";
+		LayerIndex layer = 0;
+		bool isStatic = false;
 
-        friend Scene;
+		GameObjectConstructionInfo(std::string _name = "", Tag _tag = "", LayerIndex _layerIndex = 0, bool _isStatic = false)
+			:name(std::move(_name)), tag(std::move(_tag)), layer(_layerIndex), isStatic(_isStatic) {
+		}
+	};
 
-    public:
-        struct GameObjectConstructionInfo {
-            std::string name = "";
-            Tag tag = "";
-            LayerIndex layer = 0;
-            bool isStatic = false;
-        };
+	class GameObject : public Object {
+		MX_DECLARE_RTTI;
+		MX_DECLARE_CLASS_FACTORY;
 
-        /** @note Default ctor for RTTI. DO NOT use this ctor. */
-        GameObject();
+		friend Scene;
 
-        GameObject(const GameObjectConstructionInfo& _info);
+	public:
 
-        GameObject(const GameObject& _obj) = delete;
 
-        // DO NOT use this function yet. There might be bugs.
-        GameObject(GameObject&& _obj) noexcept;
+		/** @note Default ctor for RTTI. DO NOT use this ctor. */
+		GameObject();
 
-        GameObject& operator=(const GameObject& _obj) = delete;
+		GameObject(const GameObjectConstructionInfo& _info);
 
-        // DO NOT use this function yet. There might be bugs.
-        GameObject& operator=(GameObject&& _obj) noexcept;
+		GameObject(const GameObject& _obj) = delete;
 
-        virtual ~GameObject();
+		// DO NOT use this function yet. There might be bugs.
+		GameObject(GameObject&& _obj) noexcept;
 
-        /**
-         *  @brief Add Component _comp to this GameObject
-         *  @return The pointer to the Component
-         */
-        Component* addComponent(Component* _comp);
+		GameObject& operator=(const GameObject& _obj) = delete;
 
-        /**
-         *  @brief Add a Component of type _Ty to this GameObject, using default constructor to create the Component
-         *  @return The pointer to the Component
-         */
-        template<typename _Ty>
-        _Ty* addComponent();
+		// DO NOT use this function yet. There might be bugs.
+		GameObject& operator=(GameObject&& _obj) noexcept;
 
-        /**
-         *  @brief Construct a Component of type _Ty and add it to this GameObject
-         *  @return The pointer to the Component
-         */
-        template<typename _Ty, typename... _Args>
-        _Ty* addComponent(_Args&&... _args);
+		virtual ~GameObject();
 
-        /**
-         *  @brief Get the pointer to the Component of type _Ty that attached to this GameObject
-         *  @return The pointer to the Component, return nullptr if not found
-         */
-        template<typename _Ty>
-        _Ty* getComponent();
+		/**
+		 *  @brief Add Component _comp to this GameObject
+		 *  @return The pointer to the Component
+		 */
+		Component* addComponent(Component* _comp);
 
-        /**
-         *  @brief Get all Components of type _Ty that attached to this GameObject
-         *  @return A vector containing pointers of Components that been found
-         */
-        template<typename _Ty>
-        std::vector<_Ty*> getComponents();
+		/**
+		 *  @brief Add a Component of type _Ty to this GameObject, using default constructor to create the Component
+		 *  @return The pointer to the Component
+		 */
+		template<typename _Ty>
+		_Ty* addComponent();
 
-        /** @brief Get Component of type _Ty in children of this GameObject using DFS */
-        template<typename _Ty>
-        _Ty* getComponentInChildren();
+		/**
+		 *  @brief Construct a Component of type _Ty and add it to this GameObject
+		 *  @return The pointer to the Component
+		 */
+		template<typename _Ty, typename... _Args>
+		_Ty* addComponent(_Args&&... _args);
 
-        /** 
-         *  @brief Removes Component that _comp points to,
-         *  does nothing if _comp isn't attached to this GameObject
-         */
-        void removeComponent(Component* _comp);
+		/**
+		 *  @brief Get the pointer to the Component of type _Ty that attached to this GameObject
+		 *  @return The pointer to the Component, return nullptr if not found
+		 */
+		template<typename _Ty>
+		_Ty* getComponent();
 
-        /**
-         *  @brief Add _obj as a child of this GameObject.\n
-         *  Automatically remove it from its original parent.
-         */
-        void addChild(GameObject* _obj);
+		/**
+		 *  @brief Get all Components of type _Ty that attached to this GameObject
+		 *  @return A vector containing pointers of Components that been found
+		 */
+		template<typename _Ty>
+		std::vector<_Ty*> getComponents();
 
-        /** @brief Remove a child that _obj points to from this GameObject */
-        void removeChild(GameObject* _obj);
+		/** @brief Get Component of type _Ty in children of this GameObject using DFS */
+		template<typename _Ty>
+		_Ty* getComponentInChildren();
 
-        auto getAllChildren() const {
-            return std::vector<GameObject*>(mChildren.begin(), mChildren.end());
-        }
+		/**
+		 *  @brief Removes Component that _comp points to,
+		 *  does nothing if _comp isn't attached to this GameObject
+		 */
+		void removeComponent(Component* _comp);
 
-        bool activeInHierarchy() const { return mActiveInHierarchy; }
+		/**
+		 *  @brief Add _obj as a child of this GameObject.\n
+		 *  Automatically remove it from its original parent.
+		 */
+		void addChild(GameObject* _obj);
 
-        /** @brief Check if this GameObject is active */
-        bool activeSelf() const { return mActiveSelf; }
+		/** @brief Remove a child that _obj points to from this GameObject */
+		void removeChild(GameObject* _obj);
 
-        /** @brief Activates/Deactivates the GameObject, depending on the given true or false value. */
-        void setActive(const bool _active);
+		auto getAllChildren() const {
+			return std::vector<GameObject*>(mChildren.begin(), mChildren.end());
+		}
 
-        /** @note There is not getter of this field because altering this will affect its physics. */
-        bool isStatic() const { return mIsStatic; }
+		bool activeInHierarchy() const { return mActiveInHierarchy; }
 
-        /** @brief Get the index of the layer that this GameObject belongs to */
-        const auto& getLayer() const { return mLayer; }
+		/** @brief Check if this GameObject is active */
+		bool activeSelf() const { return mActiveSelf; }
 
-        /** @brief Get the tag attached to this GameObject */
-        const auto& getTag() const { return mTag; }
+		/** @brief Activates/Deactivates the GameObject, depending on the given true or false value. */
+		void setActive(const bool _active);
 
-        Transform& transform() noexcept { return *mTransform; }
+		/** @note There is not getter of this field because altering this will affect its physics. */
+		bool isStatic() const { return mIsStatic; }
 
-        GameObject* parent() const noexcept { return mParent; }
+		/** @brief Get the index of the layer that this GameObject belongs to */
+		const auto& getLayer() const { return mLayer; }
 
-    protected:
-        GameObject* mParent;
-        std::set<GameObject*> mChildren;
-        std::set<Component*> mComponents;
-        std::set<Behaviour*> mBehaviours;
+		/** @brief Get the tag attached to this GameObject */
+		const auto& getTag() const { return mTag; }
 
-        bool mActiveInHierarchy, mActiveSelf, mIsStatic;
-        Tag mTag;
-        LayerIndex mLayer;
-        Transform* mTransform;
-        Scene* mScene;
+		Transform& transform() noexcept { return *mTransform; }
 
-        void awake() const {
-            for(auto behaviour : mBehaviours)
-                behaviour->awake();
-        }
+		GameObject* parent() const noexcept { return mParent; }
 
-        void init() const {
-            for(auto behaviour : mBehaviours)
-                behaviour->init();
-        }
+	protected:
+		GameObject* mParent;
+		std::set<GameObject*> mChildren;
+		std::set<Component*> mComponents;
+		std::set<Behaviour*> mBehaviours;
 
-        void update() const {
-            for(auto behaviour : mBehaviours)
-                behaviour->update();
-        }
+		bool mActiveInHierarchy, mActiveSelf, mIsStatic;
+		Tag mTag;
+		LayerIndex mLayer;
+		Transform* mTransform;
+		Scene* mScene;
 
-        void fixedUpdate() const {
-            for(auto behaviour : mBehaviours)
-                behaviour->fixedUpdate();
-        }
+		void awake() {
+			for (auto behaviour : mBehaviours)
+				behaviour->awake();
+		}
 
-        void lateUpdate() const {
-            for(auto behaviour : mBehaviours)
-                behaviour->lateUpdate();
-        }
+		void init() {
+			for (auto behaviour : mBehaviours)
+				behaviour->init();
+		}
 
-        /** @brief Insert _ptr into a shortlisted set of Mix::Behaviours 
-         *  if and only if _ptr points to an object derived from Mix::Behaviour.
-         */
-        template<typename _Ty>
-        std::enable_if_t<std::is_base_of_v<Behaviour, _Ty>> addBehaviour(_Ty* _ptr) { mBehaviours.insert(_ptr); }
+		void update() {
+			for (auto behaviour : mBehaviours)
+				behaviour->update();
+		}
 
-        /** @brief This function is called when _Ty is not derived from Mix::Behaviour. */
-        template<typename _Ty>
-        std::enable_if_t<!std::is_base_of_v<Behaviour, _Ty>> addBehaviour(_Ty*) {}
+		void fixedUpdate() {
+			for (auto behaviour : mBehaviours)
+				behaviour->fixedUpdate();
+		}
 
-        // ----- static variables and functions -----
+		void lateUpdate() {
+			for (auto behaviour : mBehaviours)
+				behaviour->lateUpdate();
+		}
 
-    public:
-        /**
-         *  @brief Get a GameObject named _name
-         *  @return The Pointer to the GameObject, return nullptr if not found
-         */
-        static GameObject* Find(const std::string& _name);
+		/** @brief Insert _ptr into a shortlisted set of Mix::Behaviours
+		 *  if and only if _ptr points to an object derived from Mix::Behaviour.
+		 */
+		template<typename _Ty>
+		std::enable_if_t<std::is_base_of_v<Behaviour, _Ty>> addBehaviour(_Ty* _ptr) { mBehaviours.insert(_ptr); }
 
-        /**
-         *  @brief Get all GameObjects with tag _tag
-         *  @return A vector containing pointers to GameObjects
-         */
-        static std::vector<GameObject*> FindGameObjectsWithTag(const Tag& _tag);
+		/** @brief This function is called when _Ty is not derived from Mix::Behaviour. */
+		template<typename _Ty>
+		std::enable_if_t<!std::is_base_of_v<Behaviour, _Ty>> addBehaviour(_Ty*) {}
 
-        /**
-         *  @brief Get a GameObject with tag _tag
-         *  @return The pointer to the first GameObject been found, return nullptr if not found
-         */
-        static GameObject* FindGameObjectWithTag(const Tag& _tag);
+		// ----- static variables and functions -----
 
-    private:
-        static std::vector<GameObject*> sGameObjList;
+	public:
+		/**
+		 *  @brief Get a GameObject named _name
+		 *  @return The Pointer to the GameObject, return nullptr if not found
+		 */
+		static GameObject* Find(const std::string& _name);
 
-        /** @brief Add GameObject _obj points to to global GameObject list */
-        static void AddGameObject(GameObject* _obj) {
-            if(_obj)
-                sGameObjList.push_back(_obj);
-        }
+		/**
+		 *  @brief Get all GameObjects with tag _tag
+		 *  @return A vector containing pointers to GameObjects
+		 */
+		static std::vector<GameObject*> FindGameObjectsWithTag(const Tag& _tag);
 
-        /** @brief Remove the GameObject _obj points to fom global GameObject list */
-        static void RemoveGameObject(GameObject* _obj) {
-            auto it = std::find(sGameObjList.cbegin(), sGameObjList.cend(), _obj);
-            if(it != sGameObjList.cend())
-                sGameObjList.erase(it);
-        }
-    };
+		/**
+		 *  @brief Get a GameObject with tag _tag
+		 *  @return The pointer to the first GameObject been found, return nullptr if not found
+		 */
+		static GameObject* FindGameObjectWithTag(const Tag& _tag);
 
-    // ----- template function implementations -----
+	private:
+		static std::vector<GameObject*> sGameObjList;
 
-    template<typename _Ty>
-    inline _Ty* GameObject::addComponent() {
-        // if type _Ty isn't derived from Component
-        static_assert(std::is_base_of_v<Component, _Ty>, "A Component must be a derived class of Component");
+		/** @brief Add GameObject _obj points to to global GameObject list */
+		static void AddGameObject(GameObject* _obj) {
+			if (_obj)
+				sGameObjList.push_back(_obj);
+		}
 
-        _Ty* t = new _Ty();
-        t->setGameObject(this);
-        mComponents.insert(t);
+		/** @brief Remove the GameObject _obj points to fom global GameObject list */
+		static void RemoveGameObject(GameObject* _obj) {
+			auto it = std::find(sGameObjList.cbegin(), sGameObjList.cend(), _obj);
+			if (it != sGameObjList.cend())
+				sGameObjList.erase(it);
+		}
+	};
 
-        addBehaviour(t);
+	// ----- template function implementations -----
 
-        return t;
-    }
+	template<typename _Ty>
+	inline _Ty* GameObject::addComponent() {
+		// if type _Ty isn't derived from Component
+		static_assert(std::is_base_of_v<Component, _Ty>, "A Component must be a derived class of Component");
 
-    template<typename _Ty, typename... _Args>
-    inline _Ty* GameObject::addComponent(_Args&&... _args) {
-        // if type _Ty isn't derived from Component
-        static_assert(std::is_base_of_v<Component, _Ty>, "A Component must be a derived class of Component");
+		_Ty* t = new _Ty();
+		t->setGameObject(this);
+		mComponents.insert(t);
 
-        _Ty* t = new _Ty(std::forward<_Args>(_args)...);
-        t->setGameObject(this);
-        mComponents.insert(t);
+		addBehaviour(t);
 
-        addBehaviour(t);
+		return t;
+	}
 
-        return t;
-    }
+	template<typename _Ty, typename... _Args>
+	inline _Ty* GameObject::addComponent(_Args&&... _args) {
+		// if type _Ty isn't derived from Component
+		static_assert(std::is_base_of_v<Component, _Ty>, "A Component must be a derived class of Component");
 
-    template<typename _Ty>
-    inline _Ty* GameObject::getComponent() {
-        _Ty* result;
+		_Ty* t = new _Ty(std::forward<_Args>(_args)...);
+		t->setGameObject(this);
+		mComponents.insert(t);
 
-        for(auto comp : mComponents) {
-            if((result = dynamic_cast<_Ty*>(comp)))
-                return result;
-        }
+		addBehaviour(t);
 
-        return nullptr;
-    }
+		return t;
+	}
 
-    template<typename _Ty>
-    inline std::vector<_Ty*> GameObject::getComponents() {
-        std::vector<_Ty*> results;
-        _Ty* result;
+	template<typename _Ty>
+	inline _Ty* GameObject::getComponent() {
+		_Ty* result;
 
-        for(auto comp : mComponents) {
-            if((result = dynamic_cast<_Ty*>(comp)))
-                results.push_back(result);
-        }
+		for (auto comp : mComponents) {
+			if ((result = dynamic_cast<_Ty*>(comp)))
+				return result;
+		}
 
-        return results;
-    }
+		return nullptr;
+	}
 
-    template<typename _Ty>
-    inline _Ty* GameObject::getComponentInChildren() {
-        _Ty* ptr = getComponent<_Ty>();
+	template<typename _Ty>
+	inline std::vector<_Ty*> GameObject::getComponents() {
+		std::vector<_Ty*> results;
+		_Ty* result;
 
-        if(!ptr) {
-            for(auto child : mChildren) {
-                if((ptr = child->getComponentInChildren<_Ty>()))
-                    return ptr;
-            }
-        }
+		for (auto comp : mComponents) {
+			if ((result = dynamic_cast<_Ty*>(comp)))
+				results.push_back(result);
+		}
 
-        return nullptr;
-    }
+		return results;
+	}
+
+	template<typename _Ty>
+	inline _Ty* GameObject::getComponentInChildren() {
+		_Ty* ptr = getComponent<_Ty>();
+
+		if (!ptr) {
+			for (auto child : mChildren) {
+				if ((ptr = child->getComponentInChildren<_Ty>()))
+					return ptr;
+			}
+		}
+
+		return nullptr;
+	}
 }
 
 #endif

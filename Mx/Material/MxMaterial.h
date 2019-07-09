@@ -2,7 +2,7 @@
 #ifndef MX_MATERIAL_H_
 #define MX_MATERIAL_H_
 
-#include "../Vulkan/Descriptor/MxVkDescriptor.h"
+#include "../Vulkan/Descriptor/MxVkDescriptorSet.h"
 #include <unordered_map>
 #include <string>
 

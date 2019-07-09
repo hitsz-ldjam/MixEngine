@@ -13,6 +13,7 @@
 #include "../../../GUI/imgui/imgui.h"
 #include "../../Pipeline/MxVkPipelineFactory.h"
 #include "../../../GameObject/MxGameObject.h"
+#include "../../../Preset/Camera/MxCamera.h"
 
 namespace Mix {
 	namespace Graphics {
@@ -52,20 +53,16 @@ namespace Mix {
 
 			if (camera) {
 				auto& transform = camera->transform();
+				auto cb = camera->getComponent<Camera>();
+
 				Uniform::CameraUniform ubo;
 
 				ubo.position = transform.getPosition();
-				ubo.forward = transform.forward();
-				auto target = ubo.position + ubo.forward;
 
-				ubo.viewMat = Math::Matrix4::ViewMatrix(ubo.position, target, Math::Vector3f::Up);
+				ubo.viewMat = cb->getViewMat();
 
-				ubo.projMat = Math::Matrix4::Perspective(Math::Radians(45.0f),
-														 float(mSwapchain->extent().width) / mSwapchain
-														 ->extent().height,
-														 0.1f, 1000.0f);
+				ubo.projMat = cb->getProjMat();
 
-				ubo.projMat[1][1] *= -1.0f;
 				mCameraUniforms[_currFrame].uploadData(&ubo, sizeof(ubo));
 			}
 		}
@@ -200,20 +197,14 @@ namespace Mix {
 			// update descriptor sets
 			for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
 				std::array<vk::WriteDescriptorSet, 2> descriptorWrites = {};
-				descriptorWrites[0].dstSet = mDescriptorSets[i];
-				//descriptor which will be write in
-				descriptorWrites[0].dstBinding = 0; //destination binding
-				descriptorWrites[0].dstArrayElement = 0;
-				descriptorWrites[0].descriptorType = vk::DescriptorType::eUniformBuffer;
-				//the type of the descriptor that will be wirte in
-				descriptorWrites[0].descriptorCount = 1;                                //descriptor count
-				descriptorWrites[0].pBufferInfo = &mCameraUniforms[i].descriptorInfo(); //descriptorBufferInfo
-				descriptorWrites[0].pImageInfo = nullptr;
-				descriptorWrites[0].pTexelBufferView = nullptr;
+				auto write0 = mCameraUniforms[i].getWriteDescriptor(0, vk::DescriptorType::eUniformBuffer);
+				auto write1 = mDynamicUniform[i].getWriteDescriptorSet(1);
 
+				descriptorWrites[0] = write0.get();
+				descriptorWrites[1] = write1.get();
 
-				auto write = mDynamicUniform[i].getWriteDescriptorSet(mDescriptorSets[i], 1);
-				descriptorWrites[1] = write.get();
+				descriptorWrites[0].dstSet=mDescriptorSets[i];
+				descriptorWrites[1].dstSet=mDescriptorSets[i];
 
 				mDevice->get().updateDescriptorSets(descriptorWrites, nullptr);
 			}

@@ -2,10 +2,9 @@
 #ifndef MX_VK_DESCRIPTOR_H_
 #define MX_VK_DESCRIPTOR_H_
 
-#include "../Device/MxVkDevice.h"
-#include <unordered_map>
-#include "../../Utils/MxArrayProxy.h"
-#include <map>
+#include <vulkan/vulkan.hpp>
+#include <optional>
+#include "../../Utils/MxOffsetSize.hpp"
 
 namespace Mix {
 	namespace Graphics {
@@ -13,106 +12,35 @@ namespace Mix {
 		public:
 			WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorImageInfo &_imageInfo) :
 				mWriteDescriptorSet(_writeDescriptorSet),
-				mImageInfo(std::make_unique<vk::DescriptorImageInfo>(_imageInfo)),
+				mImageInfo(_imageInfo),
 				mBufferInfo(nullptr) {
-				mWriteDescriptorSet.pImageInfo = mImageInfo.get();
+				mWriteDescriptorSet.pImageInfo = &mImageInfo.value();
 			}
 
 			WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorBufferInfo &_bufferInfo) :
 				mWriteDescriptorSet(_writeDescriptorSet),
 				mImageInfo(nullptr),
-				mBufferInfo(std::make_unique<vk::DescriptorBufferInfo>(_bufferInfo)) {
-				mWriteDescriptorSet.pBufferInfo = mBufferInfo.get();
+				mBufferInfo(_bufferInfo) {
+				mWriteDescriptorSet.pBufferInfo = &mBufferInfo.value();
 			}
 
-			const VkWriteDescriptorSet &get() const { return mWriteDescriptorSet; }
+			const vk::WriteDescriptorSet &get() const { return mWriteDescriptorSet; }
 
 		private:
 			vk::WriteDescriptorSet mWriteDescriptorSet;
-			std::unique_ptr<vk::DescriptorImageInfo> mImageInfo;
-			std::unique_ptr<vk::DescriptorBufferInfo> mBufferInfo;
+			std::optional<vk::DescriptorImageInfo> mImageInfo;
+			std::optional<vk::DescriptorBufferInfo> mBufferInfo;
 		};
 
-		class DescriptorSetLayout {
+		class Descriptor {
 		public:
-			explicit DescriptorSetLayout(std::shared_ptr<Device> _device) :mDevice(_device) {
-			}
+			virtual WriteDescriptorSet getWriteDescriptor(const uint32_t &_binding, const vk::DescriptorType &_descriptorType, const std::optional<OffsetSize64>& _offsetSize = std::nullopt) const = 0;
 
-			DescriptorSetLayout(const DescriptorSetLayout& _other);
+			Descriptor() = default;
 
-			DescriptorSetLayout(DescriptorSetLayout&& _other) noexcept;
-
-			DescriptorSetLayout& operator=(DescriptorSetLayout _other);
-
-			DescriptorSetLayout& operator=(DescriptorSetLayout&& _other) noexcept;
-
-			void swap(DescriptorSetLayout& _other) noexcept;
-
-			~DescriptorSetLayout();
-
-			void addBindings(const uint32_t _binding,
-							 const vk::DescriptorType _type,
-							 const uint32_t _count,
-							 const vk::ShaderStageFlags _stage,
-							 const vk::Sampler* _immutableSamplers = nullptr);
-
-			void addBindings(ArrayProxy<const vk::DescriptorSetLayoutBinding> _bindings);
-
-			void create();
-
-			const vk::DescriptorSetLayout& get() const { return mDescriptorSetLayout; }
-
-			std::shared_ptr<Device> getDevice() const { return mDevice; }
-
-			const std::vector<vk::DescriptorSetLayoutBinding>& getBindings() const { return mBindings; }
-
-		private:
-			std::shared_ptr<Device> mDevice;
-			vk::DescriptorSetLayout mDescriptorSetLayout;
-			std::vector<vk::DescriptorSetLayoutBinding> mBindings;
-		};
-
-		class DescriptorPool :public GeneralBase::NoCopyBase {
-		public:
-			~DescriptorPool();
-
-			explicit DescriptorPool(const std::shared_ptr<Device>& _device) :mDevice(_device) {}
-
-			DescriptorPool(DescriptorPool&& _other) noexcept { swap(_other); }
-
-			DescriptorPool& operator=(DescriptorPool&& _other) noexcept { swap(_other); return *this; }
-
-			void swap(DescriptorPool& _other) noexcept;
-
-			void create(uint32_t _maxSets);
-
-			void addPoolSize(vk::DescriptorType _type, uint32_t _count);
-
-			const vk::DescriptorPool& get() const { return mDescriptorPool; }
-
-			std::shared_ptr<Device> getDevice() const { return mDevice; }
-
-			std::vector<vk::DescriptorSet> allocDescriptorSet(const std::vector<vk::DescriptorSetLayout>& _layouts) const;
-
-			std::vector<vk::DescriptorSet> allocDescriptorSet(const vk::DescriptorSetLayout _layout, const uint32_t _count) const;
-
-			vk::DescriptorSet allocDescriptorSet(const vk::DescriptorSetLayout _layout) const;
-
-			std::vector<vk::DescriptorSet> allocDescriptorSet(const std::vector<DescriptorSetLayout>& _layouts) const;
-
-			std::vector<vk::DescriptorSet> allocDescriptorSet(const DescriptorSetLayout& _layout, const uint32_t _count) const;
-
-			vk::DescriptorSet allocDescriptorSet(const DescriptorSetLayout& _layout) const;
-
-			void dealloc(const vk::DescriptorSet& _set) const;
-
-			void dealloc(const std::vector<vk::DescriptorSet>& _sets) const;
-
-		private:
-			vk::DescriptorPool mDescriptorPool;
-			std::shared_ptr<Device> mDevice;
-			std::map<vk::DescriptorType, uint32_t> mPoolSizes;
+			virtual ~Descriptor() = default;
 		};
 	}
 }
-#endif // !MX_VK_DESCRIPTOR_H_
+
+#endif

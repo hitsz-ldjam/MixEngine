@@ -2,7 +2,6 @@
 #ifndef MX_MODEL_H_
 #define MX_MODEL_H_
 
-#include "../../Vulkan/Buffers/MxVkBuffer.h"
 #include "../../Vulkan/Memory/MxVkAllocator.h"
 #include "../../Math/MxVector3.h"
 #include "../../Math/MxQuaternion.h"
@@ -10,6 +9,7 @@
 
 namespace Mix {
 	class GameObject;
+	struct GameObjectConstructionInfo;
 
 	namespace Resource {
 		class Model :public ResourceBase {
@@ -36,7 +36,7 @@ namespace Mix {
 				std::vector<std::shared_ptr<Mesh>> meshes;
 			};
 
-			GameObject* generateGameObject() const;
+			GameObject* generateGameObject(const GameObjectConstructionInfo& _info) const;
 
 		private:
 			std::shared_ptr<DataType> mData;
