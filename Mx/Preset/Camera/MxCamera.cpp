@@ -22,22 +22,22 @@ namespace Mix {
 			tran->rotate(Radians(mMouseSpeed * delta.y * Time::DeltaTime()), Radians(mMouseSpeed * delta.x * Time::DeltaTime()), 0.0f);
 		}
 
-		if (Input::GetKeyState(SDL_SCANCODE_W)) {
+		if (Input::GetAxisRaw(SDL_SCANCODE_W)) {
 			tran->translate(Vector3f::Forward * (Time::DeltaTime() * 5.0f), Space::SELF);
 		}
-		if (Input::GetKeyState(SDL_SCANCODE_S)) {
+		if (Input::GetAxisRaw(SDL_SCANCODE_S)) {
 			tran->translate(Vector3f::Back * (Time::DeltaTime() * 5.0f), Space::SELF);
 		}
-		if (Input::GetKeyState(SDL_SCANCODE_D)) {
+		if (Input::GetAxisRaw(SDL_SCANCODE_D)) {
 			tran->translate(Vector3f::Right * (Time::DeltaTime() * 5.0f), Space::SELF);
 		}
-		if (Input::GetKeyState(SDL_SCANCODE_A)) {
+		if (Input::GetAxisRaw(SDL_SCANCODE_A)) {
 			tran->translate(Vector3f::Left * (Time::DeltaTime() * 5.0f), Space::SELF);
 		}
-		if (Input::GetKeyState(SDL_SCANCODE_SPACE)) {
+		if (Input::GetAxisRaw(SDL_SCANCODE_SPACE)) {
 			tran->translate(Vector3f::Up * (Time::DeltaTime() * 5.0f), Space::WORLD);
 		}
-		if (Input::GetKeyState(SDL_SCANCODE_LCTRL)) {
+		if (Input::GetAxisRaw(SDL_SCANCODE_LCTRL)) {
 			tran->translate(Vector3f::Down * (Time::DeltaTime() * 5.0f), Space::WORLD);
 		}
 

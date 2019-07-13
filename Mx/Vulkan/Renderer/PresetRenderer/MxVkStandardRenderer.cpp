@@ -10,7 +10,7 @@
 #include "../../../Resource/Shader/MxShaderSource.h"
 #include "../../../GUI/MxUi.h"
 #include "../../../Resource/Texture/MxTexture.h"
-#include "../../../GUI/imgui/imgui.h"
+#include "../../../../ThirdPartyLibs/imgui/imgui.h"
 #include "../../Pipeline/MxVkPipelineFactory.h"
 #include "../../../GameObject/MxGameObject.h"
 #include "../../../Preset/Camera/MxCamera.h"

@@ -1,71 +1,66 @@
 ﻿#include "MxInput.h"
 
 namespace Mix {
-	const Uint8* Input::keyboardState = nullptr;
-	Uint8 Input::keyEvent[SDL_NUM_SCANCODES] = { 0 };
-	bool Input::anyKey = false;
-	bool Input::anyKeyDown = false;
-	Math::Vector2i Input::mouseScrollDelta = { 0, 0 };
-	Math::Vector2i Input::mousePosDelta = { 0,0 };
-	Uint8 Input::mouseButtonEvent[SDL_BUTTON_X2] = { 0 };
+    const Uint8* Input::mKeyboardState = nullptr;
+    uint8_t Input::mKeyboardEvent[SDL_NUM_SCANCODES]{};
+    bool Input::mAnyKey = false, Input::mAnyKeyDown = false;
+    uint8_t Input::mMouseButtonEvent[SDL_BUTTON_X2]{};
+    Math::Vector2i Input::mMousePosDelta(0, 0), Input::mMouseScrollDelta(0, 0);
 
-	void Input::Init() {
-		keyboardState = SDL_GetKeyboardState(nullptr);
-	}
+    void Input::Awake() {
+        mKeyboardState = SDL_GetKeyboardState(nullptr);
+    }
 
-	bool Input::Process(const SDL_Event& _event) {
-		switch (_event.type) {
-		case SDL_KEYDOWN:
-		{
-			SDL_Scancode code = _event.key.keysym.scancode;
-			anyKey = true;
-			keyEvent[code] |= PRESSED_MASK;
-			if (!_event.key.repeat) {
-				anyKeyDown = true;
-				keyEvent[code] |= FIRST_PRESSED_MASK;
-			}
-			break;
-		}
-		case SDL_KEYUP:
-		{
-			keyEvent[_event.key.keysym.scancode] |= RELEASED_MASK;
-			break;
-		}
-		case SDL_MOUSEBUTTONDOWN:
-		{
-			// if(event.button.clicks == 1)
-			mouseButtonEvent[_event.button.button - 1] |= FIRST_PRESSED_MASK;
-			break;
-		}
-		case SDL_MOUSEBUTTONUP:
-		{
-			mouseButtonEvent[_event.button.button - 1] |= RELEASED_MASK;
-			break;
-		}
-		case SDL_MOUSEMOTION:
-		{
-			mousePosDelta = { _event.motion.xrel,_event.motion.yrel };
-			break;
-		}
-		case SDL_MOUSEWHEEL:
-		{
-			int deltaY = _event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1;
-			deltaY *= _event.wheel.y;
-			mouseScrollDelta += Math::Vector2i(_event.wheel.x, deltaY);
-			break;
-		}
-		default:
-			break;
-		}
-		return false;
-	}
+    void Input::Process(const SDL_Event& _event) {
+        switch(_event.type) {
+            case SDL_KEYDOWN:
+            {
+                auto code = _event.key.keysym.scancode;
+                mKeyboardEvent[code] |= mPressedMask;
+                mAnyKey = true;
+                if(!_event.key.repeat) {
+                    mKeyboardEvent[code] |= mDownMask;
+                    mAnyKeyDown = true;
+                }
+                break;
+            }
+            case SDL_KEYUP:
+            {
+                mKeyboardEvent[_event.key.keysym.scancode] |= mUpMask;
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN:
+            {
+                //if(event.button.clicks == 1)
+                mMouseButtonEvent[_event.button.button - 1] |= mDownMask;
+                break;
+            }
+            case SDL_MOUSEBUTTONUP:
+            {
+                mMouseButtonEvent[_event.button.button - 1] |= mUpMask;
+                break;
+            }
+            case SDL_MOUSEMOTION:
+            {
+                mMousePosDelta += Math::Vector2(_event.motion.xrel, _event.motion.yrel);
+                break;
+            }
+            case SDL_MOUSEWHEEL:
+            {
+                int deltaY = _event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1;
+                deltaY *= _event.wheel.y;
+                mMouseScrollDelta += Math::Vector2i(_event.wheel.x, deltaY);
+                break;
+            }
+            default:
+                break;
+        }
+    }
 
-	void Input::Reset() {
-		std::memset(keyEvent, 0, SDL_NUM_SCANCODES * sizeof(*keyEvent));
-		anyKey = false;
-		anyKeyDown = false;
-		mouseScrollDelta = { 0, 0 };
-		mousePosDelta = { 0,0 };
-		std::memset(mouseButtonEvent, 0, SDL_BUTTON_X2 * sizeof(*mouseButtonEvent));
-	}
+    void Input::Reset() {
+        std::memset(mKeyboardEvent, 0, SDL_NUM_SCANCODES * sizeof(*mKeyboardEvent));
+        mAnyKey = mAnyKeyDown = false;
+        std::memset(mMouseButtonEvent, 0, SDL_BUTTON_X2 * sizeof(*mMouseButtonEvent));
+        mMousePosDelta = mMouseScrollDelta = {0, 0};
+    }
 }

@@ -54,7 +54,7 @@ namespace Mix {
 
         static void Awake() noexcept;
 
-        static void Update() noexcept;
+        static void Tick() noexcept;
 
         static auto DurationToSecond(const Duration& _duration) noexcept {
             return static_cast<float>(_duration.count()) * Duration::period::num / Duration::period::den;

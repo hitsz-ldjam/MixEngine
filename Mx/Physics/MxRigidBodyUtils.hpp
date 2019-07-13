@@ -1,16 +1,53 @@
 ﻿#pragma once
 
-#ifndef MX_PHYSICS_HPP_
-#define MX_PHYSICS_HPP_
+#ifndef MX_RIGID_BODY_UTILS_HPP_
+#define MX_RIGID_BODY_UTILS_HPP_
 
 #include <bullet3/btBulletDynamicsCommon.h>
-#include "../Component/Transform/MxTransform.h"
+#include <functional>
 
 namespace Mix::Physics {
     enum class RigidbodyInterpolation {
         NONE,
         INTERPOLATE,
         EXTRAPOLATE,
+    };
+
+    struct RigidBodyConstructionInfo {
+        /** Zero mass creates a static rigid body (@code btCollisionObject::CF_STATIC_OBJECT @endcode) */
+        btScalar mass;
+
+        /** Can be cast from Transform by calling @code Physics::mixTransformToBtTransform @endcode */
+        btTransform startTrans;
+
+        /**
+         *  1) Should NOT be nullptr. Local inertia tensor is calculated via this shape.\n
+         *  2) Reusing collision shapes is highly recommended.\n
+         *  3) The life times of collision shapes (and their children shapes) are automatically managed by
+         *  RigidBody. DO NOT (and there is no need to) delete shapes manually.
+         */
+        btCollisionShape* shape;
+
+        /** Used in MotionState construction. */
+        RigidbodyInterpolation interpolation = RigidbodyInterpolation::NONE;
+
+        /** Used in MotionState construction. */
+        btTransform centerOfMassOffset = btTransform::getIdentity();
+
+        /** 
+         *  This function is called after btRigidBody::btRigidBodyConstructionInfo is constructed in RigidBody
+         *  construction.\n
+         *  DO NOT overwrite m_mass, m_motionState, m_collisionShape, m_localInertia in this function.
+         *  
+         *  @b See: btRigidBody::btRigidBodyConstructionInfo
+         */
+        std::function<void(btRigidBody::btRigidBodyConstructionInfo&)> furtherSetup = [](auto&) {};
+
+        explicit RigidBodyConstructionInfo(const btScalar _mass,
+                                           const btTransform& _startTrans,
+                                           btCollisionShape* _shape) : mass(_mass),
+                                                                       startTrans(_startTrans),
+                                                                       shape(_shape) {}
     };
 
     ATTRIBUTE_ALIGNED16(struct) MotionState final : btMotionState {
@@ -40,10 +77,10 @@ namespace Mix::Physics {
 
         /**
          *  @brief Interpolates transform. Should be called manually once per
-         *  frame(update) if interpolated transform is desired.
+         *  frame (update) if transform interpolation is desired.
          *  @param _fixedDeltaTime Should be Time::FixedDeltaTime()
          *  @param _smoothing Should be Time::SmoothingFactor()
-         *  
+         *
          *  @b todo: debug
          */
         void calculateInterpolatedTransform(const btScalar _fixedDeltaTime, const btScalar _smoothing) {
@@ -98,37 +135,6 @@ namespace Mix::Physics {
         btTransform mPrevTrans, mCurrTrans, mInterpolatedTrans, mComOffset;
         RigidbodyInterpolation mInterpolation;
     };
-
-    // todo: debug. bullet uses right hand coordinate system!
-    inline Transform btTransformToMixTransform(const btTransform& _btTrans) noexcept {
-        Transform trans;
-        trans.setPosition({
-            _btTrans.getOrigin().x(),
-            _btTrans.getOrigin().y(),
-            _btTrans.getOrigin().z()
-        });
-        trans.setRotation({
-            _btTrans.getRotation().w(),
-            _btTrans.getRotation().x(),
-            _btTrans.getRotation().y(),
-            _btTrans.getRotation().z()
-        });
-        return trans;
-    }
-
-    inline btTransform mixTransformToBtTransform(const Transform& _mixTrans) noexcept {
-        return btTransform({
-                               _mixTrans.getRotation().x,
-                               _mixTrans.getRotation().y,
-                               _mixTrans.getRotation().z,
-                               _mixTrans.getRotation().w
-                           },
-                           {
-                               _mixTrans.getPosition().x,
-                               _mixTrans.getPosition().y,
-                               _mixTrans.getPosition().z
-                           });
-    }
 }
 
 #endif

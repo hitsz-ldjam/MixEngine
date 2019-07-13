@@ -4,9 +4,8 @@
 #define MX_INPUT_H_
 
 #include "../Math/MxVector2.h"
-#include <SDL2/SDL_keyboard.h>
-#include <SDL2/SDL_mouse.h>
-#include <SDL2/SDL.h>
+#include "../Engine/MxModuleBase.h"
+#include <SDL2/SDL_events.h>
 
 namespace Mix {
 
@@ -18,133 +17,93 @@ namespace Mix {
     class Input final {
     public:
         Input() = delete;
+        Input(const Input&) = delete;
 
         // ----- Keyboard -----
 
-        static bool AnyKey() {
-            return anyKey;
-        }
+        static bool AnyKey() noexcept { return mAnyKey; }
 
-        static bool AnyKeyDown() {
-            return anyKeyDown;
-        }
+        static bool AnyKeyDown() noexcept { return mAnyKeyDown; }
 
-        static bool GetKeyState(const SDL_Scancode _scancode) {
-            return keyboardState[_scancode];
-        }
+        static bool GetAxisRaw(const SDL_Scancode _scancode) noexcept { return mKeyboardState[_scancode]; }
 
-        static bool GetKeyState(const std::string& _name) {
-            return GetKeyState(SDL_GetScancodeFromName(_name.c_str()));
-        }
+        static bool GetAxisRaw(const std::string& _name) noexcept { return GetAxisRaw(SDL_GetScancodeFromName(_name.c_str())); }
 
-        static bool GetButton(const SDL_Scancode _scancode) {
-            return keyEvent[_scancode] & PRESSED_MASK;
-        }
+        static bool GetButton(const SDL_Scancode _scancode) noexcept { return mKeyboardEvent[_scancode] & mPressedMask; }
 
-        static bool GetButton(const std::string& _name) {
-            return GetButton(SDL_GetScancodeFromName(_name.c_str()));
-        }
+        static bool GetButton(const std::string& _name) noexcept { return GetButton(SDL_GetScancodeFromName(_name.c_str())); }
 
-        static bool GetButtonDown(const SDL_Scancode _scancode) {
-            return keyEvent[_scancode] & FIRST_PRESSED_MASK;
-        }
+        static bool GetButtonDown(const SDL_Scancode _scancode) noexcept { return mKeyboardEvent[_scancode] & mDownMask; }
 
-        static bool GetButtonDown(const std::string& _name) {
-            return GetButtonDown(SDL_GetScancodeFromName(_name.c_str()));
-        }
+        static bool GetButtonDown(const std::string& _name) noexcept { return GetButtonDown(SDL_GetScancodeFromName(_name.c_str())); }
 
-        static bool GetButtonUp(const SDL_Scancode _scancode) {
-            return keyEvent[_scancode] & RELEASED_MASK;
-        }
+        static bool GetButtonUp(const SDL_Scancode _scancode) noexcept { return mKeyboardEvent[_scancode] & mUpMask; }
 
-        static bool GetButtonUp(const std::string& _name) {
-            return GetButtonUp(SDL_GetScancodeFromName(_name.c_str()));
-        }
+        static bool GetButtonUp(const std::string& _name) noexcept { return GetButtonUp(SDL_GetScancodeFromName(_name.c_str())); }
 
-        static bool GetKey(const SDL_Keycode _keycode) {
-            return GetButton(SDL_GetScancodeFromKey(_keycode));
-        }
+        static bool GetKey(const SDL_Keycode _keycode) noexcept { return GetButton(SDL_GetScancodeFromKey(_keycode)); }
 
         /** @note Redundant. Identical to @code Input::GetButton(const std::string&) @endcode . */
-        static bool GetKey(const std::string& _name) {
-            return GetKey(SDL_GetKeyFromName(_name.c_str()));
-        }
+        static bool GetKey(const std::string& _name) noexcept { return GetKey(SDL_GetKeyFromName(_name.c_str())); }
 
-        static bool GetKeyDown(const SDL_Keycode _keycode) {
-            return GetButtonDown(SDL_GetScancodeFromKey(_keycode));
-        }
+        static bool GetKeyDown(const SDL_Keycode _keycode) noexcept { return GetButtonDown(SDL_GetScancodeFromKey(_keycode)); }
 
         /** @note Redundant. Identical to @code Input::GetButtonDown(const std::string&) @endcode . */
-        static bool GetKeyDown(const std::string& _name) {
-            return GetKeyDown(SDL_GetKeyFromName(_name.c_str()));
-        }
+        static bool GetKeyDown(const std::string& _name) noexcept { return GetKeyDown(SDL_GetKeyFromName(_name.c_str())); }
 
-        static bool GetKeyUp(const SDL_Keycode _keycode) {
-            return GetButtonUp(SDL_GetScancodeFromKey(_keycode));
-        }
+        static bool GetKeyUp(const SDL_Keycode _keycode) noexcept { return GetButtonUp(SDL_GetScancodeFromKey(_keycode)); }
 
         /** @note Redundant. Identical to @code Input::GetButtonUp(const std::string&) @endcode . */
-        static bool GetKeyUp(const std::string& _name) {
-            return GetKeyUp(SDL_GetKeyFromName(_name.c_str()));
-        }
+        static bool GetKeyUp(const std::string& _name) noexcept { return GetKeyUp(SDL_GetKeyFromName(_name.c_str())); }
 
         /** @note Directly calls @code SDL_GetModState() @endcode . */
-        static SDL_Keymod GetKeyModState() {
-            return SDL_GetModState();
-        }
+        static auto GetKeyModState() noexcept { return SDL_GetModState(); }
 
         // ----- Mouse -----
 
-        static Math::Vector2i MousePosition() {
+        static auto MousePosition() noexcept {
             Math::Vector2i position;
             SDL_GetMouseState(&position.x, &position.y);
             return position;
         }
 
-        static Math::Vector2i MousePositionDelta() {
-            return mousePosDelta;
-        }
+        static auto MousePositionDelta() noexcept { return mMousePosDelta; }
 
-        /** @return Button state. Can be tested using the @code SDL_BUTTON_MASK @endcode macros. */
-        static Uint32 MouseButtonState() {
-            return SDL_GetMouseState(nullptr, nullptr);
-        }
+        /** 
+         *  @return Button state. Can be tested using the @code SDL_BUTTON_MASK @endcode macros. 
+         *  @note Directly calls @code SDL_GetMouseState(nullptr, nullptr) @endcode .
+         */
+        static auto MouseButtonState() noexcept { return SDL_GetMouseState(nullptr, nullptr); }
 
         /** @return Positive for upwards, negative for downwards. */
-        static Math::Vector2i MouseScrollDelta() {
-            return mouseScrollDelta;
-        }
+        static auto MouseScrollDelta() noexcept { return mMouseScrollDelta; }
 
         /** @param _button One of the @code SDL_BUTTON_ @endcode macros. */
-        static bool GetMouseButtonDown(const Uint8 _button) {
-            return mouseButtonEvent[_button - 1] & FIRST_PRESSED_MASK;
-        }
+        static bool GetMouseButtonDown(const Uint8 _button) noexcept { return mMouseButtonEvent[_button - 1] & mDownMask; }
 
         /** @param _button One of the @code SDL_BUTTON_ @endcode macros. */
-        static bool GetMouseButtonUp(const Uint8 _button) {
-            return mouseButtonEvent[_button - 1] & RELEASED_MASK;
-        }
+        static bool GetMouseButtonUp(const Uint8 _button) noexcept { return mMouseButtonEvent[_button - 1] & mUpMask; }
 
-		static bool Process(const SDL_Event& _event);
+        /** Please use @code Input::MouseButtonState() @endcode instead. */
+        static bool GetMouseButton(const Uint8 _button) = delete;
 
-		static void Reset();
+        static void Awake();
 
-		static void Init();
+        static void Process(const SDL_Event& _event);
+
+        static void Reset();
+
     private:
-        static const Uint8 FIRST_PRESSED_MASK = (1 << 2);
-        static const Uint8 PRESSED_MASK = (1 << 1);
-        static const Uint8 RELEASED_MASK = (1);
+        static const uint8_t mUpMask = 1,
+                             mPressedMask = 1 << 1,
+                             mDownMask = 1 << 2;
 
-        static const Uint8* keyboardState;
-        // FIRST_PRESSED | PRESSED | RELEASED
-        static Uint8 keyEvent[SDL_NUM_SCANCODES];
-        static bool anyKey;
-        static bool anyKeyDown;
+        static const Uint8* mKeyboardState;
+        static uint8_t mKeyboardEvent[SDL_NUM_SCANCODES];
+        static bool mAnyKey, mAnyKeyDown;
 
-        static Math::Vector2i mouseScrollDelta;
-		static Math::Vector2i mousePosDelta;
-        // FIRST_PRESSED | PRESSED | RELEASED
-        static Uint8 mouseButtonEvent[SDL_BUTTON_X2];
+        static uint8_t mMouseButtonEvent[SDL_BUTTON_X2];
+        static Math::Vector2i mMousePosDelta, mMouseScrollDelta;
     };
 }
 

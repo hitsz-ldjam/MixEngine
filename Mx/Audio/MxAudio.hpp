@@ -5,7 +5,6 @@
 
 #include "../Engine/MxModuleBase.h"
 #include <fmod/fmod.hpp>
-#include <glm/vec3.hpp>
 
 namespace Mix::Audio {
     enum class LoadType {
@@ -25,10 +24,6 @@ namespace Mix::Audio {
         FIXED,
         DYNAMIC
     };
-
-    inline FMOD_VECTOR glmVec3ToFmodVec(const glm::vec3& _vec) {
-        return {_vec.x, _vec.y, _vec.z};
-    }
 
     class Core final : public ModuleBase {
     public:

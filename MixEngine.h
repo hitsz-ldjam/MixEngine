@@ -23,7 +23,7 @@ namespace Mix {
         Window& getWindow() { return *mWindow; }
 
         // ----- ModuleHolder -----
-        
+
         template<typename _Ty>
         bool hasModule() const { return mModuleHolder.has<_Ty>(); }
 

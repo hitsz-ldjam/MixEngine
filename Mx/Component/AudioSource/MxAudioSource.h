@@ -5,6 +5,7 @@
 
 #include "../Behaviour/MxBehaviour.h"
 #include "../../Audio/MxAudioClip.h"
+#include <glm/vec3.hpp>
 
 namespace Mix {
     // todo: add 3d roll off
@@ -191,9 +192,11 @@ namespace Mix {
         float mVolume;
 
         void init() override;
+        void fixedUpdate() override;
         void lateUpdate() override;
 
         void initChannelParameters();
+        void updatePosAndVel(const glm::vec3& _pos, const glm::vec3& _vel);
     };
 }
 

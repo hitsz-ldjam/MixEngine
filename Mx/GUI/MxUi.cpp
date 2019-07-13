@@ -1,4 +1,3 @@
-#include "imgui/imgui.h"
 #include "MxUi.h"
 #include "../../MixEngine.h"
 #include "../Vulkan/MxVkGraphics.h"
@@ -8,6 +7,7 @@
 #include "../Input/MxInput.h"
 #include "../Vulkan/Buffers/MxVkBuffer.h"
 #include "../Vulkan/Swapchain/MxVkSwapchain.h"
+#include "../../ThirdPartyLibs/imgui/imgui.h"
 
 namespace Mix {
 

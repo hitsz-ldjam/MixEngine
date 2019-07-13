@@ -6,7 +6,7 @@
 #include <SDL2/SDL.h>
 #include <vulkan/vulkan.hpp>
 #include "../Math/MxVector2.h"
-#include "imgui/imgui.h"
+#include "../../ThirdPartyLibs/imgui/imgui.h"
 
 namespace Mix {
 	namespace Graphics {

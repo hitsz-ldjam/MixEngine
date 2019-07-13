@@ -2,7 +2,6 @@
 
 #include "../../GameObject/MxGameObject.h"
 #include "../RigidBody/MxRigidBody.h"
-#include "../Transform/MxTransform.h"
 #include "../../Time/MxTime.h"
 
 namespace Mix {
@@ -113,37 +112,31 @@ namespace Mix {
             pause();
     }
 
-    void AudioSource::lateUpdate() {
-        if(!mChannel)
-            return;
+    void AudioSource::fixedUpdate() {
+        if(!mChannel || !mUseFixedUpdate) return;
 
-        if(!mUseFixedUpdate) {
-            auto pos = mGameObject->transform().getPosition().vec;
-            auto vel = (pos - mLastPos) / Time::DeltaTime();
-            mLastPos = pos;
-
-            auto fvPos = Audio::glmVec3ToFmodVec(pos);
-            auto fvVel = Audio::glmVec3ToFmodVec(vel);
-
-            mChannel->set3DAttributes(&fvPos, &fvVel);
+        if(const auto* rb = mGameObject->getComponent<RigidBody>()) {
+            const auto& pos = rb->get().getCenterOfMassPosition();
+            const auto& vel = rb->get().getLinearVelocity();
+            updatePosAndVel({pos.x(), pos.y(), pos.z()}, {vel.x(), vel.y(), vel.z()});
         }
         else {
-            // todo: use motion state instead
-
             auto pos = mGameObject->transform().getPosition().vec;
             auto vel = (pos - mLastPos) / Time::FixedDeltaTime();
-            mLastPos = pos;
-
-            auto fvPos = Audio::glmVec3ToFmodVec(pos);
-            auto fvVel = Audio::glmVec3ToFmodVec(vel);
-
-            mChannel->set3DAttributes(&fvPos, &fvVel);
+            updatePosAndVel(pos, vel);
         }
     }
 
+    void AudioSource::lateUpdate() {
+        if(!mChannel || mUseFixedUpdate) return;
+
+        auto pos = mGameObject->transform().getPosition().vec;
+        auto vel = (pos - mLastPos) / Time::DeltaTime();
+        updatePosAndVel(pos, vel);
+    }
+
     void AudioSource::initChannelParameters() {
-        if(!mChannel)
-            return;
+        if(!mChannel) return;
 
         mLastPos = mGameObject->transform().getPosition().vec;
         mUseFixedUpdate = mVelocityUpdateMode == Audio::VelocityUpdateMode::FIXED ||
@@ -156,5 +149,13 @@ namespace Mix {
         pitch(mPitch);
         priority(mPriority);
         volume(mVolume);
+    }
+
+    void AudioSource::updatePosAndVel(const glm::vec3& _pos, const glm::vec3& _vel) {
+        auto glmVecToFmodVec = [](const glm::vec3& _vec) { return FMOD_VECTOR{_vec.x, _vec.y, _vec.z}; };
+        auto fvPos = glmVecToFmodVec(_pos),
+             fvVel = glmVecToFmodVec(_vel);
+        mChannel->set3DAttributes(&fvPos, &fvVel);
+        mLastPos = _pos;
     }
 }

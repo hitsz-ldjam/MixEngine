@@ -23,7 +23,7 @@ namespace Mix {
         sStart = sPrev = sCurr = Clock::now();
     }
 
-    void Time::Update() noexcept {
+    void Time::Tick() noexcept {
         sCurr = Clock::now();
         sDeltaTime = DurationToSecond(sCurr - sPrev);
         sTime = DurationToSecond(sCurr - sStart);

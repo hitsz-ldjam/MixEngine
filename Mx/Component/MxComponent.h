@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_COMPONENT_H_
 #define MX_COMPONENT_H_
@@ -12,22 +12,24 @@ namespace Mix {
     MX_DECLARE_RTTI
     MX_DECLARE_NO_CLASS_FACTORY
 
+        friend GameObject;
+
     public:
         Component() : mGameObject(nullptr) {}
+
+        /** 
+         *  @note Copy ctor should be called before engine awakes. And copy constructed Components
+         *  should be added to corresponding GameObjects manually via GameObject::addComponent.
+         */
+        Component(const Component& _other) : Object(_other),
+                                             mGameObject(nullptr) {}
+
         virtual ~Component() = 0 {}
-
-        void setGameObject(GameObject* _gameObject) {
-            mGameObject = _gameObject;
-        }
-
-        GameObject* getGameObject() const {
-            return mGameObject;
-        }
-
-        //virtual Component* copy() const = 0;
+        auto getGameObject() const noexcept { return mGameObject; }
 
     protected:
         GameObject* mGameObject;
+        void setGameObject(GameObject* _obj) noexcept { mGameObject = _obj; }
     };
 }
 

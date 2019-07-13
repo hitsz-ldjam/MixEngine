@@ -10,40 +10,50 @@ namespace Mix {
     MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(AudioListener)
 
     void AudioListener::init() {
-        if(mCore)
-            return;
-        if(!mGameObject)
-            throw IndependentComponentError(getTypeName());
+        if(mCore) return;
+        if(!mGameObject) throw IndependentComponentError(getTypeName());
         mCore = MixEngine::Instance().getModule<Audio::Core>()->getCore();
         mLastPos = mGameObject->transform().getPosition().vec;
         mUseFixedUpdate = mVelocityUpdateMode == Audio::VelocityUpdateMode::FIXED ||
                           mVelocityUpdateMode == Audio::VelocityUpdateMode::AUTO && mGameObject->getComponent<RigidBody>();
+    }
 
-        // mListenerIdx = sListenerNum++;
+    void AudioListener::fixedUpdate() {
+        if(!mUseFixedUpdate) return;
+
+        if(const auto* rb = mGameObject->getComponent<RigidBody>()) {
+            const auto& pos = rb->get().getCenterOfMassPosition();
+            const auto& vel = rb->get().getLinearVelocity();
+            updatePosAndVel({pos.x(), pos.y(), pos.z()}, {vel.x(), vel.y(), vel.z()});
+        }
+        else {
+            auto pos = mGameObject->transform().getPosition().vec;
+            auto vel = (pos - mLastPos) / Time::FixedDeltaTime();
+            updatePosAndVel(pos, vel);
+        }
     }
 
     void AudioListener::lateUpdate() {
-        if(!mUseFixedUpdate)
-            updatePosAndVel(Time::DeltaTime());
-        else
-            // todo: use motion state instead
-            updatePosAndVel(Time::FixedDeltaTime());
+        if(mUseFixedUpdate) return;
+
+        auto pos = mGameObject->transform().getPosition().vec;
+        auto vel = (pos - mLastPos) / Time::DeltaTime();
+        updatePosAndVel(pos, vel);
     }
 
-    void AudioListener::updatePosAndVel(const float _deltaTime) {
+    void AudioListener::updatePosAndVel(const glm::vec3& _pos, const glm::vec3& _vel) {
+        const auto& trans = mGameObject->transform();
 
-        auto trans = mGameObject->transform();
+        auto glmVecToFmodVec = [](const glm::vec3& _vec) { return FMOD_VECTOR{_vec.x, _vec.y, _vec.z}; };
 
-        auto pos = trans.getPosition().vec;
-        auto vel = (pos - mLastPos) / _deltaTime;
-        mLastPos = pos;
-
-        auto fvPos = Audio::glmVec3ToFmodVec(pos),
-             fvVel = Audio::glmVec3ToFmodVec(vel),
-             fvForward = Audio::glmVec3ToFmodVec(trans.forward().vec),
-             fvUp = Audio::glmVec3ToFmodVec(trans.up().vec);
+        auto fvPos = glmVecToFmodVec(_pos),
+             fvVel = glmVecToFmodVec(_vel),
+             fvForward = glmVecToFmodVec(trans.forward().vec),
+             fvUp = glmVecToFmodVec(trans.up().vec);
 
         if(mCore)
-            mCore->set3DListenerAttributes(mListenerIdx, &fvPos, &fvVel, &fvForward, &fvUp);
+            mCore->set3DListenerAttributes(listenerIdx, &fvPos, &fvVel, &fvForward, &fvUp);
+
+        mLastPos = _pos;
     }
 }
