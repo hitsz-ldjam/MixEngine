@@ -1,7 +1,7 @@
 #include "MxVkInstance.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		std::vector<const char*> Instance::DefaultLayerDebug = {
 			"VK_LAYER_LUNARG_standard_validation"
 		};

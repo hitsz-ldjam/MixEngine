@@ -215,7 +215,63 @@ namespace Mix {
 				return *this = divide(Vector4<_Ty>(_right));
 			}
 
+			static Vector4 Lerp(const Vector4& _a, const Vector4& _b, float _t);
+
+			static Vector4 LerpUnclamped(const Vector4& _a, const Vector4& _b, float _t);
+
+			static Vector4 Slerp(const Vector4& _a, const Vector4& _b, float _t);
+
+			static Vector4 SlerpUnclamped(const Vector4& _a, const Vector4& _b, float _t);
+
+			static Vector4 SmoothDamp(const Vector4& _current, const Vector4& _target,
+									  Vector4& _currentV, float _smoothTime, float _max, float _delta);
+
 		};
+
+		template <typename _Ty>
+		Vector4<_Ty> Vector4<_Ty>::Lerp(const Vector4& _a, const Vector4& _b, float _t) {
+			_t = std::clamp(_t, 0.0f, 1.0f);
+			return Vector4(_b.x * _t + _a.x * (1.0f - _t),
+						   _b.y * _t + _a.y * (1.0f - _t),
+						   _b.z * _t + _a.z * (1.0f - _t),
+						   _b.w * _t + _a.w * (1.0f - _t));
+		}
+
+		template <typename _Ty>
+		Vector4<_Ty> Vector4<_Ty>::LerpUnclamped(const Vector4& _a, const Vector4& _b, float _t) {
+			return Vector4(_b.x * _t + _a.x * (1.0f - _t),
+						   _b.y * _t + _a.y * (1.0f - _t),
+						   _b.z * _t + _a.z * (1.0f - _t),
+						   _b.w * _t + _a.w * (1.0f - _t));
+		}
+
+		template <typename _Ty>
+		Vector4<_Ty> Vector4<_Ty>::Slerp(const Vector4& _a, const Vector4& _b, float _t) {
+			_t = std::clamp(_t, 0.0f, 1.0f);
+			float dot = _a.dot(_b);
+			float theta = std::acos(dot) * _t;
+			Vector4 relativeVec = _b - _a * dot;
+			relativeVec = relativeVec.normalize();
+			return Vector4((_a*std::cos(theta)) + (relativeVec*std::sin(theta)));
+		}
+
+		template <typename _Ty>
+		Vector4<_Ty> Vector4<_Ty>::SlerpUnclamped(const Vector4& _a, const Vector4& _b, float _t) {
+			float dot = _a.dot(_b);
+			float theta = std::acos(dot) * _t;
+			Vector4 relativeVec = _b - _a * dot;
+			relativeVec = relativeVec.normalize();
+			return Vector4((_a*std::cos(theta)) + (relativeVec*std::sin(theta)));
+		}
+
+		template <typename _Ty>
+		Vector4<_Ty> Vector4<_Ty>::SmoothDamp(const Vector4& _current, const Vector4& _target, Vector4& _currentV, float _smoothTime, float _max, float _delta) {
+			// test
+			return Vector4(Math::SmoothDamp(_current.x, _target.x, _currentV.x, _smoothTime, _max, _delta),
+						   Math::SmoothDamp(_current.y, _target.y, _currentV.y, _smoothTime, _max, _delta),
+						   Math::SmoothDamp(_current.z, _target.z, _currentV.z, _smoothTime, _max, _delta),
+						   Math::SmoothDamp(_current.w, _target.w, _currentV.w, _smoothTime, _max, _delta));
+		}
 
 		// Vector<_T1> +|-|*|/ Vector<_T2>
 

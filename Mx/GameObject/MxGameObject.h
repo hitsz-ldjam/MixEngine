@@ -13,13 +13,13 @@ namespace Mix {
     using LayerIndex = uint32_t;
     using Tag = std::string;
 
-    struct GameObjectConstructionInfo {
+    struct GameObjectCreateInfo {
         std::string name = "";
         Tag tag = "";
         LayerIndex layer = 0;
         bool isStatic = false;
 
-        GameObjectConstructionInfo(std::string _name = "",
+        GameObjectCreateInfo(std::string _name = "",
                                    Tag _tag = "",
                                    const LayerIndex _layerIndex = 0,
                                    const bool _isStatic = false)
@@ -39,7 +39,7 @@ namespace Mix {
         /** @note Default ctor for RTTI. DO NOT use this ctor. */
         GameObject();
 
-        GameObject(const GameObjectConstructionInfo& _info);
+        GameObject(const GameObjectCreateInfo& _info);
 
         GameObject(const GameObject& _obj) = delete;
 

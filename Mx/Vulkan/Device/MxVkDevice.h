@@ -7,7 +7,7 @@
 #include "../Core/MxVkDef.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class Instance;
 		class PhysicalDevice;
 

@@ -7,54 +7,56 @@
 #include <fmod/fmod.hpp>
 
 namespace Mix::Audio {
-    enum class LoadType {
-        STREAMING = FMOD_CREATESTREAM,
-        DECOMPRESS_ON_LOAD = FMOD_CREATESAMPLE,
-        COMPRESSED_IN_MEMORY = FMOD_CREATECOMPRESSEDSAMPLE,
-    };
+	enum class LoadType {
+		STREAMING = FMOD_CREATESTREAM,
+		DECOMPRESS_ON_LOAD = FMOD_CREATESAMPLE,
+		COMPRESSED_IN_MEMORY = FMOD_CREATECOMPRESSEDSAMPLE,
+	};
 
-    enum class LoadState {
-        LOADING,
-        LOADED,
-        FAILED,
-    };
+	enum class LoadState {
+		LOADING,
+		LOADED,
+		FAILED,
+	};
 
-    enum class VelocityUpdateMode {
-        AUTO,
-        FIXED,
-        DYNAMIC
-    };
+	enum class VelocityUpdateMode {
+		AUTO,
+		FIXED,
+		DYNAMIC
+	};
 
-    class Core final : public ModuleBase {
-    public:
-        Core() : mCore(nullptr) {}
-        ~Core() { if(mCore) mCore->release(); }
+	class Core final : public ModuleBase {
+	public:
+		Core() : mCore(nullptr) {}
+		~Core() { if (mCore) mCore->release(); }
 
-        auto getCore() const noexcept { return mCore; }
+		auto getCore() const noexcept { return mCore; }
 
-        void awake() {
-            auto result = FMOD::System_Create(&mCore);
-            if(result != FMOD_OK)
-                throw ThirdPartyLibInitError("FMOD");
-            result = mCore->init(512, FMOD_INIT_NORMAL, nullptr);
-            if(result != FMOD_OK)
-                throw ThirdPartyLibInitError("FMOD");
-        }
+		void awake() override {
+			auto result = FMOD::System_Create(&mCore);
+			if (result != FMOD_OK)
+				throw ThirdPartyLibInitError("FMOD");
+			result = mCore->init(512, FMOD_INIT_NORMAL, nullptr);
+			if (result != FMOD_OK)
+				throw ThirdPartyLibInitError("FMOD");
+		}
 
-        void update() {
-            mCore->update();
-        }
+		void init() override {}
 
-        // Auto called when ModuleHolder destructs?
-        void release() {
-            if(mCore)
-                mCore->release();
-            mCore = nullptr;
-        }
+		void update() {
+			mCore->update();
+		}
 
-    private:
-        FMOD::System* mCore;
-    };
+		// Auto called when ModuleHolder destructs?
+		void release() {
+			if (mCore)
+				mCore->release();
+			mCore = nullptr;
+		}
+
+	private:
+		FMOD::System* mCore;
+	};
 }
 
 #endif

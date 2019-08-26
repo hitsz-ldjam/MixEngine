@@ -6,7 +6,7 @@
 #include "../../Math/MxMath.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		struct MemoryBlock {
 			vk::DeviceMemory memory = nullptr;
 			vk::DeviceSize offset = 0;

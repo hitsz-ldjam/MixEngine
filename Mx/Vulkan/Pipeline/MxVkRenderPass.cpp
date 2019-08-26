@@ -1,7 +1,7 @@
 #include "MxVkRenderPass.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		Attachment::Attachment(const uint32_t _binding,
 							   const Type _type,
 							   const vk::Format _format,

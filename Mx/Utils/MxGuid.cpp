@@ -1,16 +1,149 @@
 #include "MxGuid.h"
+#include <boost/uuid/uuid_generators.hpp>
 
 namespace Mix {
-    namespace Utils {
-        std::hash<long long> GuidGenerator::TimeHash;
-        std::hash<std::string> GuidGenerator::StringHash;
+	constexpr const char HexToLiteral[16] =
+	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
-        long long GuidGenerator::GetGuid() {
-            return TimeHash(std::chrono::steady_clock::now().time_since_epoch().count());
-        }
+	constexpr const uint8_t LiteralToHex[256] =
+	{ 0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		// 0 through 9 translate to 0  though 9
+		0x00,  0x01,  0x02,  0x03,  0x04,  0x05,  0x06,  0x07,  0x08,  0x09,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		// A through F translate to 10 though 15
+		0xFF,  0x0A,  0x0B,  0x0C,  0x0D,  0x0E,  0x0F,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		// a through f translate to 10 though 15
+		0xFF,  0x0A,  0x0B,  0x0C,  0x0D,  0x0E,  0x0F,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,
+		0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF,  0xFF
+	};
 
-        long long GuidGenerator::GetGuid(const std::string& _str) {
-            return StringHash(_str);
-        }
-    }
+	UUID::UUID(const std::string& _uuid) {
+		if (_uuid.size() < 36)
+			return;
+
+		uint32_t idx = 0;
+
+		// First group: 8 digits
+		for (int32_t i = 7; i >= 0; --i) {
+			char charVal = _uuid[idx++];
+			uint8_t hexVal = LiteralToHex[static_cast<int>(charVal)];
+
+			mData[0] |= hexVal << (i * 4);
+		}
+
+		idx++;
+
+		// Second group: 4 digits
+		for (int32_t i = 7; i >= 4; --i) {
+			char charVal = _uuid[idx++];
+			uint8_t hexVal = LiteralToHex[static_cast<int>(charVal)];
+
+			mData[1] |= hexVal << (i * 4);
+		}
+
+		idx++;
+
+		// Third group: 4 digits
+		for (int32_t i = 3; i >= 0; --i) {
+			char charVal = _uuid[idx++];
+			uint8_t hexVal = LiteralToHex[static_cast<int>(charVal)];
+
+			mData[1] |= hexVal << (i * 4);
+		}
+
+		idx++;
+
+		// Fourth group: 4 digits
+		for (int32_t i = 7; i >= 4; --i) {
+			char charVal = _uuid[idx++];
+			uint8_t hexVal = LiteralToHex[static_cast<int>(charVal)];
+
+			mData[2] |= hexVal << (i * 4);
+		}
+
+		idx++;
+
+		// Fifth group: 12 digits
+		for (int32_t i = 3; i >= 0; --i) {
+			char charVal = _uuid[idx++];
+			uint8_t hexVal = LiteralToHex[static_cast<int>(charVal)];
+
+			mData[2] |= hexVal << (i * 4);
+		}
+
+		for (int32_t i = 7; i >= 0; --i) {
+			char charVal = _uuid[idx++];
+			uint8_t hexVal = LiteralToHex[static_cast<int>(charVal)];
+
+			mData[3] |= hexVal << (i * 4);
+		}
+	}
+
+	std::string UUID::toString() const {
+		uint8_t output[36];
+		uint32_t idx = 0;
+
+		// First group: 8 digits
+		for (int32_t i = 7; i >= 0; --i) {
+			uint32_t hexVal = (mData[0] >> (i * 4)) & 0xF;
+			output[idx++] = HexToLiteral[hexVal];
+		}
+
+		output[idx++] = '-';
+
+		// Second group: 4 digits
+		for (int32_t i = 7; i >= 4; --i) {
+			uint32_t hexVal = (mData[1] >> (i * 4)) & 0xF;
+			output[idx++] = HexToLiteral[hexVal];
+		}
+
+		output[idx++] = '-';
+
+		// Third group: 4 digits
+		for (int32_t i = 3; i >= 0; --i) {
+			uint32_t hexVal = (mData[1] >> (i * 4)) & 0xF;
+			output[idx++] = HexToLiteral[hexVal];
+		}
+
+		output[idx++] = '-';
+
+		// Fourth group: 4 digits
+		for (int32_t i = 7; i >= 4; --i) {
+			uint32_t hexVal = (mData[2] >> (i * 4)) & 0xF;
+			output[idx++] = HexToLiteral[hexVal];
+		}
+
+		output[idx++] = '-';
+
+		// Fifth group: 12 digits
+		for (int32_t i = 3; i >= 0; --i) {
+			uint32_t hexVal = (mData[2] >> (i * 4)) & 0xF;
+			output[idx++] = HexToLiteral[hexVal];
+		}
+
+		for (int32_t i = 7; i >= 0; --i) {
+			uint32_t hexVal = (mData[3] >> (i * 4)) & 0xF;
+			output[idx++] = HexToLiteral[hexVal];
+		}
+
+		return std::string(reinterpret_cast<const char*>(output), 36);
+	}
+
+	UUID UUID::RandomUUID() {
+		boost::uuids::random_generator generator;
+		auto uuid = generator();
+		UUID result;
+		memcpy(&result, &uuid, sizeof UUID);
+		return result;
+	}
 }

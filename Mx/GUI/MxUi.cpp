@@ -1,18 +1,23 @@
+#include "../../ThirdPartyLibs/imgui/imgui.h"
 #include "MxUi.h"
 #include "../../MixEngine.h"
-#include "../Vulkan/MxVkGraphics.h"
 #include "../Vulkan/CommandBuffer/MxVkCommandPool.h"
 #include "../Resource/Texture/MxTexture.h"
 #include "../Vulkan/Descriptor/MxVkDescriptorSet.h"
 #include "../Input/MxInput.h"
 #include "../Vulkan/Buffers/MxVkBuffer.h"
 #include "../Vulkan/Swapchain/MxVkSwapchain.h"
-#include "../../ThirdPartyLibs/imgui/imgui.h"
+#include "../Graphics/MxGraphics.h"
+#include "../Vulkan/MxVulkan.h"
 
 namespace Mix {
 
+	Ui* Ui::Get() {
+		return MixEngine::Instance().getModule<Ui>();
+	}
+
 	void Ui::init() {
-		mVulkan = MixEngine::Instance().getModule<Graphics::Vulkan>();
+		mVulkan = &Graphics::Get()->getRenderApi();
 		if (!mVulkan) {
 			Debug::Log::Error("Imgui need Vulkan as a dependency");
 			return;
@@ -49,8 +54,8 @@ namespace Mix {
 
 		for (int i = 0; i < drawData->CmdListsCount; ++i) {
 			auto cmdList = drawData->CmdLists[i];
-			mVertexBuffers[mCurrFrame]->uploadData(cmdList->VtxBuffer.Data, vOffset, cmdList->VtxBuffer.size_in_bytes());
-			mIndexBuffers[mCurrFrame]->uploadData(cmdList->IdxBuffer.Data, iOffset, cmdList->IdxBuffer.size_in_bytes());
+			mVertexBuffers[mCurrFrame]->setData(cmdList->VtxBuffer.Data, vOffset, cmdList->VtxBuffer.size_in_bytes());
+			mIndexBuffers[mCurrFrame]->setData(cmdList->IdxBuffer.Data, iOffset, cmdList->IdxBuffer.size_in_bytes());
 			vOffset += cmdList->VtxBuffer.size_in_bytes();
 			iOffset += cmdList->IdxBuffer.size_in_bytes();
 		}
@@ -62,13 +67,13 @@ namespace Mix {
 
 	void Ui::checkBuffers(const size_t _vertex, const size_t _index) {
 		if (!mVertexBuffers[mCurrFrame] || mVertexBuffers[mCurrFrame]->size() < _vertex)
-			mVertexBuffers[mCurrFrame] = std::make_shared<Graphics::Buffer>(mVulkan->getAllocator(),
+			mVertexBuffers[mCurrFrame] = std::make_shared<Vulkan::Buffer>(mVulkan->getAllocator(),
 																			vk::BufferUsageFlagBits::eVertexBuffer,
 																			vk::MemoryPropertyFlagBits::eHostVisible |
 																			vk::MemoryPropertyFlagBits::eHostCoherent,
 																			_vertex);
 		if (!mIndexBuffers[mCurrFrame] || mIndexBuffers[mCurrFrame]->size() < _index)
-			mIndexBuffers[mCurrFrame] = std::make_shared<Graphics::Buffer>(mVulkan->getAllocator(),
+			mIndexBuffers[mCurrFrame] = std::make_shared<Vulkan::Buffer>(mVulkan->getAllocator(),
 																		   vk::BufferUsageFlagBits::eIndexBuffer,
 																		   vk::MemoryPropertyFlagBits::eHostVisible |
 																		   vk::MemoryPropertyFlagBits::eHostCoherent,
@@ -142,8 +147,8 @@ namespace Mix {
 		mMouseCursors[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 
 		// size
-		auto extent = MixEngine::Instance().getWindow().extent();
-		auto drawableExtent = MixEngine::Instance().getWindow().drawableSize();
+		auto extent = Window::Get()->extent();
+		auto drawableExtent = Window::Get()->drawableSize();
 		io.DisplaySize = ImVec2(static_cast<float>(extent.x), static_cast<float>(extent.y));
 		if (extent.x > 0 && extent.y > 0)
 			io.DisplayFramebufferScale = ImVec2(static_cast<float>(drawableExtent.x) / extent.x,
@@ -158,11 +163,9 @@ namespace Mix {
 		io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 		size_t size = width * height * 4 * sizeof(char);
 
-		mFontTexture = std::make_shared<Resource::Texture2D>(width,
-															 height,
-															 vk::Format::eR8G8B8A8Unorm,
-															 size,
-															 reinterpret_cast<char*>(pixels));
+		mFontTexture = std::make_shared<Texture2D>(width, height, TextureFormat::R8G8B8A8_UNORM);
+		mFontTexture->setPixels(reinterpret_cast<const char*>(pixels), size);
+		mFontTexture->apply(false);
 	}
 
 	Math::Vector2f Ui::getScale() const {
@@ -219,8 +222,8 @@ namespace Mix {
 			break;
 		case SDL_WINDOWEVENT_SHOWN:
 		case SDL_WINDOWEVENT_RESIZED:
-			auto extent = MixEngine::Instance().getWindow().extent();
-			auto drawableExtent = MixEngine::Instance().getWindow().drawableSize();
+			auto extent = Window::Get()->extent();
+			auto drawableExtent = Window::Get()->drawableSize();
 			io.DisplaySize = ImVec2(static_cast<float>(extent.x), static_cast<float>(extent.y));
 			if (extent.x > 0 && extent.y > 0)
 				io.DisplayFramebufferScale = ImVec2(static_cast<float>(drawableExtent.x) / extent.x,
@@ -229,7 +232,7 @@ namespace Mix {
 		}
 
 		if (io.WantSetMousePos) {
-			SDL_WarpMouseInWindow(MixEngine::Instance().getWindow().window(),
+			SDL_WarpMouseInWindow(Window::Get()->rawPtr(),
 								  static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y));
 			auto mousePos = Input::MousePosition();
 			io.MousePos.x = static_cast<float>(mousePos.x);

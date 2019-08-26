@@ -16,6 +16,8 @@ namespace Mix {
 
 		bool operator!=(BasicOffsetSize const& _other) { return !*this == _other; }
 
+		static constexpr ValueType WholeSize() { return std::numeric_limits<ValueType>::max(); }
+
 		ValueType offset = 0;
 		ValueType size = 0;
 	};

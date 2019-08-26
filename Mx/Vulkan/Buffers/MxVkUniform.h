@@ -5,7 +5,7 @@
 #include "../../Math/MxMatrix4.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		namespace Uniform {
 			struct AbstractUniform {
 			protected:
@@ -42,11 +42,9 @@ namespace Mix {
 
 			struct MeshUniform :public AbstractUniform {
 				Math::Matrix4 modelMat;
-				Math::Matrix4 normMat;
 
 				MeshUniform() :
-					modelMat(Math::Matrix4::Identity),
-					normMat(Math::Matrix4::Identity) {
+					modelMat(Math::Matrix4::Identity) {
 				}
 			};
 

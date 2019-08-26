@@ -8,7 +8,7 @@
 
 
 namespace Mix {
-    namespace Graphics {
+    namespace Vulkan {
 
         typedef size_t ArrayIndex;
         typedef uint32_t QueueIndex;

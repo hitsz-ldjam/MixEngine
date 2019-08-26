@@ -9,30 +9,30 @@
 #include "../../ThirdPartyLibs/imgui/imgui.h"
 
 namespace Mix {
-	namespace Graphics {
+	class Texture2D;
+
+	namespace Vulkan {
 		class CommandBufferHandle;
 		class DescriptorSetLayout;
 		class Buffer;
-		class Vulkan;
-	}
-
-	namespace Resource {
-		class Texture2D;
+		class VulkanAPI;	
 	}
 
 	class Ui : public ModuleBase {
 	public:
+		static Ui* Get();
+
 		void init();
 
 		void render();
 
 		ImDrawData* getDrawData();
 
-		Resource::Texture2D& getFontTexture() const { return *mFontTexture; }
+		Texture2D& getFontTexture() const { return *mFontTexture; }
 
-		Graphics::Buffer& getVertexBuffer() const { return *mVertexBuffers[mCurrFrame]; }
+		Vulkan::Buffer& getVertexBuffer() const { return *mVertexBuffers[mCurrFrame]; }
 
-		Graphics::Buffer& getIndexBuffer() const { return *mIndexBuffers[mCurrFrame]; }
+		Vulkan::Buffer& getIndexBuffer() const { return *mIndexBuffers[mCurrFrame]; }
 
 		vk::IndexType getIndexType() const;
 
@@ -53,13 +53,13 @@ namespace Mix {
 		void createFontTexture();
 		void checkBuffers(const size_t _vertex, const size_t _index);
 
-		Graphics::Vulkan* mVulkan = nullptr;
+		Vulkan::VulkanAPI* mVulkan = nullptr;
 		SDL_Cursor* mMouseCursors[ImGuiMouseCursor_COUNT] = { nullptr };
 
 		size_t mCurrFrame = 0;
-		std::shared_ptr<Resource::Texture2D> mFontTexture;
-		std::vector<std::shared_ptr<Graphics::Buffer>> mVertexBuffers;
-		std::vector<std::shared_ptr<Graphics::Buffer>> mIndexBuffers;
+		std::shared_ptr<Texture2D> mFontTexture;
+		std::vector<std::shared_ptr<Vulkan::Buffer>> mVertexBuffers;
+		std::vector<std::shared_ptr<Vulkan::Buffer>> mIndexBuffers;
 
 		static char* sClipboardTextData;
 		static void SetClipboardText(void*, const char* _text);

@@ -1,7 +1,7 @@
 #include "MxVkUniform.h"
 
 namespace Mix {
-    namespace Graphics {
+    namespace Vulkan {
 
     }
 }

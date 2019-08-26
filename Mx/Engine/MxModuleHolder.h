@@ -31,7 +31,7 @@ namespace Mix {
 			}
 		}
 
-		template<typename _Ty,typename... _Args>
+		template<typename _Ty, typename... _Args>
 		_Ty* add(_Args&&... _args) {
 			static_assert(std::is_base_of<ModuleBase, _Ty>::value, "A Module must be a derived class of ModuleBase");
 
@@ -49,6 +49,8 @@ namespace Mix {
 			mAddOrder.erase(it);
 		}
 
+		std::vector<ModuleBase*> getAllOrdered() const;
+
 		~ModuleHolder();
 
 	private:
@@ -56,8 +58,15 @@ namespace Mix {
 		std::unordered_map<std::type_index, std::unique_ptr<ModuleBase>> mModules;
 	};
 
+	inline std::vector<ModuleBase*> ModuleHolder::getAllOrdered() const {
+		std::vector<ModuleBase*> result;
+		for (auto index : mAddOrder)
+			result.push_back(mModules.at(index).get());
+		return result;
+	}
+
 	inline ModuleHolder::~ModuleHolder() {
-		while(!mAddOrder.empty()) {
+		while (!mAddOrder.empty()) {
 			mModules.erase(mAddOrder.back());
 			mAddOrder.pop_back();
 		}

@@ -7,7 +7,7 @@
 #include <functional>
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class Instance;
 
 		class PhysicalDevice :public GeneralBase::NoCopyBase {

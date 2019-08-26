@@ -1,9 +1,10 @@
 #include "MxVkSwapchain.h"
 #include "../Core/MxVkExcept.hpp"
 #include "../../Log/MxLog.h"
+#include "../Image/MxVkImage.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		Swapchain::Swapchain(const std::shared_ptr<Device>& _device)
 			:mDevice(_device), mSurface(_device->getSurface().value()), mSurfaceFormat() {
 			auto physicalDevice = mDevice->getPhysicalDevice();

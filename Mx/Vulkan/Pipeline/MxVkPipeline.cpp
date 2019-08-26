@@ -1,11 +1,10 @@
 #include "MxVkPipeline.h"
-#include "MxVkShader.h"
 #include "../Descriptor/MxVkDescriptorSet.h"
 #include <utility>
 
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		void Pipeline::swap(Pipeline& _other) noexcept {
 			mRenderPass.swap(_other.mRenderPass);
 			std::swap(mPipeline, _other.mPipeline);
@@ -21,7 +20,7 @@ namespace Mix {
 		}
 
 		Pipeline::Pipeline(std::shared_ptr<RenderPass> _renderPass,
-						   ArrayProxy<DescriptorSetLayout> _descriptorSetLayout,
+						   ArrayProxy<std::shared_ptr<DescriptorSetLayout>> _descriptorSetLayout,
 						   const uint32_t _subpassIndex,
 						   const vk::Pipeline& _pipeline,
 						   const vk::PipelineLayout& _layout)

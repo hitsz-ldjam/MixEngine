@@ -9,15 +9,15 @@ namespace Mix {
 		MX_DECLARE_RTTI;
 		MX_DECLARE_CLASS_FACTORY;
 	public:
-		std::shared_ptr<Resource::Mesh> getMesh() const {
+		std::shared_ptr<Mesh> getMesh() const {
 			return mMesh;
 		}
 
-		void setMesh(std::shared_ptr<Resource::Mesh> _mesh) {
+		void setMesh(std::shared_ptr<Mesh> _mesh) {
 			mMesh = std::move(_mesh);
 		}
 	private:
-		std::shared_ptr<Resource::Mesh> mMesh;
+		std::shared_ptr<Mesh> mMesh;
 	};
 }
 

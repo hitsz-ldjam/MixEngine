@@ -1,8 +1,7 @@
 #include "MxVkAllocator.h"
-#include "../Core/MxVkCore.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		Chunk::Chunk(const std::shared_ptr<Device>& _device,
 					 const vk::DeviceSize& _size,
 					 const uint32_t _memoryTypeIndex)

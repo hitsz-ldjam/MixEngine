@@ -1,161 +1,112 @@
 ﻿#include "MixEngine.h"
+#include "Mx/Window/MxWindow.h"
 #include "Mx/Time/MxTime.h"
 #include "Mx/Input/MxInput.h"
 #include "Mx/Audio/MxAudio.hpp"
 #include "Mx/Physics/MxPhysicsWorld.h"
-#include "Mx/Vulkan/MxVkGraphics.h"
-#include "Mx/Vulkan/Renderer/PresetRenderer/MxVkStandardRenderer.h"
+#include "Mx/Vulkan/Shader/MxVkStandardShader.h"
 #include "Mx/GUI/MxUi.h"
 #include "Mx/Resource/MxResourceLoader.h"
+#include "Mx/Graphics/MxGraphics.h"
 
 namespace Mix {
-    MixEngine::MixEngine(int _argc, char** _argv) : mQuit(false),
-                                                    mWindow(nullptr),
-                                                    mDebugScene("Debug Scene") {}
+	MixEngine::MixEngine(int _argc, char** _argv) : mQuit(false),
+		mDebugScene("Debug Scene") {
+	}
 
-    MixEngine::~MixEngine() {
-        //mModuleHolder.get<Audio::Core>()->release();
-        delete mWindow;
-        SDL_Quit();
-    }
+	MixEngine::~MixEngine() {
+		//mModuleHolder.get<Audio::Core>()->release();
+		SDL_Quit();
+	}
 
-    int MixEngine::exec() {
-        try {
-            awake();
-            init();
-            SDL_Event event;
-            while(!mQuit) {
-                while(SDL_PollEvent(&event)) {
-                    process(event);
-                }
-                update();
-                lateUpdate();
-                render();
-            }
-        }
-        catch(const std::exception& e) {
-            std::cerr << e.what() << std::endl;
-            return EXIT_FAILURE;
-        }
-        return EXIT_SUCCESS;
-    }
+	int MixEngine::exec() {
+		try {
+			awake();
+			init();
+			SDL_Event event;
+			while (!mQuit) {
+				while (SDL_PollEvent(&event)) {
+					process(event);
+				}
+				update();
+				lateUpdate();
+				render();
+			}
+		}
+		catch (const std::exception& e) {
+			std::cerr << e.what() << std::endl;
+			return EXIT_FAILURE;
+		}
+		return EXIT_SUCCESS;
+	}
 
-    void MixEngine::awake() {
-        if(SDL_Init(SDL_INIT_VIDEO))
-            throw ThirdPartyLibInitError("SDL2");
+	void MixEngine::awake() {
+		mModuleHolder.add<Window>("Mix Engine Demo", Math::Vector2i{ 1024,760 }, WindowFlag::VULKAN | WindowFlag::SHOWN);
+		mModuleHolder.add<Audio::Core>()->awake();
+		mModuleHolder.add<Physics::World>()->awake();
+		mModuleHolder.add<Graphics>()->awake();
+		mModuleHolder.add<ResourceLoader>()->awake();
+		Time::Awake();
+		Input::Awake();
 
-        mModuleHolder.add<Audio::Core>()->awake();
+		Window::SetRelativeMouseMode(true);
+	}
 
-        mModuleHolder.add<Physics::World>()->awake();
+	void MixEngine::init() {
+		auto modules = mModuleHolder.getAllOrdered();
+		for (auto m : modules)
+			m->init();
 
-        Time::Awake();
-        Input::Awake();
+		mDebugScene.awake();
+		mDebugScene.init();
+	}
 
-        // todo test graphics
-        mWindow = new Window("Mix Engine Demo", {1400, 900});
-        Window::SetRelativeMouseMode(true);
+	void MixEngine::process(const SDL_Event& _event) {
+		if (_event.type == SDL_QUIT) {
+			mQuit = true;
+			return;
+		}
 
-        auto instanceExtsReq = mWindow->getRequiredInstanceExts();
-        instanceExtsReq.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		// mModuleHolder.get<Ui>()->process(_event);
+		Input::Process(_event);
+	}
 
-        std::vector<const char*> deviceExtsReq;
-        deviceExtsReq.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	void MixEngine::update() {
+		Time::Tick();
+		mModuleHolder.get<Physics::World>()->sync(Time::FixedDeltaTime(), Time::SmoothingFactor());
+		//mModuleHolder.get<Ui>()->update();
 
-        std::vector<const char*> layersReq;
-        layersReq.push_back("VK_LAYER_LUNARG_standard_validation");
+		// calculate fps
+		static auto startTp = Time::TotalTime();
+		if (++mFrameCount > mFrameSampleRate) {
+			mFramePerSecond = mFrameCount / (Time::TotalTime() - startTp);
+			startTp = Time::TotalTime();
+			mFrameCount = 0u;
+		}
+		Window::Get()->setTitle(std::to_string(mFramePerSecond));
+		// -----
 
-        Graphics::VulkanSettings settings;
-        settings.appInfo.appName = "Demo";
-        settings.appInfo.appVersion = Version::MakeVersion(0, 0, 1);
-        settings.debugMode = true;
-        settings.instanceExts = instanceExtsReq;
-        settings.deviceExts = deviceExtsReq;
-        settings.validationLayers = layersReq;
-        settings.physicalDeviceIndex = 0;
+		mDebugScene.update();
 
-        auto vulkan = mModuleHolder.add<Graphics::Vulkan>();
-        vulkan->init();
+		for (auto i = 0u; i < Time::sFixedClampedSteps; ++i)
+			fixedUpdate();
+	}
 
-        Debug::Log::Info("Instance Extensions:");
+	void MixEngine::fixedUpdate() {
+		mModuleHolder.get<Physics::World>()->step(Time::FixedDeltaTime());
 
-        auto instanceExts = Graphics::Vulkan::GetAllSupportedInstanceExts();
-        for(auto& ext : instanceExts) {
-            Debug::Log::Info("--%s", ext.extensionName);
-        }
+		mDebugScene.fixedUpate();
+	}
 
-        Debug::Log::Info("Validation Layers:");
+	void MixEngine::lateUpdate() {
+		mDebugScene.lateUpate();
 
-        auto layers = Graphics::Vulkan::GetAllSupportedLayers();
-        for(auto& layer : layers) {
-            Debug::Log::Info("--%s", layer.layerName);
-        }
+		mModuleHolder.get<Audio::Core>()->update();
+		Input::Reset();
+	}
 
-        vulkan->setTargetWindow(mWindow);
-        vulkan->build(settings);
-
-        auto ui = mModuleHolder.add<Ui>();
-        ui->init();
-
-        auto resourceLoader = mModuleHolder.add<Resource::ResourceLoader>();
-        resourceLoader->init();
-
-        auto mainRendererIndex = vulkan->addRenderer<Graphics::StandardRenderer>();
-        vulkan->setActiveRenderer(mainRendererIndex);
-
-        mDebugScene.awake();
-    }
-
-    void MixEngine::init() {
-        mDebugScene.init();
-    }
-
-    void MixEngine::process(const SDL_Event& _event) {
-        if(_event.type == SDL_QUIT) {
-            mQuit = true;
-            return;
-        }
-
-        mModuleHolder.get<Ui>()->process(_event);
-        Input::Process(_event);
-    }
-
-    void MixEngine::update() {
-        Time::Tick();
-        mModuleHolder.get<Physics::World>()->sync(Time::FixedDeltaTime(), Time::SmoothingFactor());
-        mModuleHolder.get<Ui>()->update();
-
-        // calculate fps
-        static auto startTp = Time::TotalTime();
-        if(++mFrameCount > mFrameSampleRate) {
-            mFramePerSecond = mFrameCount / (Time::TotalTime() - startTp);
-            startTp = Time::TotalTime();
-            mFrameCount = 0u;
-        }
-        mWindow->setTitle(std::to_string(mFramePerSecond));
-        // -----
-
-        mDebugScene.update();
-
-        for(auto i = 0u; i < Time::sFixedClampedSteps; ++i)
-            fixedUpdate();
-    }
-
-    void MixEngine::fixedUpdate() {
-        mModuleHolder.get<Physics::World>()->step(Time::FixedDeltaTime());
-
-        mDebugScene.fixedUpate();
-    }
-
-    void MixEngine::lateUpdate() {
-        mDebugScene.lateUpate();
-
-        mModuleHolder.get<Audio::Core>()->update();
-        Input::Reset();
-    }
-
-    void MixEngine::render() {
-        mModuleHolder.get<Ui>()->render();
-        mModuleHolder.get<Graphics::Vulkan>()->update();
-        mModuleHolder.get<Graphics::Vulkan>()->render();
-    }
+	void MixEngine::render() {
+		mModuleHolder.get<Graphics>()->update();
+		mModuleHolder.get<Graphics>()->render();
+	}
 }

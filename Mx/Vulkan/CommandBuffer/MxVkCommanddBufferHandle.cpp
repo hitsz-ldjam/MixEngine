@@ -3,46 +3,7 @@
 
 
 namespace Mix {
-	namespace Graphics {
-		/*CommandBufferSubmitter::CommandBufferSubmitter(const std::shared_ptr<Core>& _core,
-													   const vk::QueueFlagBits _queueType
-													   uint32_t _bufferCount) :
-			mCore(_core),
-			mQueue(std::make_shared<vk::Queue>(_core->getQueues().transfer.value())),
-			mCommandPool(std::make_shared<vk::CommandPool>(_core->getDevice(), true, true, )),
-			mFence(std::move(_core->getSyncObjMgr().createFence())) {
-			*mCommandBuffers = mCommandPool->al(vk::CommandBufferLevel::ePrimary, numberCommandBuffers);
-		}
-
-		void CommandBufferSubmitter::addObserver(ObserverCmdBufferSubmitter *_observer) {
-			mObservers->emplace_back(_observer);
-		}
-
-		vk::CommandBuffer CommandBufferSubmitter::createCommandBuffer() {
-			if (*mIndex >= mCommandBuffers->size()) {
-				auto buffers = mCommandPool->allocate(vk::CommandBufferLevel::ePrimary, 10);
-
-				for (auto &b : buffers)
-					mCommandBuffers->emplace_back(b);
-			}
-
-			return (*mCommandBuffers)[(*mIndex)++];
-		}
-
-		void CommandBufferSubmitter::submit() {
-			vk::SubmitInfo info;
-			info.setCommandBufferCount(*mIndex).setPCommandBuffers(mCommandBuffers->data());
-			mFence->reset();
-			mQueue->submit(info, *mFence);
-		}
-
-		void CommandBufferSubmitter::wait() {
-			*mIndex = 0;
-			mFence->wait();
-			mFence->reset();
-			for (auto &observer : *mObservers)
-				observer->notify();
-		}*/
+	namespace Vulkan {
 		CommandBufferHandle::CommandBufferHandle(const std::shared_ptr<CommandPool>& _commandPool)
 			: mCommandPool(_commandPool) {
 			mFence = mCommandPool->getDevice()->get().createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));

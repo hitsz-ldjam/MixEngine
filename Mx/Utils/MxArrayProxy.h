@@ -10,7 +10,7 @@
 #include <cassert>
 
 namespace Mix {
-	template <typename _Ty>
+	template <typename _Ty, typename _SizeT = size_t>
 	class ArrayProxy {
 	public:
 		constexpr ArrayProxy(std::nullptr_t)
@@ -23,7 +23,7 @@ namespace Mix {
 			, mPtr(&_ptr) {
 		}
 
-		ArrayProxy(const uint32_t _count, _Ty* _ptr)
+		ArrayProxy(const _SizeT _count, _Ty* _ptr)
 			: mCount(_count)
 			, mPtr(_ptr) {
 		}
@@ -42,26 +42,26 @@ namespace Mix {
 
 		template <class Allocator = std::allocator<typename std::remove_const<_Ty>::type>>
 		ArrayProxy(std::vector<typename std::remove_const<_Ty>::type, Allocator>& _data)
-			: mCount(static_cast<uint32_t>(_data.size()))
+			: mCount(static_cast<_SizeT>(_data.size()))
 			, mPtr(_data.data()) {
 		}
 
 		template <class Allocator = std::allocator<typename std::remove_const<_Ty>::type>>
 		ArrayProxy(std::vector<typename std::remove_const<_Ty>::type, Allocator> const& _data)
-			: mCount(static_cast<uint32_t>(_data.size()))
+			: mCount(static_cast<_SizeT>(_data.size()))
 			, mPtr(_data.data()) {
 		}
 
 		ArrayProxy(std::initializer_list<_Ty> const& _data)
-			: mCount(static_cast<uint32_t>(_data.end() - _data.begin()))
+			: mCount(static_cast<_SizeT>(_data.end() - _data.begin()))
 			, mPtr(_data.begin()) {
 		}
 
-		_Ty const* begin() const {
+		_Ty const* cbegin() const noexcept {
 			return mPtr;
 		}
 
-		_Ty const* end() const {
+		_Ty const* cend() const noexcept {
 			return mPtr + mCount;
 		}
 
@@ -75,15 +75,45 @@ namespace Mix {
 			return *(mPtr + mCount - 1);
 		}
 
+		_Ty * begin() noexcept {
+			return mPtr;
+		}
+
+		_Ty const* begin() const noexcept {
+			return mPtr;
+		}
+
+		_Ty const* end() const noexcept {
+			return mPtr + mCount;
+		}
+
+		_Ty * end()  noexcept{
+			return mPtr + mCount;
+		}
+
+		_Ty & front() {
+			MX_ASSERT(mCount && mPtr);
+			return *mPtr;
+		}
+
+		_Ty & back() {
+			MX_ASSERT(mCount && mPtr);
+			return *(mPtr + mCount - 1);
+		}
+
 		bool empty() const {
 			return (mCount == 0);
 		}
 
-		uint32_t size() const {
+		_SizeT size() const {
 			return mCount;
 		}
 
-		_Ty* data() const {
+		_Ty const * data() const {
+			return mPtr;
+		}
+
+		_Ty * data() {
 			return mPtr;
 		}
 
@@ -96,7 +126,7 @@ namespace Mix {
 		}
 
 	private:
-		uint32_t mCount;
+		_SizeT mCount;
 		_Ty* mPtr;
 	};
 }

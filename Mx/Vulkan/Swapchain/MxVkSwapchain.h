@@ -3,11 +3,10 @@
 #define MX_VK_SWAPCHAIN_H_
 
 #include "../Device/MxVkDevice.h"
-#include "../Image/MxVkImage.h"
 #include "../SyncObject/MxVkSyncObject.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class Swapchain : public GeneralBase::NoCopyBase {
 		public:
 			explicit Swapchain(const std::shared_ptr<Device>& _device);

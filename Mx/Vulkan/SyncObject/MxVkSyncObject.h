@@ -5,7 +5,7 @@
 #include "../Device/MxVkDevice.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class Semaphore : GeneralBase::NoCopyBase {
 		public:
 			Semaphore() = default;

@@ -6,7 +6,7 @@
 #include "../Pipeline/MxVkRenderPass.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class Device;
 
 		class FrameBuffer : public GeneralBase::NoCopyBase {

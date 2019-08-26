@@ -2,7 +2,7 @@
 #include <map>
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		Device::Device(const std::shared_ptr<PhysicalDevice>& _physicalDevice,
 		               std::optional<vk::SurfaceKHR> _surface,
 		               const vk::PhysicalDeviceFeatures* _enabledFeatures,

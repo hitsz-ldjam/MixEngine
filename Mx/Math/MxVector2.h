@@ -6,6 +6,7 @@
 #include <cmath>
 #include <boost/format.hpp>
 #include <glm/vec2.hpp>
+#include <glm/gtx/compatibility.hpp>
 #include "MxMath.h"
 
 namespace Mix {
@@ -226,7 +227,56 @@ namespace Mix {
 				return *this = divide(Vector2<_Ty>(_right));
 			}
 
+			// ---------- static method ----------
+
+			static Vector2 Lerp(const Vector2& _a, const Vector2& _b, float _t);
+
+			static Vector2 LerpUnclamped(const Vector2& _a, const Vector2& _b, float _t);
+
+			static Vector2 Slerp(const Vector2& _a, const Vector2& _b, float _t);
+
+			static Vector2 SlerpUnclamped(const Vector2& _a, const Vector2& _b, float _t);
+
+			static Vector2 SmoothDamp(const Vector2& _current, const Vector2& _target,
+									  Vector2& _currentV, float _smoothTime, float _max, float _delta);
 		};
+
+		template <typename _Ty>
+		Vector2<_Ty> Vector2<_Ty>::Lerp(const Vector2& _a, const Vector2& _b, float _t) {
+			_t = std::clamp(_t, 0.0f, 1.0f);
+			return Vector2(_b.x * _t + _a.x * (1.0f - _t), _b.y * _t + _a.y * (1.0f - _t));
+		}
+
+		template <typename _Ty>
+		Vector2<_Ty> Vector2<_Ty>::LerpUnclamped(const Vector2& _a, const Vector2& _b, float _t) {
+			return Vector2(_b.x * _t + _a.x * (1.0f - _t), _b.y * _t + _a.y * (1.0f - _t));
+		}
+
+		template <typename _Ty>
+		Vector2<_Ty> Vector2<_Ty>::Slerp(const Vector2& _a, const Vector2& _b, float _t) {
+			_t = std::clamp(_t, 0.0f, 1.0f);
+			float dot = _a.dot(_b);
+			float theta = std::acos(dot) * _t;
+			Vector2 relativeVec = _b - _a * dot;
+			relativeVec = relativeVec.normalize();
+			return Vector2((_a*std::cos(theta)) + (relativeVec*std::sin(theta)));
+		}
+
+		template <typename _Ty>
+		Vector2<_Ty> Vector2<_Ty>::SlerpUnclamped(const Vector2& _a, const Vector2& _b, float _t) {
+			float dot = _a.dot(_b);
+			float theta = std::acos(dot) * _t;
+			Vector2 relativeVec = _b - _a * dot;
+			relativeVec = relativeVec.normalize();
+			return Vector2((_a*std::cos(theta)) + (relativeVec*std::sin(theta)));
+		}
+
+		template <typename _Ty>
+		Vector2<_Ty> Vector2<_Ty>::SmoothDamp(const Vector2& _current, const Vector2& _target, Vector2& _currentV, float _smoothTime, float _max, float _delta) {
+			// test
+			return Vector2(Math::SmoothDamp(_current.x, _target.x, _currentV.x, _smoothTime, _max, _delta),
+						   Math::SmoothDamp(_current.y, _target.y, _currentV.y, _smoothTime, _max, _delta));
+		}
 
 		// Vector<_T1> +|-|*|/ Vector<_T2>
 

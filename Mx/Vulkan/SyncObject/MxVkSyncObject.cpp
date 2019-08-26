@@ -1,7 +1,7 @@
 #include "MxVkSyncObject.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		Semaphore::Semaphore(const std::shared_ptr<Device>& _device)
 			: mDevice(_device) {
 			mSemaphore = mDevice->get().createSemaphore(vk::SemaphoreCreateInfo());

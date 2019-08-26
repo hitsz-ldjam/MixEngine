@@ -2,7 +2,7 @@
 #include <map>
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		uint32_t PhysicalDevice::getMemoryTypeIndex(const uint32_t _type, const vk::MemoryPropertyFlags& _properties) const {
 			for (uint32_t i = 0; i < mMemoryProperties.memoryTypeCount; ++i) {
 				if (_type & (1 << i) && mMemoryProperties.memoryTypes[i].propertyFlags & _properties)

@@ -6,7 +6,7 @@
 #include <set>
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class Attachment {
 		public:
 			enum class Type {

@@ -1,7 +1,7 @@
 #include "MxVkFramebuffer.h"
 
 namespace Mix {
-    namespace Graphics {
+    namespace Vulkan {
         void FrameBuffer::clear() {
             mAttachments.clear();
         }

@@ -6,7 +6,7 @@
 #include <vulkan/vulkan.hpp>
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class Instance :public GeneralBase::NoCopyBase {
 		public:
 			Instance(const vk::ApplicationInfo& _appInfo,

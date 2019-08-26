@@ -15,7 +15,7 @@ namespace Mix {
                               mTransform(nullptr),
                               mScene(nullptr) {}
 
-    GameObject::GameObject(const GameObjectConstructionInfo& _info): mParent(nullptr),
+    GameObject::GameObject(const GameObjectCreateInfo& _info): mParent(nullptr),
                                                                      mActiveInHierarchy(true),
                                                                      mActiveSelf(true),
                                                                      mIsStatic(_info.isStatic),

@@ -7,26 +7,35 @@
 #include "../../Utils/MxOffsetSize.hpp"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class  WriteDescriptorSet {
 		public:
-			WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorImageInfo &_imageInfo) :
-				mWriteDescriptorSet(_writeDescriptorSet),
-				mImageInfo(_imageInfo),
-				mBufferInfo(nullptr) {
-				mWriteDescriptorSet.pImageInfo = &mImageInfo.value();
-			}
+			WriteDescriptorSet() = default;
 
-			WriteDescriptorSet(const vk::WriteDescriptorSet &_writeDescriptorSet, const vk::DescriptorBufferInfo &_bufferInfo) :
-				mWriteDescriptorSet(_writeDescriptorSet),
-				mImageInfo(nullptr),
-				mBufferInfo(_bufferInfo) {
-				mWriteDescriptorSet.pBufferInfo = &mBufferInfo.value();
-			}
+			WriteDescriptorSet(const vk::WriteDescriptorSet& _writeDescriptorSet,
+			                   const vk::DescriptorImageInfo& _imageInfo);
+
+			WriteDescriptorSet(const vk::WriteDescriptorSet& _writeDescriptorSet,
+			                   const vk::DescriptorBufferInfo& _bufferInfo);
+
+
+			WriteDescriptorSet(const WriteDescriptorSet& _other);
+
+			WriteDescriptorSet(WriteDescriptorSet&& _other) noexcept;
+
+			WriteDescriptorSet& operator=(WriteDescriptorSet _other);
+
+			void swap(WriteDescriptorSet& _other) noexcept;
+
+			void setDstSet(const vk::DescriptorSet& _set) { mWriteDescriptorSet.dstSet = _set; }
 
 			const vk::WriteDescriptorSet &get() const { return mWriteDescriptorSet; }
 
+			vk::WriteDescriptorSet& get() { return mWriteDescriptorSet; }
+
 		private:
+			void checkInfoPtr() noexcept;
+
 			vk::WriteDescriptorSet mWriteDescriptorSet;
 			std::optional<vk::DescriptorImageInfo> mImageInfo;
 			std::optional<vk::DescriptorBufferInfo> mBufferInfo;
@@ -34,7 +43,7 @@ namespace Mix {
 
 		class Descriptor {
 		public:
-			virtual WriteDescriptorSet getWriteDescriptor(const uint32_t &_binding, const vk::DescriptorType &_descriptorType, const std::optional<OffsetSize64>& _offsetSize = std::nullopt) const = 0;
+			virtual WriteDescriptorSet getWriteDescriptor(uint32_t _binding, vk::DescriptorType _descriptorType, const std::optional<OffsetSize64>& _offsetSize = std::nullopt) const = 0;
 
 			Descriptor() = default;
 

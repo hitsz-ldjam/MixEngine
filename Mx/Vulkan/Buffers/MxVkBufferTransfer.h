@@ -6,7 +6,7 @@
 #include "vulkan/vulkan.hpp"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class Device;
 		class Buffer;
 		class Image;
@@ -15,7 +15,7 @@ namespace Mix {
 		public:
 			DataToBuffer(const std::shared_ptr<DeviceAllocator>& _allocator,
 						 const char* _src,
-						 const std::shared_ptr<Buffer>& _dst,
+						 std::shared_ptr<Buffer> _dst,
 						 vk::DeviceSize _dstOffset,
 						 vk::DeviceSize _size);
 
@@ -28,22 +28,23 @@ namespace Mix {
 
 		class BufferToBuffer {
 		public:
-			BufferToBuffer(const std::shared_ptr<Buffer>& _src,
-						   const std::shared_ptr<Buffer>& _dst,
+			BufferToBuffer(std::shared_ptr<Buffer> _src,
+						   std::shared_ptr<Buffer> _dst,
 						   const vk::DeviceSize& _srcOffset,
 						   const vk::DeviceSize& _dstOffset,
 						   const vk::DeviceSize& _size);
 
-			BufferToBuffer(const std::shared_ptr<Buffer>& _src,
-						   const std::shared_ptr<Buffer>& _dst,
+			BufferToBuffer(std::shared_ptr<Buffer> _src,
+						   std::shared_ptr<Buffer> _dst,
 						   const vk::BufferCopy& _region);
 
-			BufferToBuffer(const std::shared_ptr<Buffer>& _src,
-						   const std::shared_ptr<Buffer>& _dst,
+			BufferToBuffer(std::shared_ptr<Buffer> _src,
+						   std::shared_ptr<Buffer> _dst,
 						   const std::vector<vk::BufferCopy>& _regions);
 
 			void operator()(const vk::CommandBuffer& _cmd) const;
 
+			const std::vector<vk::BufferCopy>& getCopyRegions() const { return mCopyRegions; }
 		private:
 			std::shared_ptr<Buffer> mSrc;
 			std::shared_ptr<Buffer> mDst;
@@ -52,16 +53,17 @@ namespace Mix {
 
 		class BufferToImage {
 		public:
-			BufferToImage(const std::shared_ptr<Buffer>& _src,
-						  const std::shared_ptr<Image>& _dst,
+			BufferToImage(std::shared_ptr<Buffer> _src,
+						  std::shared_ptr<Image> _dst,
 						  const vk::BufferImageCopy& _region);
 
-			BufferToImage(const std::shared_ptr<Buffer>& _src,
-						  const std::shared_ptr<Image>& _dst,
+			BufferToImage(std::shared_ptr<Buffer> _src,
+						  std::shared_ptr<Image> _dst,
 						  const std::vector<vk::BufferImageCopy>& _regions);
 
 			void operator()(const vk::CommandBuffer& _cmd) const;
 
+			const std::vector<vk::BufferImageCopy>& getCopyRegions() const { return mCopyRegions; }
 		private:
 			std::shared_ptr<Buffer> mSrc;
 			std::shared_ptr<Image> mDst;
@@ -73,14 +75,32 @@ namespace Mix {
 			DataToImage(const std::shared_ptr<DeviceAllocator>& _allocator,
 						const char* _src,
 						const vk::DeviceSize& _size,
-						const std::shared_ptr<Image>& _dst,
-						const vk::BufferImageCopy& _region);
+						std::shared_ptr<Image> _dst,
+						const vk::ImageSubresourceLayers& _imageSubresource,
+						const vk::Offset3D& _imageOffset,
+						const vk::Extent3D& _imageExtent);
 
 			void operator()(const vk::CommandBuffer& _cmd) const;
 		private:
 			std::shared_ptr<Buffer> mSrc;
 			std::shared_ptr<Image> mDst;
 			vk::BufferImageCopy mCopyRegion;
+		};
+
+		class ImageToImage {
+		public:
+			ImageToImage(const std::shared_ptr<DeviceAllocator>& _allocator,
+						 std::shared_ptr<Image> _src,
+						 std::shared_ptr<Image> _dst,
+						 std::vector<vk::ImageCopy> _regions);
+
+			void operator()(const vk::CommandBuffer& _cmd) const;
+
+			const std::vector<vk::ImageCopy>& getCopyRegions() const { return mCopyRegions; }
+		private:
+			std::shared_ptr<Image> mSrc;
+			std::shared_ptr<Image> mDst;
+			std::vector<vk::ImageCopy> mCopyRegions;
 		};
 	}
 }

@@ -6,7 +6,7 @@
 
 
 namespace Mix {
-    namespace Graphics {
+    namespace Vulkan {
         class NoSuitableVulkanDevice :public std::runtime_error {
         public:
             NoSuitableVulkanDevice() :runtime_error("Error : Failed to find device with Vulkan support") {};

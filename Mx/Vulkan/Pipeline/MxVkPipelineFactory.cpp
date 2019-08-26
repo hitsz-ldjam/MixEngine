@@ -1,13 +1,14 @@
 #include "MxVkPipelineFactory.h"
 #include "MxVkPipeline.h"
-#include "MxVkShader.h"
+#include "MxVkShaderModule.h"
 #include "../../../MixEngine.h"
 #include "../../Resource/MxResourceLoader.h"
 #include "../../Resource/Shader/MxShaderSource.h"
 #include <nlohmann/json.hpp>
+#include "MxVkVertexInput.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		const char* const PipelineFactory::sDefaultEntry = "main";
 
 		const vk::PipelineColorBlendAttachmentState PipelineFactory::DefaultBlendAttachment = {
@@ -24,13 +25,13 @@ namespace Mix {
 				vk::ColorComponentFlagBits::eA
 		};
 
-		std::vector<Shader> PipelineFactory::CreateShaderStageFromJson(const nlohmann::json& _json, const std::shared_ptr<Device>& _device) {
+		std::vector<ShaderModule> PipelineFactory::CreateShaderStageFromJson(const nlohmann::json& _json, const std::shared_ptr<Device>& _device) {
 			if (!_json.contains("shaderStage"))
 				throw Exception("Pipeline description file does not contain key: shaderStage");
 
-			std::vector<Shader> results;
+			std::vector<ShaderModule> results;
 			for (auto& path : _json["shaderStage"]) {
-				results.emplace_back(_device, *(MixEngine::Instance().getModule<Resource::ResourceLoader>()->load<Resource::ShaderSource>(path.get<std::string>())));
+				results.emplace_back(_device, *ResourceLoader::Get()->load<ShaderSource>(path.get<std::string>()));
 			}
 			return results;
 		}
@@ -105,7 +106,7 @@ namespace Mix {
 				if (rasterizationJs.contains("polygon")) {
 					auto str = rasterizationJs["polygon"].get<std::string>();
 
-					if (str == "Fill");
+					if (str == "Fill")polygon = vk::PolygonMode::eFill;
 					else if (str == "Line") polygon = vk::PolygonMode::eLine;
 					else if (str == "Point")polygon = vk::PolygonMode::ePoint;
 				}
@@ -113,7 +114,7 @@ namespace Mix {
 				if (rasterizationJs.contains("cullMode")) {
 					auto str = rasterizationJs["cullMode"].get<std::string>();
 
-					if (str == "Back");
+					if (str == "Back")cullMode = vk::CullModeFlagBits::eBack;
 					if (str == "Front") cullMode = vk::CullModeFlagBits::eFront;
 					if (str == "FrontAndBack")cullMode = vk::CullModeFlagBits::eFrontAndBack;
 					if (str == "None")cullMode = vk::CullModeFlagBits::eNone;
@@ -306,17 +307,24 @@ namespace Mix {
 					binding.binding = bdIndex++;
 					binding.descriptorType = GetVkDescriptorTypeFromStr(bindingJs["type"].get<std::string>());
 					binding.descriptorCount = bindingJs["count"].get<uint32_t>();
-					binding.stageFlags = GetVkShaderStageFromStr(bindingJs["stage"].get<std::string>());
+
+					vk::ShaderStageFlags stages;
+					for (auto& stageJs : bindingJs["stage"]) {
+						stages |= GetVkShaderStageFromStr(stageJs.get<std::string>());
+					}
+
+					binding.stageFlags = stages;
 					sets.back().emplace_back(bindingJs["name"].get<std::string>(), binding);
 				}
 			}
 
-			std::vector<DescriptorSetLayout> descriptorSetLayouts;
+			std::vector<std::shared_ptr<DescriptorSetLayout>> descriptorSetLayouts;
 			for (auto& set : sets) {
-				auto setLayout = DescriptorSetLayout(_device);
-				for (auto& pair : set)
-					setLayout.addBinding(pair.first, pair.second);
-				setLayout.create();
+				auto setLayout = std::make_shared<DescriptorSetLayout>(_device);
+				// todo
+				/*for (auto& pair : set)
+					setLayout->addBinding(pair.first, pair.second);*/
+				setLayout->create();
 				descriptorSetLayouts.push_back(std::move(setLayout));
 			}
 
@@ -457,7 +465,7 @@ namespace Mix {
 			factory.begin();
 			auto shaders = std::move(CreateShaderStageFromJson(_json, _renderPass->getDevice()));
 			for (auto& shader : shaders)
-				factory.setShader(shader);
+				factory.setShaderModule(shader);
 			factory.setViewport(_viewports);
 			factory.setScissor(_scissors);
 
@@ -479,10 +487,14 @@ namespace Mix {
 			mPipelineStates.reset(new PipelineStates);
 		}
 
-		void PipelineFactory::setShader(const Shader& _shader, const vk::SpecializationInfo* _specInfo) const {
+		void PipelineFactory::setShaderModule(const ShaderModule& _shader, const vk::SpecializationInfo* _specInfo) const {
 			if (mPipelineStates) {
 				mPipelineStates->shaders[_shader.stage()] = { {}, _shader.stage(), _shader.get(), sDefaultEntry, _specInfo };
 			}
+		}
+
+		void PipelineFactory::setVertexInput(const VertexInput& _vertexInput) {
+			setVertexInput(_vertexInput.getBindingDescription(), _vertexInput.getAttributeDescriptions());
 		}
 
 		void PipelineFactory::setVertexInput(ArrayProxy<const vk::VertexInputBindingDescription> _bindingDescri,
@@ -619,7 +631,7 @@ namespace Mix {
 				mPipelineStates->dynamicStates.assign(_dynamicStates.begin(), _dynamicStates.end());
 		}
 
-		void PipelineFactory::setDescriptorSetLayout(ArrayProxy<DescriptorSetLayout> _setLayouts) const {
+		void PipelineFactory::setDescriptorSetLayout(ArrayProxy<const std::shared_ptr<DescriptorSetLayout>> _setLayouts) const {
 			if (mPipelineStates)
 				mPipelineStates->descriptorSetLayouts.assign(_setLayouts.begin(), _setLayouts.end());
 		}
@@ -635,7 +647,7 @@ namespace Mix {
 			std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
 			descriptorSetLayouts.reserve(mPipelineStates->descriptorSetLayouts.size());
 			for (auto& layout : mPipelineStates->descriptorSetLayouts)
-				descriptorSetLayouts.emplace_back(layout.get());
+				descriptorSetLayouts.emplace_back(layout->get());
 
 			vk::PipelineLayoutCreateInfo layoutCreateInfo = {};
 			layoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();

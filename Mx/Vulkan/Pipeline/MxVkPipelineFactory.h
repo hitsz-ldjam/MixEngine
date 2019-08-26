@@ -10,12 +10,13 @@
 #include <map>
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class Pipeline;
 		class RenderPass;
-		class Shader;
+		class ShaderModule;
 		class DescriptorSetLayout;
 		class Device;
+		class VertexInput;
 
 		class PipelineFactory {
 		public:
@@ -27,7 +28,9 @@ namespace Mix {
 
 			void begin();
 
-			void setShader(const Shader& _shader, const vk::SpecializationInfo* _specInfo = nullptr) const;
+			void setShaderModule(const ShaderModule& _shader, const vk::SpecializationInfo* _specInfo = nullptr) const;
+
+			void setVertexInput(const VertexInput& _vertexInput);
 
 			void setVertexInput(ArrayProxy<const vk::VertexInputBindingDescription> _bindingDescri,
 								ArrayProxy<const vk::VertexInputAttributeDescription> _attriDescri) const;
@@ -82,7 +85,7 @@ namespace Mix {
 
 			void setDynamicState(ArrayProxy<const vk::DynamicState> _dynamicStates) const;
 
-			void setDescriptorSetLayout(ArrayProxy<DescriptorSetLayout> _setLayouts) const;
+			void setDescriptorSetLayout(ArrayProxy<const std::shared_ptr<DescriptorSetLayout>> _setLayouts) const;
 
 			void setPushConstantRanges(ArrayProxy<const vk::PushConstantRange> _ranges) const;
 
@@ -93,7 +96,7 @@ namespace Mix {
 			static const vk::PipelineColorBlendAttachmentState DefaultBlendAttachment;
 
 		private:
-			static std::vector<Shader> CreateShaderStageFromJson(const nlohmann::json& _json, const std::shared_ptr<Device>& _device);
+			static std::vector<ShaderModule> CreateShaderStageFromJson(const nlohmann::json& _json, const std::shared_ptr<Device>& _device);
 			static void CreateVertexInputFromJson(const nlohmann::json& _json, PipelineFactory& _factory);
 			static void CreateInputAssemblyFromJson(const nlohmann::json& _json, PipelineFactory& _factory);
 			static void CreateRasterizationFromJson(const nlohmann::json& _json, PipelineFactory& _factory);
@@ -126,7 +129,7 @@ namespace Mix {
 				std::vector<vk::PipelineColorBlendAttachmentState> colorBlendAttachments;
 				vk::PipelineColorBlendStateCreateInfo colorBlend;
 				std::vector<vk::DynamicState> dynamicStates;
-				std::vector<DescriptorSetLayout> descriptorSetLayouts;
+				std::vector<std::shared_ptr<DescriptorSetLayout>> descriptorSetLayouts;
 				std::vector<vk::PushConstantRange> pushConstantRanges;
 			};
 

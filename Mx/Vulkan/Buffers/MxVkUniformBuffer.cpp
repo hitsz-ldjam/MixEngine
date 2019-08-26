@@ -1,7 +1,15 @@
 #include "MxVkUniformBuffer.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
+
+		UniformBuffer::UniformBuffer(const std::shared_ptr<DeviceAllocator>& _allocator, uint32_t _size) :
+			Buffer(_allocator,
+				   vk::BufferUsageFlagBits::eUniformBuffer,
+				   vk::MemoryPropertyFlagBits::eHostCoherent |
+				   vk::MemoryPropertyFlagBits::eHostVisible,
+				   _size) {
+		}
 
 		DynamicUniformBuffer::DynamicUniformBuffer(const std::shared_ptr<DeviceAllocator>& _allocator,
 												   const uint32_t _sizePerObj, const uint32_t _count) : mCurrCount(0) {
@@ -24,7 +32,7 @@ namespace Mix {
 											   actualCount * actualAlign);
 		}
 
-		WriteDescriptorSet DynamicUniformBuffer::getWriteDescriptorSet(const uint32_t _binding) const {
+		WriteDescriptorSet DynamicUniformBuffer::getWriteDescriptor(const uint32_t _binding) const {
 			return mBuffer->getWriteDescriptor(_binding, vk::DescriptorType::eUniformBufferDynamic, OffsetSize64{ 0,mUniformSize });
 		}
 	}

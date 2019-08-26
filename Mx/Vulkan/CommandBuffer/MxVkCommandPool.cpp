@@ -1,7 +1,7 @@
 #include "MxVkCommandPool.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 
 		CommandPool::CommandPool(const std::shared_ptr<Device>& _device,
 											 const vk::QueueFlagBits _queueType,

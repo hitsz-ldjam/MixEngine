@@ -2,7 +2,7 @@
 #include "../../Log/MxLog.h"
 
 namespace Mix {
-    namespace Graphics {
+    namespace Vulkan {
 	    DebugUtils::~DebugUtils() {
 			if (!mDevice)
 				return;

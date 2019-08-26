@@ -9,7 +9,7 @@
 
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class DebugUtils :public GeneralBase::NoCopyBase {
 		public:
 			explicit DebugUtils(const std::shared_ptr<Device>& _device) :mInstance(_device->getPhysicalDevice()->getInstance()), mDevice(_device) {}

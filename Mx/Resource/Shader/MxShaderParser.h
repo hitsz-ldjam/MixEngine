@@ -5,6 +5,7 @@
 #include <shaderc/shaderc.hpp>
 #include "../MxResourceParserBase.hpp"
 #include "MxShaderSource.h"
+#include <filesystem>
 
 #define RESOURCE_GLSL_VERT_EXT "vert"
 #define RESOURCE_GLSL_FRAG_EXT "frag"
@@ -23,54 +24,52 @@
 
 
 namespace Mix {
-	namespace Resource {
-		class ShaderParser : public ResourceParserBase {
-		public:
-			ShaderParser() {
-				mSupportedTypes.insert(ResourceType::GLSL_VERT);
-				mSupportedTypes.insert(ResourceType::GLSL_FRAG);
-				mSupportedTypes.insert(ResourceType::GLSL_GEOMETRY);
-				mSupportedTypes.insert(ResourceType::GLSL_TESS_CTRL);
-				mSupportedTypes.insert(ResourceType::GLSL_TESS_EVLT);
-				mSupportedTypes.insert(ResourceType::GLSL_COMPUTE);
+	class ShaderParser : public ResourceParserBase {
+	public:
+		ShaderParser() {
+			mSupportedTypes.insert(ResourceType::GLSL_VERT);
+			mSupportedTypes.insert(ResourceType::GLSL_FRAG);
+			mSupportedTypes.insert(ResourceType::GLSL_GEOMETRY);
+			mSupportedTypes.insert(ResourceType::GLSL_TESS_CTRL);
+			mSupportedTypes.insert(ResourceType::GLSL_TESS_EVLT);
+			mSupportedTypes.insert(ResourceType::GLSL_COMPUTE);
 
-				mSupportedTypes.insert(ResourceType::SPIRV_VERT);
-				mSupportedTypes.insert(ResourceType::SPIRV_FRAG);
-				mSupportedTypes.insert(ResourceType::SPIRV_GEOMETRY);
-				mSupportedTypes.insert(ResourceType::SPIRV_TESS_CTRL);
-				mSupportedTypes.insert(ResourceType::SPIRV_TESS_EVLT);
-				mSupportedTypes.insert(ResourceType::SPIRV_COMPUTE);
+			mSupportedTypes.insert(ResourceType::SPIRV_VERT);
+			mSupportedTypes.insert(ResourceType::SPIRV_FRAG);
+			mSupportedTypes.insert(ResourceType::SPIRV_GEOMETRY);
+			mSupportedTypes.insert(ResourceType::SPIRV_TESS_CTRL);
+			mSupportedTypes.insert(ResourceType::SPIRV_TESS_EVLT);
+			mSupportedTypes.insert(ResourceType::SPIRV_COMPUTE);
 
-				mSupportedExts.insert(RESOURCE_GLSL_VERT_EXT);
-				mSupportedExts.insert(RESOURCE_GLSL_FRAG_EXT);
-				mSupportedExts.insert(RESOURCE_GLSL_GEOM_EXT);
-				mSupportedExts.insert(RESOURCE_GLSL_TESC_EXT);
-				mSupportedExts.insert(RESOURCE_GLSL_TESE_EXT);
-				mSupportedExts.insert(RESOURCE_GLSL_COMP_EXT);
+			mSupportedExts.insert(RESOURCE_GLSL_VERT_EXT);
+			mSupportedExts.insert(RESOURCE_GLSL_FRAG_EXT);
+			mSupportedExts.insert(RESOURCE_GLSL_GEOM_EXT);
+			mSupportedExts.insert(RESOURCE_GLSL_TESC_EXT);
+			mSupportedExts.insert(RESOURCE_GLSL_TESE_EXT);
+			mSupportedExts.insert(RESOURCE_GLSL_COMP_EXT);
 
-				mSupportedExts.insert(RESOURCE_SPRV_VERT_EXT);
-				mSupportedExts.insert(RESOURCE_SPRV_FRAG_EXT);
-				mSupportedExts.insert(RESOURCE_SPRV_GEOM_EXT);
-				mSupportedExts.insert(RESOURCE_SPRV_TESC_EXT);
-				mSupportedExts.insert(RESOURCE_SPRV_TESE_EXT);
-				mSupportedExts.insert(RESOURCE_SPRV_COMP_EXT);
-			}
+			mSupportedExts.insert(RESOURCE_SPRV_VERT_EXT);
+			mSupportedExts.insert(RESOURCE_SPRV_FRAG_EXT);
+			mSupportedExts.insert(RESOURCE_SPRV_GEOM_EXT);
+			mSupportedExts.insert(RESOURCE_SPRV_TESC_EXT);
+			mSupportedExts.insert(RESOURCE_SPRV_TESE_EXT);
+			mSupportedExts.insert(RESOURCE_SPRV_COMP_EXT);
+		}
 
-			std::shared_ptr<ResourceBase> load(const std::filesystem::path& _path, const ResourceType _type) override;
+		std::shared_ptr<ResourceBase> load(const std::filesystem::path& _path, const ResourceType _type, void* _additionalParam) override;
 
-			std::shared_ptr<ResourceBase> load(const std::filesystem::path& _path, const std::string& _ext) override;
+		std::shared_ptr<ResourceBase> load(const std::filesystem::path& _path, const std::string& _ext, void* _additionalParam) override;
 
-		private:
-			shaderc::Compiler mCompiler;
+	private:
+		shaderc::Compiler mCompiler;
 
-			std::vector<uint32_t> compileGlslToSpv(
-				const char* _data,
-				const size_t _size,
-				const shaderc_shader_kind _kind, const std::string& _name) const;
+		std::vector<uint32_t> compileGlslToSpv(
+			const char* _data,
+			const size_t _size,
+			const shaderc_shader_kind _kind, const std::string& _name) const;
 
-			bool static IsGlsl(const ResourceType _type);
-		};
-	}
+		bool static IsGlsl(const ResourceType _type);
+	};
 }
 
 #endif

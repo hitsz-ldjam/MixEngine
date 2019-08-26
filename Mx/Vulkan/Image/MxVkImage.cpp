@@ -5,43 +5,57 @@
 #include "../CommandBuffer/MxVkCommanddBufferHandle.h"
 
 namespace Mix {
-	namespace Graphics {
-		Image::Image(const std::shared_ptr<DeviceAllocator>& _allocator,
-		             const vk::ImageType _type,
-		             const vk::MemoryPropertyFlags& _memProperty,
-		             const vk::Extent3D& _extent,
-		             const vk::Format _format,
-		             const vk::ImageUsageFlags& _usage,
-		             const uint32_t _mipLevels,
-		             const uint32_t _arrayLayers,
-		             const vk::SampleCountFlagBits _sampleCount,
-		             const vk::ImageLayout _initialLayout,
-		             const vk::ImageTiling _tiling,
-		             const vk::SharingMode _sharingMode,
-		             const vk::ImageCreateFlagBits& _flag)
-			: mAllocator(_allocator) {
+	namespace Vulkan {
+		Image::Image(std::shared_ptr<DeviceAllocator> _allocator,
+					 const vk::ImageType _type,
+					 const vk::MemoryPropertyFlags& _memProperty,
+					 const vk::Extent3D& _extent,
+					 const vk::Format _format,
+					 const vk::ImageUsageFlags& _usage,
+					 const uint32_t _mipLevels,
+					 const uint32_t _arrayLayers,
+					 const vk::SampleCountFlagBits _sampleCount,
+					 const vk::ImageLayout _initialLayout,
+					 const vk::ImageTiling _tiling,
+					 const vk::SharingMode _sharingMode,
+					 const vk::ImageCreateFlagBits& _flag)
+			: mAllocator(std::move(_allocator)) {
 
 			mImage = CreateVkImage(mAllocator->getDevice()->get(),
-			                       _type,
-			                       _extent,
-			                       _format,
-			                       _usage,
-			                       _mipLevels,
-			                       _arrayLayers,
-			                       _sampleCount,
-			                       _initialLayout,
-			                       _tiling, _sharingMode,
-			                       _flag);
+								   _type,
+								   _extent,
+								   _format,
+								   _usage,
+								   _mipLevels,
+								   _arrayLayers,
+								   _sampleCount,
+								   _initialLayout,
+								   _tiling, _sharingMode,
+								   _flag);
 
-			mMemory      = _allocator->allocate(mImage, _memProperty);
-			mType        = _type;
-			mFormat      = _format;
-			mExtent      = _extent;
-			mMipLevels   = _mipLevels;
+			mMemory = mAllocator->allocate(mImage, _memProperty);
+			mType = _type;
+			mFormat = _format;
+			mExtent = _extent;
+			mMipLevels = _mipLevels;
 			mArrayLevels = _arrayLayers;
 
 			mLayout = _initialLayout;
 			mTiling = _tiling;
+		}
+
+		Image::Image(std::shared_ptr<DeviceAllocator> _allocator, const vk::ImageCreateInfo& _createInfo, const vk::MemoryPropertyFlags& _memProperty) :mAllocator(std::move(_allocator)) {
+			mImage = mAllocator->getDevice()->get().createImage(_createInfo);
+
+			mMemory = mAllocator->allocate(mImage, _memProperty);
+			mType = _createInfo.imageType;
+			mFormat = _createInfo.format;
+			mExtent = _createInfo.extent;
+			mMipLevels = _createInfo.mipLevels;
+			mArrayLevels = _createInfo.arrayLayers;
+
+			mLayout = _createInfo.initialLayout;
+			mTiling = _createInfo.tiling;
 		}
 
 		void Image::swap(Image& _other) noexcept {
@@ -58,10 +72,10 @@ namespace Mix {
 			swap(mTiling, _other.mTiling);
 		}
 
-		void Image::uploadData(const void* _data, const vk::DeviceSize& _dstOffset, const vk::DeviceSize& _size) const {
+		/*void Image::uploadData(const void* _data, const vk::DeviceSize& _dstOffset, const vk::DeviceSize& _size) const {
 			assert(_data && _dstOffset + _size <= mMemory.size);
 			memcpy(static_cast<char*>(mMemory.ptr) + _dstOffset, _data, static_cast<size_t>(_size));
-		}
+		}*/
 
 		Image::~Image() {
 			if (mImage) {
@@ -71,45 +85,45 @@ namespace Mix {
 		}
 
 		vk::Image Image::CreateVkImage(const vk::Device& _device,
-		                               const vk::ImageType _type,
-		                               const vk::Extent3D& _extent,
-		                               const vk::Format _format,
-		                               const vk::ImageUsageFlags& _usage,
-		                               const uint32_t _mipLevels,
-		                               const uint32_t _arrayLayers,
-		                               const vk::SampleCountFlagBits _sampleCount,
-		                               const vk::ImageLayout _initialLayout,
-		                               const vk::ImageTiling _tiling,
-		                               const vk::SharingMode _sharingMode,
-		                               const vk::ImageCreateFlagBits& _flag) {
+									   const vk::ImageType _type,
+									   const vk::Extent3D& _extent,
+									   const vk::Format _format,
+									   const vk::ImageUsageFlags& _usage,
+									   const uint32_t _mipLevels,
+									   const uint32_t _arrayLayers,
+									   const vk::SampleCountFlagBits _sampleCount,
+									   const vk::ImageLayout _initialLayout,
+									   const vk::ImageTiling _tiling,
+									   const vk::SharingMode _sharingMode,
+									   const vk::ImageCreateFlagBits& _flag) {
 			vk::ImageCreateInfo createInfo;
-			createInfo.imageType     = vk::ImageType::e2D;
-			createInfo.extent        = _extent;
-			createInfo.mipLevels     = _mipLevels;
-			createInfo.arrayLayers   = _arrayLayers;
-			createInfo.format        = _format;
-			createInfo.tiling        = _tiling;
+			createInfo.imageType = _type;
+			createInfo.extent = _extent;
+			createInfo.mipLevels = _mipLevels;
+			createInfo.arrayLayers = _arrayLayers;
+			createInfo.format = _format;
+			createInfo.tiling = _tiling;
 			createInfo.initialLayout = _initialLayout;
-			createInfo.usage         = _usage;
-			createInfo.sharingMode   = _sharingMode;
-			createInfo.samples       = _sampleCount;
-			createInfo.flags         = _flag;
+			createInfo.usage = _usage;
+			createInfo.sharingMode = _sharingMode;
+			createInfo.samples = _sampleCount;
+			createInfo.flags = _flag;
 
 			return _device.createImage(createInfo);
 		}
 
 		vk::UniqueImage Image::CreateVkImageUnique(const vk::Device& _device,
-		                                           const vk::ImageType _type,
-		                                           const vk::Extent3D& _extent,
-		                                           const vk::Format _format,
-		                                           const vk::ImageUsageFlags& _usage,
-		                                           const uint32_t _mipLevels,
-		                                           const uint32_t _arrayLayers,
-		                                           const vk::SampleCountFlagBits _sampleCount,
-		                                           const vk::ImageLayout _initialLayout,
-		                                           const vk::ImageTiling _tiling,
-		                                           const vk::SharingMode _sharingMode,
-		                                           const vk::ImageCreateFlagBits& _flag) {
+												   const vk::ImageType _type,
+												   const vk::Extent3D& _extent,
+												   const vk::Format _format,
+												   const vk::ImageUsageFlags& _usage,
+												   const uint32_t _mipLevels,
+												   const uint32_t _arrayLayers,
+												   const vk::SampleCountFlagBits _sampleCount,
+												   const vk::ImageLayout _initialLayout,
+												   const vk::ImageTiling _tiling,
+												   const vk::SharingMode _sharingMode,
+												   const vk::ImageCreateFlagBits& _flag) {
 			vk::ImageCreateInfo createInfo;
 			createInfo.imageType = vk::ImageType::e2D;
 			createInfo.extent = _extent;
@@ -127,34 +141,15 @@ namespace Mix {
 		}
 
 		vk::ImageView Image::CreateVkImageView2D(const vk::Device& _device,
-		                                         const vk::Image& _image,
-		                                         const vk::Format _format,
-		                                         const vk::ImageAspectFlags& _aspectFlags,
-		                                         const uint32_t _baseMipLevel,
-		                                         const uint32_t _levelCount,
-		                                         const uint32_t _baseLayer,
-		                                         const uint32_t _layerCount) {
-			vk::ImageViewCreateInfo createInfo;
-			createInfo.image                           = _image;
-			createInfo.format                          = _format;
-			createInfo.viewType                        = vk::ImageViewType::e2D;
-			createInfo.subresourceRange.aspectMask     = _aspectFlags;
-			createInfo.subresourceRange.baseArrayLayer = _baseLayer;
-			createInfo.subresourceRange.layerCount     = _layerCount;
-			createInfo.subresourceRange.baseMipLevel   = _baseMipLevel;
-			createInfo.subresourceRange.levelCount     = _levelCount;
-
-			return _device.createImageView(createInfo);
-		}
-
-		vk::UniqueImageView Image::CreateVkImageView2DUnique(const vk::Device& _device,
-		                                                     const vk::Image& _image,
-		                                                     const vk::Format _format,
-		                                                     const vk::ImageAspectFlags& _aspectFlags,
-		                                                     const uint32_t _baseMipLevel,
-		                                                     const uint32_t _levelCount,
-		                                                     const uint32_t _baseLayer,
-		                                                     const uint32_t _layerCount) {
+												 const vk::Image& _image,
+												 const vk::Format _format,
+												 const vk::ImageAspectFlags& _aspectFlags,
+												 const uint32_t _baseMipLevel,
+												 const uint32_t _levelCount,
+												 const uint32_t _baseLayer,
+												 const uint32_t _layerCount,
+												 const vk::ComponentMapping& _componentMapping,
+												 const vk::ImageViewCreateFlags& _flags) {
 			vk::ImageViewCreateInfo createInfo;
 			createInfo.image = _image;
 			createInfo.format = _format;
@@ -164,25 +159,52 @@ namespace Mix {
 			createInfo.subresourceRange.layerCount = _layerCount;
 			createInfo.subresourceRange.baseMipLevel = _baseMipLevel;
 			createInfo.subresourceRange.levelCount = _levelCount;
+			createInfo.components = _componentMapping;
+			createInfo.flags = _flags;
+
+			return _device.createImageView(createInfo);
+		}
+
+		vk::UniqueImageView Image::CreateVkImageView2DUnique(const vk::Device& _device,
+															 const vk::Image& _image,
+															 const vk::Format _format,
+															 const vk::ImageAspectFlags& _aspectFlags,
+															 const uint32_t _baseMipLevel,
+															 const uint32_t _levelCount,
+															 const uint32_t _baseLayer,
+															 const uint32_t _layerCount,
+															 const vk::ComponentMapping& _componentMapping,
+															 const vk::ImageViewCreateFlags& _flags) {
+			vk::ImageViewCreateInfo createInfo;
+			createInfo.image = _image;
+			createInfo.format = _format;
+			createInfo.viewType = vk::ImageViewType::e2D;
+			createInfo.subresourceRange.aspectMask = _aspectFlags;
+			createInfo.subresourceRange.baseArrayLayer = _baseLayer;
+			createInfo.subresourceRange.layerCount = _layerCount;
+			createInfo.subresourceRange.baseMipLevel = _baseMipLevel;
+			createInfo.subresourceRange.levelCount = _levelCount;
+			createInfo.components = _componentMapping;
+			createInfo.flags = _flags;
 
 			return _device.createImageViewUnique(createInfo);
 		}
 
 		void Image::TransferVkImageLayout(const vk::CommandBuffer& _cmdbuffer,
-		                                  vk::Image _image,
-		                                  vk::ImageLayout _oldImageLayout,
-		                                  vk::ImageLayout _newImageLayout,
-		                                  const vk::ImageSubresourceRange& _subresourceRange,
-		                                  vk::PipelineStageFlags _srcStageMask,
-		                                  vk::PipelineStageFlags _dstStageMask) {
+										  vk::Image _image,
+										  vk::ImageLayout _oldImageLayout,
+										  vk::ImageLayout _newImageLayout,
+										  const vk::ImageSubresourceRange& _subresourceRange,
+										  vk::PipelineStageFlags _srcStageMask,
+										  vk::PipelineStageFlags _dstStageMask) {
 			// Create an image barrier object
 			vk::ImageMemoryBarrier imageMemoryBarrier;
-			imageMemoryBarrier.oldLayout           = _oldImageLayout;
-			imageMemoryBarrier.newLayout           = _newImageLayout;
+			imageMemoryBarrier.oldLayout = _oldImageLayout;
+			imageMemoryBarrier.newLayout = _newImageLayout;
 			imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			imageMemoryBarrier.image               = _image;
-			imageMemoryBarrier.subresourceRange    = _subresourceRange;
+			imageMemoryBarrier.image = _image;
+			imageMemoryBarrier.subresourceRange = _subresourceRange;
 
 			// Source layouts (old)
 			// Source access mask controls actions that have to be finished on the old layout
@@ -280,16 +302,37 @@ namespace Mix {
 
 			// Put barrier inside setup command buffer
 			_cmdbuffer.pipelineBarrier(_srcStageMask,
-			                           _dstStageMask,
-			                           vk::DependencyFlags(),
-			                           {},
-			                           {},
-			                           imageMemoryBarrier);
+									   _dstStageMask,
+									   vk::DependencyFlags(),
+									   {},
+									   {},
+									   imageMemoryBarrier);
+		}
+
+		bool Image::HasDepth(vk::Format _format) {
+			static const std::vector<vk::Format> depthFormats{
+				vk::Format::eD16Unorm,
+				vk::Format::eX8D24UnormPack32,
+				vk::Format::eD32Sfloat,
+				vk::Format::eD16UnormS8Uint,
+				vk::Format::eD24UnormS8Uint,
+				vk::Format::eD32SfloatS8Uint };
+
+			return std::find(depthFormats.begin(), depthFormats.end(), _format) != std::end(depthFormats);
+		}
+
+		bool Image::HasStencil(vk::Format _format) {
+			static const std::vector<vk::Format> stencilFormats{ vk::Format::eS8Uint,
+				vk::Format::eD16UnormS8Uint,
+				vk::Format::eD24UnormS8Uint,
+				vk::Format::eD32SfloatS8Uint };
+
+			return std::find(stencilFormats.begin(), stencilFormats.end(), _format) != std::end(stencilFormats);
 		}
 
 		std::shared_ptr<Image> Image::CreateDepthStencil(const std::shared_ptr<DeviceAllocator>& _allocator,
-		                                                 const vk::Extent2D& _extent,
-		                                                 const vk::SampleCountFlagBits _sampleCount) {
+														 const vk::Extent2D& _extent,
+														 const vk::SampleCountFlagBits _sampleCount) {
 			static vk::Format candidates[] = {
 				vk::Format::eD32SfloatS8Uint,
 				vk::Format::eD24UnormS8Uint,
@@ -300,9 +343,9 @@ namespace Mix {
 			vk::Format format;
 			for (auto candidate : candidates) {
 				if (device->getPhysicalDevice()->checkFormatFeatureSupport(candidate,
-				                                                           vk::ImageTiling::eOptimal,
-				                                                           vk::FormatFeatureFlagBits::
-				                                                           eDepthStencilAttachment)) {
+					vk::ImageTiling::eOptimal,
+					vk::FormatFeatureFlagBits::
+					eDepthStencilAttachment)) {
 
 					format = candidate;
 					break;
@@ -310,11 +353,11 @@ namespace Mix {
 			}
 
 			return std::make_shared<Image>(_allocator,
-			                               vk::ImageType::e2D,
-			                               vk::MemoryPropertyFlagBits::eDeviceLocal,
-			                               vk::Extent3D(_extent, 1),
-			                               format,
-			                               vk::ImageUsageFlagBits::eDepthStencilAttachment);
+										   vk::ImageType::e2D,
+										   vk::MemoryPropertyFlagBits::eDeviceLocal,
+										   vk::Extent3D(_extent, 1),
+										   format,
+										   vk::ImageUsageFlagBits::eDepthStencilAttachment);
 		}
 
 #pragma region MyRegion

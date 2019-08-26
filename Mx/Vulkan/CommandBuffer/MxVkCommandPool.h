@@ -6,7 +6,7 @@
 #include "../../Utils/MxGeneralBase.hpp"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class CommandPool final :public GeneralBase::NoCopyBase {
 		public:
 			CommandPool(const std::shared_ptr<Device>& _device,

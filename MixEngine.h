@@ -20,8 +20,6 @@ namespace Mix {
 
         bool& quit() noexcept { return mQuit; }
 
-        Window& getWindow() { return *mWindow; }
-
         // ----- ModuleHolder -----
 
         template<typename _Ty>
@@ -43,7 +41,6 @@ namespace Mix {
 
         bool mQuit;
 
-        Window* mWindow;
         ModuleHolder mModuleHolder;
 
         // todo: debug code

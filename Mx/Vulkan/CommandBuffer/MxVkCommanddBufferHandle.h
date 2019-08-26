@@ -11,7 +11,7 @@ namespace vk {
 }
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 		class CommandPool;
 
 		class CommandBufferHandle :public GeneralBase::NoCopyBase {

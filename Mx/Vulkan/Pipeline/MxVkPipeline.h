@@ -6,8 +6,8 @@
 #include "../../Utils/MxArrayProxy.h"
 
 namespace Mix {
-	namespace Graphics {
-		class Shader;
+	namespace Vulkan {
+		class ShaderModule;
 		class DescriptorSetLayout;
 
 		class Pipeline : public GeneralBase::NoCopyBase {
@@ -25,18 +25,18 @@ namespace Mix {
 
 			const vk::PipelineLayout& pipelineLayout() const { return mPipelineLayout; }
 
-			const std::vector<DescriptorSetLayout>& descriptorSetLayouts() const { return mDescriptorSetLayout; }
+			const std::vector<std::shared_ptr<DescriptorSetLayout>>& descriptorSetLayouts() const { return mDescriptorSetLayout; }
 
 
 		private:
 			Pipeline(std::shared_ptr<RenderPass> _renderPass,
-					 ArrayProxy<DescriptorSetLayout> _descriptorSetLayout,
+					 ArrayProxy<std::shared_ptr<DescriptorSetLayout>> _descriptorSetLayout,
 					 const uint32_t _subpassIndex,
 					 const vk::Pipeline& _pipeline,
 					 const vk::PipelineLayout& _layout);
 
 			std::shared_ptr<RenderPass> mRenderPass;
-			std::vector<DescriptorSetLayout> mDescriptorSetLayout;
+			std::vector<std::shared_ptr<DescriptorSetLayout>> mDescriptorSetLayout;
 			vk::Pipeline mPipeline;
 			vk::PipelineLayout mPipelineLayout;
 			uint32_t mSubpassIndex = 0;

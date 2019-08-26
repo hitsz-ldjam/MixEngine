@@ -3,57 +3,57 @@
 #include "../Image/MxVkImage.h"
 
 namespace Mix {
-	namespace Graphics {
+	namespace Vulkan {
 
 		DataToBuffer::DataToBuffer(const std::shared_ptr<DeviceAllocator>& _allocator,
 								   const char* _src,
-								   const std::shared_ptr<Buffer>& _dst,
+								   std::shared_ptr<Buffer> _dst,
 								   vk::DeviceSize _dstOffset,
 								   vk::DeviceSize _size)
-			: mDst(_dst),
+			: mDst(std::move(_dst)),
 			mCopyRegion(0, _dstOffset, _size) {
 			mSrc = std::make_shared<Buffer>(_allocator,
 											vk::BufferUsageFlagBits::eTransferSrc,
 											vk::MemoryPropertyFlagBits::eHostVisible |
 											vk::MemoryPropertyFlagBits::eHostCoherent,
 											_size);
-			mSrc->uploadData(_src, 0, _size);
+			mSrc->setData(_src, 0, _size);
 		}
 
 		void DataToBuffer::operator()(const vk::CommandBuffer& _cmd) const {
 			_cmd.copyBuffer(mSrc->get(), mDst->get(), mCopyRegion);
 		}
 
-		BufferToBuffer::BufferToBuffer(const std::shared_ptr<Buffer>& _src,
-									   const std::shared_ptr<Buffer>& _dst,
+		BufferToBuffer::BufferToBuffer(std::shared_ptr<Buffer> _src,
+									   std::shared_ptr<Buffer> _dst,
 									   const vk::DeviceSize& _srcOffset,
 									   const vk::DeviceSize& _dstOffset,
 									   const vk::DeviceSize& _size)
-			: mSrc(_src), mDst(_dst), mCopyRegions(1, vk::BufferCopy(_srcOffset, _dstOffset, _size)) {
+			: mSrc(std::move(_src)), mDst(std::move(_dst)), mCopyRegions(1, vk::BufferCopy(_srcOffset, _dstOffset, _size)) {
 		}
 
-		BufferToBuffer::BufferToBuffer(const std::shared_ptr<Buffer>& _src,
-									   const std::shared_ptr<Buffer>& _dst,
+		BufferToBuffer::BufferToBuffer(std::shared_ptr<Buffer> _src,
+									   std::shared_ptr<Buffer> _dst,
 									   const vk::BufferCopy& _region)
-			: mSrc(_src), mDst(_dst), mCopyRegions(1, _region) {
+			: mSrc(std::move(_src)), mDst(std::move(_dst)), mCopyRegions(1, _region) {
 		}
 
-		BufferToBuffer::BufferToBuffer(const std::shared_ptr<Buffer>& _src,
-									   const std::shared_ptr<Buffer>& _dst,
+		BufferToBuffer::BufferToBuffer(std::shared_ptr<Buffer> _src,
+									   std::shared_ptr<Buffer> _dst,
 									   const std::vector<vk::BufferCopy>& _regions)
-			: mSrc(_src), mDst(_dst), mCopyRegions(_regions) {
+			: mSrc(std::move(_src)), mDst(std::move(_dst)), mCopyRegions(_regions) {
 		}
 
-		BufferToImage::BufferToImage(const std::shared_ptr<Buffer>& _src,
-									 const std::shared_ptr<Image>& _dst,
+		BufferToImage::BufferToImage(std::shared_ptr<Buffer> _src,
+									 std::shared_ptr<Image> _dst,
 									 const vk::BufferImageCopy& _region)
-			: mSrc(_src), mDst(_dst), mCopyRegions(1, _region) {
+			: mSrc(std::move(_src)), mDst(std::move(_dst)), mCopyRegions(1, _region) {
 		}
 
-		BufferToImage::BufferToImage(const std::shared_ptr<Buffer>& _src,
-									 const std::shared_ptr<Image>& _dst,
+		BufferToImage::BufferToImage(std::shared_ptr<Buffer> _src,
+									 std::shared_ptr<Image> _dst,
 									 const std::vector<vk::BufferImageCopy>& _regions)
-			: mSrc(_src), mDst(_dst), mCopyRegions(_regions) {
+			: mSrc(std::move(_src)), mDst(std::move(_dst)), mCopyRegions(_regions) {
 		}
 
 		void BufferToBuffer::operator()(const vk::CommandBuffer& _cmd) const {
@@ -67,15 +67,20 @@ namespace Mix {
 		DataToImage::DataToImage(const std::shared_ptr<DeviceAllocator>& _allocator,
 								 const char* _src,
 								 const vk::DeviceSize& _size,
-								 const std::shared_ptr<Image>& _dst,
-								 const vk::BufferImageCopy& _region)
-			: mDst(_dst), mCopyRegion(_region) {
+								 std::shared_ptr<Image> _dst,
+								 const vk::ImageSubresourceLayers& _imageSubresource,
+								 const vk::Offset3D& _imageOffset,
+								 const vk::Extent3D& _imageExtent) : mDst(std::move(_dst)) {
 			mSrc = std::make_shared<Buffer>(_allocator,
 											vk::BufferUsageFlagBits::eTransferSrc,
 											vk::MemoryPropertyFlagBits::eHostVisible |
 											vk::MemoryPropertyFlagBits::eHostCoherent,
 											_size,
 											_src);
+
+			mCopyRegion.imageSubresource = _imageSubresource;
+			mCopyRegion.imageOffset = _imageOffset;
+			mCopyRegion.imageExtent = _imageExtent;
 		}
 
 		void DataToImage::operator()(const vk::CommandBuffer& _cmd) const {
@@ -83,6 +88,19 @@ namespace Mix {
 								   mDst->get(),
 								   vk::ImageLayout::eTransferDstOptimal,
 								   mCopyRegion);
+		}
+
+		ImageToImage::ImageToImage(const std::shared_ptr<DeviceAllocator>& _allocator,
+								   std::shared_ptr<Image> _src,
+								   std::shared_ptr<Image> _dst,
+								   std::vector<vk::ImageCopy> _regions)
+			:mSrc(std::move(_src)), mDst(std::move(_dst)), mCopyRegions(std::move(_regions)) {
+		}
+
+		void ImageToImage::operator()(const vk::CommandBuffer& _cmd) const {
+			_cmd.copyImage(mSrc->get(), vk::ImageLayout::eTransferSrcOptimal,
+						   mDst->get(), vk::ImageLayout::eTransferDstOptimal,
+						   mCopyRegions);
 		}
 
 		/*const vk::DeviceSize size = mMemory.size < _size ? mMemory.size : _size;

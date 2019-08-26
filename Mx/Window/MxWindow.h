@@ -4,62 +4,66 @@
 #define MX_WINDOW_H_
 
 #include "../Math/MxVector2.h"
+#include "../Engine/MxModuleBase.h"
+#include "../Utils/MxFlags.h"
 #include <SDL2/SDL_vulkan.h>
 #include <SDL2/SDL.h>
 #include <filesystem>
 #include <string>
 
 namespace Mix {
-    class Window final {
-    public:
-        explicit Window(SDL_Window* _window = nullptr) : mWindow(_window) {}
+	enum class WindowFlag {
+		FULLSCREEN = 0x0001,	/**< Fullscreen window */
+		SHOWN = 0x0002,			/**< Window is visible */
+		HIDDEN = 0x0004,		/**< Window is not visible */
+		BORDERLESS = 0x0008,	/**< Window without border*/
+		RESIZABLE = 0x0010,		/**< Window can be resized */
+		MINIMIZED = 0x0020,		/**< Window is minimized */
+		MAXIMIZED = 0x0040,		/**< Window is maximized */
+		VULKAN = 0x0080			/**< Window for Vulkan */
+	};
 
-        Window(const std::string& _title, const Math::Vector2i& _size, const Uint32 _flags = 0);
+	MX_ALLOW_FLAGS_FOR_ENUM(WindowFlag);
 
-        ~Window();
+	class Window final :public ModuleBase {
+	public:
+		static Window* Get();
 
-        void create(const std::string& _title, const Math::Vector2i& _size, const Uint32 _flags = 0);
+		explicit Window(SDL_Window* _window = nullptr) : mWindow(_window) {}
 
-        void setIcon(const std::filesystem::path& _path);
+		Window(const std::string& _title, const Math::Vector2i& _size, Flags<WindowFlag> _windowFlag);
 
-        Math::Vector2i drawableSize() const;
+		~Window();
 
-        Math::Vector2i extent() const;
+		void awake() override {};
 
-        SDL_Window* window() const { return mWindow; }
+		void init() override {};
 
-        SDL_Surface* surface() const { return SDL_GetWindowSurface(mWindow); }
+		void setIcon(const std::filesystem::path& _path);
 
-        std::string getTitle() const {
-            if(mWindow)
-                return SDL_GetWindowTitle(mWindow);
-            return "";
-        }
+		Math::Vector2i drawableSize() const;
 
-        void setTitle(const std::string& _title) const {
-            if(mWindow)
-                SDL_SetWindowTitle(mWindow, _title.c_str());
-        }
+		Math::Vector2i extent() const;
 
-        static bool GetRelativeMouseMode() {
-            return SDL_GetRelativeMouseMode() == SDL_TRUE;
-        }
+		SDL_Window* rawPtr() const { return mWindow; }
 
-        static void SetRelativeMouseMode(const bool _enable) {
-            SDL_SetRelativeMouseMode(_enable ? SDL_TRUE : SDL_FALSE);
-        }
+		SDL_Surface* rawSurface() const { return SDL_GetWindowSurface(mWindow); }
 
-        auto getRequiredInstanceExts() const {
-            unsigned int count;
-            SDL_Vulkan_GetInstanceExtensions(mWindow, &count, nullptr);
-            std::vector<const char*> result(count);
-            SDL_Vulkan_GetInstanceExtensions(mWindow, &count, result.data());
-            return result;
-        }
+		std::string getTitle() const;
 
-    private:
-        SDL_Window* mWindow;
-    };
+		void setTitle(const std::string& _title) const;
+
+		static bool GetRelativeMouseMode();
+
+		static void SetRelativeMouseMode(const bool _enable);
+
+		std::vector<const char*> getRequiredInstanceExts() const;
+
+	private:
+		static Uint32 ToSDLWindowFlags(Flags<WindowFlag> _flags);
+
+		SDL_Window* mWindow;
+	};
 }
 
 #endif
