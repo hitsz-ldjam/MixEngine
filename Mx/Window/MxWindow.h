@@ -53,10 +53,6 @@ namespace Mix {
 
 		void setTitle(const std::string& _title) const;
 
-		static bool GetRelativeMouseMode();
-
-		static void SetRelativeMouseMode(const bool _enable);
-
 		std::vector<const char*> getRequiredInstanceExts() const;
 
 	private:

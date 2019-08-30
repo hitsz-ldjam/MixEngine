@@ -81,6 +81,15 @@ namespace Mix {
 			}
 			return num8;
 		}
+
+		template<typename _Ty, typename _Re = float>
+		constexpr _Re Normalize(_Ty _value) {
+			static_assert(!std::is_floating_point_v<_Ty>, "You can't use this function on float, double, long double");
+
+			return _value < 0 ?
+				-static_cast<float>(_value) / std::numeric_limits<_Ty>::min() :
+				static_cast<float>(_value) / std::numeric_limits<_Ty>::max();
+		}
 	}
 }
 

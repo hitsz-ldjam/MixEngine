@@ -17,7 +17,7 @@ namespace Mix {
             funcMap->insert({_typeName, _func});
         }
         catch(std::out_of_range& e) {
-            Debug::Log::Error(e.what());
+            Log::Error(e.what());
             return false;
         }
 

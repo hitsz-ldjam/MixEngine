@@ -9,6 +9,7 @@
 #include "../Vulkan/Swapchain/MxVkSwapchain.h"
 #include "../Graphics/MxGraphics.h"
 #include "../Vulkan/MxVulkan.h"
+#include "../Input/MxInputModule.h"
 
 namespace Mix {
 
@@ -19,7 +20,7 @@ namespace Mix {
 	void Ui::init() {
 		mVulkan = &Graphics::Get()->getRenderApi();
 		if (!mVulkan) {
-			Debug::Log::Error("Imgui need Vulkan as a dependency");
+			Log::Error("Imgui need Vulkan as a dependency");
 			return;
 		}
 
@@ -68,16 +69,16 @@ namespace Mix {
 	void Ui::checkBuffers(const size_t _vertex, const size_t _index) {
 		if (!mVertexBuffers[mCurrFrame] || mVertexBuffers[mCurrFrame]->size() < _vertex)
 			mVertexBuffers[mCurrFrame] = std::make_shared<Vulkan::Buffer>(mVulkan->getAllocator(),
-																			vk::BufferUsageFlagBits::eVertexBuffer,
-																			vk::MemoryPropertyFlagBits::eHostVisible |
-																			vk::MemoryPropertyFlagBits::eHostCoherent,
-																			_vertex);
+																		  vk::BufferUsageFlagBits::eVertexBuffer,
+																		  vk::MemoryPropertyFlagBits::eHostVisible |
+																		  vk::MemoryPropertyFlagBits::eHostCoherent,
+																		  _vertex);
 		if (!mIndexBuffers[mCurrFrame] || mIndexBuffers[mCurrFrame]->size() < _index)
 			mIndexBuffers[mCurrFrame] = std::make_shared<Vulkan::Buffer>(mVulkan->getAllocator(),
-																		   vk::BufferUsageFlagBits::eIndexBuffer,
-																		   vk::MemoryPropertyFlagBits::eHostVisible |
-																		   vk::MemoryPropertyFlagBits::eHostCoherent,
-																		   _index);
+																		 vk::BufferUsageFlagBits::eIndexBuffer,
+																		 vk::MemoryPropertyFlagBits::eHostVisible |
+																		 vk::MemoryPropertyFlagBits::eHostCoherent,
+																		 _index);
 
 	}
 
@@ -234,7 +235,7 @@ namespace Mix {
 		if (io.WantSetMousePos) {
 			SDL_WarpMouseInWindow(Window::Get()->rawPtr(),
 								  static_cast<int>(io.MousePos.x), static_cast<int>(io.MousePos.y));
-			auto mousePos = Input::MousePosition();
+			auto mousePos = Input::Get()->getMousePosition();
 			io.MousePos.x = static_cast<float>(mousePos.x);
 			io.MousePos.y = static_cast<float>(mousePos.y);
 		}

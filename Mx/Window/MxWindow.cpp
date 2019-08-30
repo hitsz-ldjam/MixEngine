@@ -83,14 +83,6 @@ namespace Mix {
 			SDL_SetWindowTitle(mWindow, _title.c_str());
 	}
 
-	bool Window::GetRelativeMouseMode() {
-		return SDL_GetRelativeMouseMode() == SDL_TRUE;
-	}
-
-	void Window::SetRelativeMouseMode(const bool _enable) {
-		SDL_SetRelativeMouseMode(_enable ? SDL_TRUE : SDL_FALSE);
-	}
-
 	std::vector<const char*> Window::getRequiredInstanceExts() const {
 		unsigned int count;
 		SDL_Vulkan_GetInstanceExtensions(mWindow, &count, nullptr);

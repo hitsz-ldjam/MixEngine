@@ -299,7 +299,7 @@ namespace Mix {
 		}
 
 		std::string Matrix4::toString() const {
-			return (boost::format("Matrix4\n[\n"
+			return (boost::format("[\n"
 					"  %f, %f, %f, %f\n"
 					"  %f, %f, %f, %f\n"
 					"  %f, %f, %f, %f\n"

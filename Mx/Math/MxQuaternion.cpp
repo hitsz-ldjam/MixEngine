@@ -234,7 +234,7 @@ namespace Mix {
 		}
 
 		std::string Quaternion::toString() const {
-			return (boost::format("Quaternion(%d, %d, %d, %d)") % w % x % y % z).str();
+			return (boost::format("(%d, %d, %d, %d)") % w % x % y % z).str();
 		}
 
 		Quaternion Quaternion::Euler(const float _xAngle, const float _yAngle, const float _zAngle) {

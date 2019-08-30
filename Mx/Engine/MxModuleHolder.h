@@ -26,7 +26,7 @@ namespace Mix {
 			if (it != mModules.end() && it->second)
 				return static_cast<_Ty*>(it->second.get());
 			else {
-				Debug::Log::Error("No requested Module");
+				Log::Error("No requested Module");
 				return nullptr;
 			}
 		}
@@ -53,6 +53,8 @@ namespace Mix {
 
 		~ModuleHolder();
 
+		void clear();
+
 	private:
 		std::vector<std::type_index> mAddOrder;
 		std::unordered_map<std::type_index, std::unique_ptr<ModuleBase>> mModules;
@@ -66,6 +68,10 @@ namespace Mix {
 	}
 
 	inline ModuleHolder::~ModuleHolder() {
+		clear();
+	}
+
+	inline void ModuleHolder::clear() {
 		while (!mAddOrder.empty()) {
 			mModules.erase(mAddOrder.back());
 			mAddOrder.pop_back();

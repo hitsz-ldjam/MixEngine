@@ -26,14 +26,14 @@ namespace Mix {
 			return result;
 		}
 		else {
-			Debug::Log::Error("Failed to load image: %s", _path.generic_string().c_str());
+			Log::Error("Failed to load image: %s", _path.generic_string().c_str());
 			return nullptr;
 		}
 	}
 
 	std::shared_ptr<ResourceBase> ImageParser::load(const std::filesystem::path& _path, const std::string& _ext, void* _additionalParam) {
 		// we don't use paramater _ext and don't care about type
-		return load(_path, ResourceType::UNKNOWN, _additionalParam);
+		return load(_path, ResourceType::Unknown, _additionalParam);
 	}
 
 }

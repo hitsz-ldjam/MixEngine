@@ -249,7 +249,7 @@ namespace Mix {
 			}
 
 			std::string toString() const {
-				return (boost::format("Vector3(%d, %d, %d)") % x % y % z).str();
+				return (boost::format("(%d, %d, %d)") % x % y % z).str();
 			}
 
 			template<typename _T>

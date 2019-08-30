@@ -3,6 +3,7 @@
 #define MX_LOG_H_
 
 #include "../Utils/MxUtils.h"
+#include "../Utils/MxFlags.h"
 
 #include <string>
 #include <iostream>
@@ -11,66 +12,66 @@
 #include <mutex>
 
 namespace Mix {
-    namespace Debug {
-        class Log {
-        public:
-            enum OutputMode {
-                CONSOLE = 0b001,
-                FILE = 0b010,
-                BOTH = 0b011
-            };
+	enum class OutputMode {
+		Console = 0b001,
+		File = 0b010,
+	};
+	MX_ALLOW_FLAGS_FOR_ENUM(OutputMode);
 
-            static void SetOutputMode(const OutputMode _out) {
-                std::lock_guard<std::mutex> lock(sMutex);
-                sOutputMode = _out;
-            }
+	class Log {
+	public:
 
-            static OutputMode GetOutputMode() {
-                return sOutputMode;
-            }
+		static void SetOutputMode(Flags<OutputMode> _out) {
+			std::lock_guard<std::mutex> lock(sMutex);
+			sOutputMode = _out;
+		}
 
-            template<const uint32_t _Out = 0, typename... _Args>
-            static void Info(const std::string& _format, _Args... _args) {
-                Info(_Out, Utils::StringFormat(_format, _args...));
-            }
+		static Flags<OutputMode> GetOutputMode() {
+			return sOutputMode;
+		}
 
-            template<const uint32_t _Out = 0, typename... _Args>
-            static void Error(const std::string& _format, _Args... _args) {
-                Error(_Out, Utils::StringFormat(_format, _args...));
-            }
+		template<typename... _Args>
+		static void Info(const std::string& _format, _Args... _args) {
+			Info(Utils::StringFormat(_format, _args...));
+		}
 
-            template<const uint32_t _Out = 0, typename... _Args>
-            static void Warning(const std::string& _format, _Args... _args) {
-                Warning(_Out, Utils::StringFormat(_format, _args...));
-            }
+		template<const uint32_t _Out = 0, typename... _Args>
+		static void Error(const std::string& _format, _Args... _args) {
+			Error(Utils::StringFormat(_format, _args...));
+		}
 
-            static void OpenLogFile(const std::filesystem::path& _path);
+		template<const uint32_t _Out = 0, typename... _Args>
+		static void Warning(const std::string& _format, _Args... _args) {
+			Warning(Utils::StringFormat(_format, _args...));
+		}
 
-            static void CloseLogFile();
+		static void Info(const std::string& _str);
 
-            static void Flush() {
-                if (sOutputMode & CONSOLE) {
-                    std::cout.flush();
-                    std::cerr.flush();
-                }
+		static void Error(const std::string& _str);
 
-                if (sOutputMode & FILE && sFileStream.is_open())
-                    sFileStream.flush();
-            }
+		static void Warning(const std::string& _str);
 
-        private:
-			static void Info(const uint32_t _out, const std::string& _str);
+		static void OpenLogFile(const std::filesystem::path& _path);
 
-			static void Error(const uint32_t _out, const std::string& _str);
+		static void CloseLogFile();
 
-			static void Warning(const uint32_t _out, const std::string& _str);
+		static void Flush() {
+			if (sOutputMode & OutputMode::Console) {
+				std::cout.flush();
+				std::cerr.flush();
+			}
 
-            static std::mutex sMutex;
-            static std::ofstream sFileStream;
+			if (sOutputMode & OutputMode::File && sFileStream.is_open())
+				sFileStream.flush();
+		}
 
-            static OutputMode sOutputMode;
-        };
-    }
+	private:
+		static std::mutex sMutex;
+		static std::ofstream sFileStream;
+
+		static Flags<OutputMode> sOutputMode;
+	};
+
 }
 
 #endif

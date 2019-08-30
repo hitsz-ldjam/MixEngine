@@ -8,57 +8,57 @@
 #include <SDL2/SDL_events.h>
 
 namespace Mix {
-    class Window;
+	class Window;
 
-    class MixEngine : public GeneralBase::SingletonBase<MixEngine> {
-        friend SingletonBase<MixEngine>;
+	class MixEngine : public GeneralBase::SingletonBase<MixEngine> {
+		friend SingletonBase<MixEngine>;
 
-    public:
-        ~MixEngine();
+	public:
+		~MixEngine();
 
-        int exec();
+		int exec();
 
-        bool& quit() noexcept { return mQuit; }
+		void shutDown() { mQuit = true; }
 
-        // ----- ModuleHolder -----
+		// ----- ModuleHolder -----
 
-        template<typename _Ty>
-        bool hasModule() const { return mModuleHolder.has<_Ty>(); }
+		template<typename _Ty>
+		bool hasModule() const { return mModuleHolder.has<_Ty>(); }
 
-        template<typename _Ty>
-        _Ty* getModule() const { return mModuleHolder.get<_Ty>(); }
+		template<typename _Ty>
+		_Ty* getModule() const { return mModuleHolder.get<_Ty>(); }
 
-        template<typename _Ty, typename... _Args>
-        _Ty* addModule(_Args&&... _args) { return mModuleHolder.add<_Ty>(std::forward<_Args>(_args)...); }
+		template<typename _Ty, typename... _Args>
+		_Ty* addModule(_Args&&... _args) { return mModuleHolder.add<_Ty>(std::forward<_Args>(_args)...); }
 
-        template<typename _Ty>
-        void removeModule() { mModuleHolder.remove<_Ty>(); }
+		template<typename _Ty>
+		void removeModule() { mModuleHolder.remove<_Ty>(); }
 
-        ModuleHolder& getModuleHolder() { return mModuleHolder; }
+		ModuleHolder& getModuleHolder() { return mModuleHolder; }
 
-    private:
-        explicit MixEngine(int _argc = 0, char** _argv = nullptr);
+	private:
+		explicit MixEngine(int _argc = 0, char** _argv = nullptr);
 
-        bool mQuit;
+		bool mQuit;
 
-        ModuleHolder mModuleHolder;
+		ModuleHolder mModuleHolder;
 
-        // todo: debug code
-        Scene mDebugScene;
+		// todo: debug code
+		Scene mDebugScene;
 
-        // todo: make this a utility class
-        uint32_t mFrameCount = 0u,
-                 mFrameSampleRate = 10u;
-        float mFramePerSecond = .0f;
+		// todo: make this a utility class
+		uint32_t mFrameCount = 0u,
+			mFrameSampleRate = 10u;
+		float mFramePerSecond = .0f;
 
-        void awake();
-        void init();
-        void process(const SDL_Event& _event);
-        void update();
-        void fixedUpdate();
-        void lateUpdate();
-        void render();
-    };
+		void awake();
+		void init();
+		void update();
+		void fixedUpdate();
+		void lateUpdate();
+		void finalUpdate();
+		void render();
+	};
 }
 
 #endif

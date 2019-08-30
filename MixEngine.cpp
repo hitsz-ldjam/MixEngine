@@ -8,29 +8,32 @@
 #include "Mx/GUI/MxUi.h"
 #include "Mx/Resource/MxResourceLoader.h"
 #include "Mx/Graphics/MxGraphics.h"
+#include "Mx/Engine/MxPlantform.h"
+#include "Mx/Input/MxInputModule.h"
 
 namespace Mix {
 	MixEngine::MixEngine(int _argc, char** _argv) : mQuit(false),
 		mDebugScene("Debug Scene") {
+		Plantform::Initialize();
+		Plantform::RequireQuitEvent.connect(std::bind(&MixEngine::shutDown, this));
 	}
 
 	MixEngine::~MixEngine() {
 		//mModuleHolder.get<Audio::Core>()->release();
-		SDL_Quit();
+		mModuleHolder.clear();
+		Plantform::ShutDown();
 	}
 
 	int MixEngine::exec() {
 		try {
 			awake();
 			init();
-			SDL_Event event;
 			while (!mQuit) {
-				while (SDL_PollEvent(&event)) {
-					process(event);
-				}
+				Plantform::Update();
 				update();
 				lateUpdate();
 				render();
+				finalUpdate();
 			}
 		}
 		catch (const std::exception& e) {
@@ -42,14 +45,12 @@ namespace Mix {
 
 	void MixEngine::awake() {
 		mModuleHolder.add<Window>("Mix Engine Demo", Math::Vector2i{ 1024,760 }, WindowFlag::VULKAN | WindowFlag::SHOWN);
+		mModuleHolder.add<Input>()->awake();
 		mModuleHolder.add<Audio::Core>()->awake();
 		mModuleHolder.add<Physics::World>()->awake();
 		mModuleHolder.add<Graphics>()->awake();
 		mModuleHolder.add<ResourceLoader>()->awake();
 		Time::Awake();
-		Input::Awake();
-
-		Window::SetRelativeMouseMode(true);
 	}
 
 	void MixEngine::init() {
@@ -59,16 +60,6 @@ namespace Mix {
 
 		mDebugScene.awake();
 		mDebugScene.init();
-	}
-
-	void MixEngine::process(const SDL_Event& _event) {
-		if (_event.type == SDL_QUIT) {
-			mQuit = true;
-			return;
-		}
-
-		// mModuleHolder.get<Ui>()->process(_event);
-		Input::Process(_event);
 	}
 
 	void MixEngine::update() {
@@ -102,7 +93,10 @@ namespace Mix {
 		mDebugScene.lateUpate();
 
 		mModuleHolder.get<Audio::Core>()->update();
-		Input::Reset();
+	}
+
+	void MixEngine::finalUpdate() {
+		mModuleHolder.get<Input>()->nextFrame();
 	}
 
 	void MixEngine::render() {

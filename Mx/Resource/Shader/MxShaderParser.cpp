@@ -34,7 +34,7 @@ namespace Mix {
 				kind = shaderc_compute_shader, stage = vk::ShaderStageFlagBits::eCompute;
 				break;
 			default:
-				Debug::Log::Error("Unknown shader type");
+				Log::Error("Unknown shader type");
 				return nullptr;
 			}
 
@@ -61,7 +61,7 @@ namespace Mix {
 			case ResourceType::SPIRV_COMPUTE: stage = vk::ShaderStageFlagBits::eCompute;
 				break;
 			default:
-				Debug::Log::Error("Unknown shader type");
+				Log::Error("Unknown shader type");
 				return nullptr;
 			}
 
@@ -86,7 +86,7 @@ namespace Mix {
 		else if (_ext == RESOURCE_SPRV_COMP_EXT) type = ResourceType::SPIRV_COMPUTE;
 
 		else {
-			Debug::Log::Error("Unknown shader file extension");
+			Log::Error("Unknown shader file extension");
 			return nullptr;
 		}
 
@@ -103,7 +103,7 @@ namespace Mix {
 
 		auto compileResult = mCompiler.CompileGlslToSpv(_data, _size, _kind, _name.c_str());
 		if (compileResult.GetCompilationStatus() != shaderc_compilation_status_success) {
-			Debug::Log::Error(compileResult.GetErrorMessage());
+			Log::Error(compileResult.GetErrorMessage());
 			return {};
 		}
 
