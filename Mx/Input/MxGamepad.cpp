@@ -1,5 +1,5 @@
 #include "MxGamepad.h"
-#include "MxInputModule.h"
+#include "MxInput.h"
 
 namespace Mix {
 	Gamepad::Gamepad(int _index, Input* _input) {

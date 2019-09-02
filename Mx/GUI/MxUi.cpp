@@ -9,7 +9,7 @@
 #include "../Vulkan/Swapchain/MxVkSwapchain.h"
 #include "../Graphics/MxGraphics.h"
 #include "../Vulkan/MxVulkan.h"
-#include "../Input/MxInputModule.h"
+#include "../Input/MxInput.h"
 
 namespace Mix {
 
@@ -164,7 +164,7 @@ namespace Mix {
 		io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 		size_t size = width * height * 4 * sizeof(char);
 
-		mFontTexture = std::make_shared<Texture2D>(width, height, TextureFormat::R8G8B8A8_UNORM);
+		mFontTexture = std::make_shared<Texture2D>(width, height, TextureFormat::R8G8B8A8_Unorm);
 		mFontTexture->setPixels(reinterpret_cast<const char*>(pixels), size);
 		mFontTexture->apply(false);
 	}

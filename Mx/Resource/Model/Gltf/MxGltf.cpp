@@ -168,7 +168,7 @@ namespace Mix {
 				buffer = gltfImage.image.data();
 			}
 
-			auto tex = std::make_shared<Texture2D>(gltfImage.width, gltfImage.height, TextureFormat::R8G8B8A8_UNORM);
+			auto tex = std::make_shared<Texture2D>(gltfImage.width, gltfImage.height, TextureFormat::R8G8B8A8_Unorm);
 			tex->setPixels(buffer, pixelCount * 4);
 			tex->apply();
 			mTempData->textures.push_back(tex);
@@ -396,11 +396,11 @@ namespace Mix {
 		}
 		if (_meshData.uv0.has_value()) {
 			for (auto& uv : _meshData.uv0.value())
-				uv.y = 2.0f - uv.y;
+				uv.y = 1.0f - uv.y;
 		}
 		if (_meshData.uv1.has_value()) {
 			for (auto& uv : _meshData.uv1.value())
-				uv.y = 2.0f - uv.y;
+				uv.y = 1.0f - uv.y;
 		}
 
 		_mesh.setPositions(std::move(_meshData.positions).value_or(std::vector<MixMeshData::PositionType>()));
@@ -526,22 +526,22 @@ namespace Mix {
 
 	VertexAttribute Gltf::GetVertexAttribute(GltfAttribute _gltfAttribute) {
 		switch (_gltfAttribute) {
-		case GltfAttribute::POSITION:	return VertexAttribute::POSITION;
-		case GltfAttribute::NORMAL:		return VertexAttribute::NORMAL;
-		case GltfAttribute::TANGENT:	return VertexAttribute::TANGENT;
+		case GltfAttribute::POSITION:	return VertexAttribute::Position;
+		case GltfAttribute::NORMAL:		return VertexAttribute::Normal;
+		case GltfAttribute::TANGENT:	return VertexAttribute::Tangent;
 		case GltfAttribute::TEXCOORD_0: return VertexAttribute::UV0;
 		case GltfAttribute::TEXCOORD_1: return VertexAttribute::UV1;
-		case GltfAttribute::COLOR:		return VertexAttribute::COLOR;
+		case GltfAttribute::COLOR:		return VertexAttribute::Color;
 		default:assert(false);
 		}
 	}
 
 	MeshTopology Gltf::GetMeshTopology(int _gltfMode) {
 		switch (_gltfMode) {
-		case TINYGLTF_MODE_POINTS: return MeshTopology::POINTS_LIST;
-		case TINYGLTF_MODE_LINE: return MeshTopology::LINES_LIST;
-		case TINYGLTF_MODE_TRIANGLES: return MeshTopology::TRIANGLES_LIST;
-		default: return MeshTopology::TRIANGLES_LIST;
+		case TINYGLTF_MODE_POINTS: return MeshTopology::Points_List;
+		case TINYGLTF_MODE_LINE: return MeshTopology::Lines_List;
+		case TINYGLTF_MODE_TRIANGLES: return MeshTopology::Triangles_List;
+		default: return MeshTopology::Triangles_List;
 		}
 	}
 
@@ -550,28 +550,28 @@ namespace Mix {
 		case 9728:
 		case 9984:
 		case 9985:
-			return TextureFilterMode::NEAREST;
+			return TextureFilterMode::Nearest;
 		case 9729:
 		case 9986:
 		case 9987:
-			return TextureFilterMode::LINEAR;
+			return TextureFilterMode::Linear;
 		default:
 			std::cerr << "Unknown filter mode: " << _gltfFilter << std::endl;
-			return TextureFilterMode::NEAREST;
+			return TextureFilterMode::Nearest;
 		}
 	}
 
 	TextureWrapMode Gltf::GetTexWrapMode(int _gltfWrap) {
 		switch (_gltfWrap) {
 		case 10497:
-			return TextureWrapMode::REPEAT;
+			return TextureWrapMode::Repeat;
 		case 33071:
-			return TextureWrapMode::CLAMP_TO_EDGE;
+			return TextureWrapMode::ClampToEdge;
 		case 33648:
-			return TextureWrapMode::MIRROR;
+			return TextureWrapMode::Mirror;
 		default:
 			std::cerr << "Unknown wrap mode: " << _gltfWrap << std::endl;
-			return TextureWrapMode::REPEAT;
+			return TextureWrapMode::Repeat;
 		}
 	}
 }

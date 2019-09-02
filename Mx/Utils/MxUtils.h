@@ -11,10 +11,6 @@ namespace Mix {
 	namespace Utils {
 		template<typename... _Args>
 		static std::string StringFormat(const std::string &_format, _Args &&... _args) {
-			//const size_t size = snprintf(nullptr, 0, _format.c_str(), _args ...) + 1; // Extra space for '\0'
-			//std::unique_ptr<char[]> buf(new char[size]);
-			//snprintf(buf.get(), size, _format.c_str(), _args ...);
-			//return std::string(buf.get(), buf.get() + size - 1); // Excludes the '\0'
 			std::string result;
 			try {
 				boost::format f(_format);
@@ -29,9 +25,26 @@ namespace Mix {
 
 		std::filesystem::path GetGenericPath(const std::string& _file);
 
-		template <class T>
-		void HashCombine(std::size_t& _seed, const T& _v) {
-			std::hash<T> hasher;
+		struct EnumHash {
+			template<typename _Ty>
+			constexpr size_t operator()(_Ty _e) const {
+				return static_cast<std::size_t>(_e);
+			}
+		};
+
+		template<typename _Ty>
+		size_t Hash(_Ty const& _v) {
+			using Hasher = std::conditional_t<std::is_enum_v<_Ty>, EnumHash, std::hash<_Ty>>;
+
+			Hasher hasher;
+			return hasher(_v);
+		}
+
+		template <class _Ty>
+		void HashCombine(std::size_t& _seed, _Ty const& _v) {
+			using Hasher = std::conditional_t<std::is_enum_v<_Ty>, EnumHash, std::hash<_Ty>>;
+
+			Hasher hasher;
 			_seed ^= hasher(_v) + 0x9e3779b9 + (_seed << 6) + (_seed >> 2);
 		}
 	}

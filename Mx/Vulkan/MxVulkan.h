@@ -30,6 +30,7 @@ namespace Mix {
 		class Buffer;
 		class DynamicUniformBuffer;
 		class ShaderBase;
+		class VertexInputManager;
 
 		struct VulkanSettings {
 			struct {
@@ -94,6 +95,9 @@ namespace Mix {
 
 			~VulkanAPI();
 
+			// Test managers
+			VertexInputManager& getVertexInputManager() {return *mVertexInputManager;};
+
 		private:
 			void build();
 			void createInstance();
@@ -122,6 +126,9 @@ namespace Mix {
 
 			std::shared_ptr<CommandPool>		mTransferCommandPool;
 			std::shared_ptr<CommandPool>		mGraphicsCommandPool;
+
+			// Test managers
+			std::shared_ptr<VertexInputManager> mVertexInputManager;
 
 			std::vector<std::shared_ptr<CommandBufferHandle>> mGraphicsCommandBuffers;
 

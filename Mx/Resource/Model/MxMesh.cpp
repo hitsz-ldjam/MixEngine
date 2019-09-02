@@ -21,7 +21,7 @@ namespace Mix {
 	}
 
 	void Mesh::getPositions(std::vector<PositionType>& _vertices) const {
-		if (mMeshData.has_value())
+		if (mMeshData)
 			_vertices = mMeshData->positions;
 	}
 
@@ -40,7 +40,7 @@ namespace Mix {
 	}
 
 	void Mesh::getNormals(std::vector<NormalType>& _normals) const {
-		if (mMeshData.has_value())
+		if (mMeshData)
 			_normals = mMeshData->normals;
 	}
 
@@ -59,7 +59,7 @@ namespace Mix {
 	}
 
 	void Mesh::getTangents(std::vector<TangentType>& _tangents) const {
-		if (mMeshData.has_value())
+		if (mMeshData)
 			_tangents = mMeshData->tangents;
 	}
 
@@ -93,16 +93,16 @@ namespace Mix {
 		switch (_channel) {
 		case UVChannel::UV0:return mMeshData->uv0;
 		case UVChannel::UV1:return mMeshData->uv1;
-		default:;
+		default: assert(false);
 		}
 	}
 
 	void Mesh::getUVs(UVChannel _channel, std::vector<UV2DType>& _uvs) const {
-		if (mMeshData.has_value())
+		if (mMeshData)
 			switch (_channel) {
 			case UVChannel::UV0:_uvs = mMeshData->uv0;
 			case UVChannel::UV1:_uvs = mMeshData->uv1;
-			default:;
+			default: assert(false);
 			}
 	}
 
@@ -121,7 +121,7 @@ namespace Mix {
 	}
 
 	void Mesh::getColors(std::vector<ColorType>& _colors) const {
-		if (mMeshData.has_value())
+		if (mMeshData)
 			_colors = mMeshData->colors;
 	}
 
@@ -160,13 +160,13 @@ namespace Mix {
 	}
 
 	void Mesh::getIndices(std::vector<uint32_t>& _indices, uint32_t _submesh) {
-		if (mMeshData.has_value() && mMeshData->indexSet.has_value() && _submesh < mMeshData->indexSet->size())
+		if (mMeshData && mMeshData->indexSet.has_value() && _submesh < mMeshData->indexSet->size())
 			_indices = mMeshData->indexSet.value()[_submesh];
 	}
 
 	void Mesh::uploadMeshData(bool _markNoLongerReadable) {
 		// Check if has mesh data
-		if (!mMeshData.has_value())
+		if (!mMeshData)
 			return;
 
 		// Check that the number of other attributes is consistent with the number of Vertex
@@ -196,17 +196,17 @@ namespace Mix {
 
 		std::vector<std::pair<std::byte*, uint32_t>> srcs;
 		uint32_t stride = sizeof(PositionType); // A mesh always has Vertex attribute
-		Flags<VertexAttribute> attribute = VertexAttribute::POSITION;
+		Flags<VertexAttribute> attribute = VertexAttribute::Position;
 		srcs.emplace_back(reinterpret_cast<std::byte*>(mMeshData->positions.data()), sizeof(PositionType));
 
 		if (!mMeshData->normals.empty()) {
 			stride += sizeof(NormalType);
-			attribute |= VertexAttribute::NORMAL;
+			attribute |= VertexAttribute::Normal;
 			srcs.emplace_back(reinterpret_cast<std::byte*>(mMeshData->normals.data()), sizeof(NormalType));
 		}
 		if (!mMeshData->tangents.empty()) {
 			stride += sizeof(TangentType);
-			attribute |= VertexAttribute::TANGENT;
+			attribute |= VertexAttribute::Tangent;
 			srcs.emplace_back(reinterpret_cast<std::byte*>(mMeshData->tangents.data()), sizeof(TangentType));
 		}
 		if (!mMeshData->uv0.empty()) {
@@ -221,7 +221,7 @@ namespace Mix {
 		}
 		if (!mMeshData->colors.empty()) {
 			stride += sizeof(ColorType);
-			attribute |= VertexAttribute::COLOR;
+			attribute |= VertexAttribute::Color;
 			srcs.emplace_back(reinterpret_cast<std::byte*>(mMeshData->colors.data()), sizeof(ColorType));
 		}
 
@@ -242,12 +242,12 @@ namespace Mix {
 		// Generate index data
 
 		size_t indexByteSize = 0;
-		IndexFormat indexFormat = IndexFormat::UINT16;
+		IndexFormat indexFormat = IndexFormat::UInt16;
 		std::vector<std::byte> indexData;
 		if (mMeshData->indexSet.has_value()) {
 			// Calculate the size of indexData
-			indexFormat = mMeshData->positions.size() > std::numeric_limits<uint16_t>::max() ? IndexFormat::UINT32 : IndexFormat::UINT16;
-			const auto indexFormatSizeInByte = (indexFormat == IndexFormat::UINT16 ? sizeof(Index16Type) : sizeof(Index32Type));
+			indexFormat = mMeshData->positions.size() > std::numeric_limits<uint16_t>::max() ? IndexFormat::UInt32 : IndexFormat::UInt16;
+			const auto indexFormatSizeInByte = (indexFormat == IndexFormat::UInt16 ? sizeof(Index16Type) : sizeof(Index32Type));
 
 			uint32_t count = 0;
 			for (uint32_t i = 0; i < mMeshData->indexSet->size(); ++i) {
@@ -259,7 +259,7 @@ namespace Mix {
 
 			// Populate index buffer
 			indexData.resize(indexByteSize);
-			if (indexFormat == IndexFormat::UINT32) {
+			if (indexFormat == IndexFormat::UInt32) {
 				size_t offset = 0;
 				for (auto index : mMeshData->indexSet.value()) {
 					memcpy(indexData.data(), index.data(), index.size() * indexFormatSizeInByte);
@@ -285,6 +285,7 @@ namespace Mix {
 		mHasIndex = indexByteSize == 0;
 		mAttributes = attribute;
 		mSubMeshes = mMeshData->subMeshes.value();
+		mVertexDeclaration = std::make_shared<VertexDeclaration>(mAttributes);
 
 		if (_markNoLongerReadable) {
 			markNoLongerReadable();
@@ -316,6 +317,7 @@ namespace Mix {
 			result->mSubMeshes = _subMeshes;
 			result->mVertexBuffer = vertexBuffer;
 			result->mIndexBuffer = indexBuffer;
+			result->mVertexDeclaration = std::make_shared<VertexDeclaration>(result->mAttributes);
 
 			return result;
 		}
@@ -336,6 +338,7 @@ namespace Mix {
 			result->mSubMeshes = _subMeshes;
 			result->mVertexBuffer = vertexBuffer;
 			result->mIndexBuffer = nullptr;
+			result->mVertexDeclaration = std::make_shared<VertexDeclaration>(result->mAttributes);
 
 			return result;
 		}
@@ -351,8 +354,8 @@ namespace Mix {
 	}
 
 	void Mesh::createMeshDataIfNotExist() {
-		if (!mMeshData.has_value())
-			mMeshData.emplace();
+		if (!mMeshData)
+			mMeshData = std::make_shared<MeshData>();
 	}
 
 	bool Mesh::SendToGPU(ArrayProxy<const std::byte, vk::DeviceSize> _vertexData,

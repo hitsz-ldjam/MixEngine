@@ -43,12 +43,12 @@ namespace Mix {
 	void Transform::translate(const Math::Vector3f& _translation, const Space _relativeTo) {
 		Vector3f tr;
 		switch (_relativeTo) {
-		case Space::SELF:
+		case Space::Self:
 			tr = mQuat * _translation;
 			if (mGameObject && mGameObject->parent())
 				tr /= mGameObject->parent()->transform().getLocalScale();
 			break;
-		case Space::WORLD:
+		case Space::World:
 			if (mGameObject && mGameObject->parent()) {
 				tr = (mGameObject->parent()->transform().worldToLocalMatrix().multiplyPoint(_translation));
 			} else {
@@ -62,15 +62,15 @@ namespace Mix {
 
 	void Transform::translate(const Math::Vector3f& _translation, const Transform& _relativeTo) {
 		auto tr = _relativeTo.localToWorldMatrix().multiplyDirection(_translation);
-		translate(tr, Space::WORLD);
+		translate(tr, Space::World);
 	}
 
 	void Transform::rotate(const Math::Quaternion& _qua, const Space _relativeTo) {
 		switch (_relativeTo) {
-		case Space::SELF:
+		case Space::Self:
 			mQuat = mQuat * _qua;
 			break;
-		case Space::WORLD:
+		case Space::World:
 			if (mGameObject && mGameObject->parent()) {
 				auto p = mGameObject->parent()->transform().getRotation();
 				mQuat = p.inverse() * _qua * p * mQuat;

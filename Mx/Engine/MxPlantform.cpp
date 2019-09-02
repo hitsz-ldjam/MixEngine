@@ -197,6 +197,7 @@ namespace Mix {
 	bool Plantform::sInitialized = false;
 	bool Plantform::sCursorVisible = false;
 	bool Plantform::sRelativeMouseMode = false;
+	std::string Plantform::sPlantformName = "Unknown";
 
 	Event<void(const PFMouseMoveEventData&)>		Plantform::MouseMoveEvent;
 	Event<void(const PFMouseButtonEventData&)>		Plantform::MouseButtonEvent;
@@ -213,6 +214,8 @@ namespace Mix {
 				Log::Error("Failed to initialize SDL2");
 				sInitialized = false;
 			}
+			sPlantformName = SDL_GetPlatform();
+
 			sInitialized = true;
 		}
 		return sInitialized;
@@ -220,6 +223,10 @@ namespace Mix {
 
 	void Plantform::ShutDown() {
 		SDL_Quit();
+	}
+
+	const std::string& Plantform::GetPlantformName() {
+		return sPlantformName;
 	}
 
 	void Plantform::SetCursorPositionGlobal(const Math::Vector2i& _screenPos) {

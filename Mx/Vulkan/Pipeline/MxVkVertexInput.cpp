@@ -1,93 +1,146 @@
 #include "MxVkVertexInput.h"
 
 #include <array>
+#include "../MxVkUtils.h"
 
 namespace Mix {
 	namespace Vulkan {
-		std::array<VertexAttribute, 6> VertexInput::sAttributes = {
-			VertexAttribute::POSITION,
-			VertexAttribute::NORMAL,
-			VertexAttribute::TANGENT,
-			VertexAttribute::UV0,
-			VertexAttribute::UV1,
-			VertexAttribute::COLOR
-		};
+		VertexInput::VertexInput(VertexInput&& _other) noexcept
+			:mId(_other.mId),
+			mBindings(std::move(_other.mBindings)),
+			mAttributes(std::move(_other.mAttributes)) {
+			updateVertexInputInfo();
 
-		VertexInput::VertexInput(Flags<VertexAttribute> _srcVertexAttributeFlags, Flags<VertexAttribute> _dstVertexAttributeFlags) {
-			uint32_t stride = 0;
-			uint32_t location = 0;
-			std::vector<vk::VertexInputAttributeDescription> attributeDescrs;
-			for (auto attribute : sAttributes) {
-				if (_srcVertexAttributeFlags.isSet(attribute)) {
-					if (_dstVertexAttributeFlags.isSet(attribute)) {
-						vk::VertexInputAttributeDescription attributeDescr;
-						attributeDescr.binding = 0;
-						attributeDescr.location = location++;
-						attributeDescr.format = VertexAttributeToVkFormat(attribute);
-						attributeDescr.offset = stride;
-						attributeDescrs.push_back(attributeDescr);
+			_other.mId = 0;
+		}
+
+		VertexInput& VertexInput::operator=(VertexInput&& _other) noexcept {
+			mId = _other.mId;
+			mBindings = std::move(_other.mBindings);
+			mAttributes = std::move(_other.mAttributes);
+			updateVertexInputInfo();
+
+			_other.mId = 0;
+			return *this;
+		}
+
+		VertexInput::VertexInput(uint32_t _id, const VertexDeclaration& _srcDecl, const VertexDeclaration& _dstDecl) :mId(_id) {
+			auto& srcElems = _srcDecl.getElements();
+			auto& dstElems = _dstDecl.getElements();
+
+			uint32_t bindingCount = 0;
+			uint32_t attributeCount = 0;
+
+			for (auto& src : srcElems) {
+				bool found = false;
+				for (auto& dst : dstElems) {
+					if (dst.getSemantic() == src.getSemantic() && 
+						dst.getSemanticIndex() == src.getSemanticIndex() &&
+						dst.getStreamIndex() == src.getStreamIndex()) {
+						found = true;
+						break;
 					}
-					stride += GetVertexAttributeSize(attribute);
 				}
+
+				if (!found)
+					continue;
+
+				++attributeCount;
+				bindingCount = std::max(bindingCount, static_cast<uint32_t>(src.getStreamIndex() + 1));
 			}
 
-			vk::VertexInputBindingDescription bindingDesc;
-			bindingDesc.binding = 0;
-			bindingDesc.inputRate = vk::VertexInputRate::eVertex;
-			bindingDesc.stride = stride;
+			std::vector<vk::VertexInputAttributeDescription> attributes;
+			attributes.reserve(attributeCount);
+			std::vector<vk::VertexInputBindingDescription> bindings;
+			bindings.reserve(bindingCount);
 
-			mBindings.push_back(bindingDesc);
-			mAttributes = std::move(attributeDescrs);
-		}
+			for (uint32_t i = 0; i < bindingCount; ++i) {
+				bindings.emplace_back(i, _srcDecl.getSizeOfStream(i), vk::VertexInputRate::eVertex);
+			}
 
-		VertexInput::VertexInput(Flags<VertexAttribute> _vertexAttributeFlags) {
-			uint32_t stride = 0;
-			uint32_t location = 0;
-			std::vector<vk::VertexInputAttributeDescription> attributeDescrs;
-
-			for (auto attribute : sAttributes) {
-				if (_vertexAttributeFlags.isSet(attribute)) {
-					vk::VertexInputAttributeDescription attributeDescr;
-					attributeDescr.binding = 0;
-					attributeDescr.location = location++;
-					attributeDescr.format = VertexAttributeToVkFormat(attribute);
-					attributeDescr.offset = stride;
-					attributeDescrs.push_back(attributeDescr);
-					stride += GetVertexAttributeSize(attribute);
+			for (auto& src : srcElems) {
+				bool found = false;
+				uint32_t location = 0;
+				for (auto& dst : dstElems) {
+					if (dst.getSemantic() == src.getSemantic() &&
+						dst.getSemanticIndex() == src.getSemanticIndex() &&
+						dst.getStreamIndex() == src.getStreamIndex()) {
+						found = true;
+						location = dst.getLocation();
+						break;
+					}
 				}
+
+				if (!found)
+					continue;
+
+				vk::VertexInputAttributeDescription attribute;
+				attribute.binding = src.getStreamIndex();
+				attribute.location = location;
+				attribute.format = VulkanUtils::GetVertexFormat(src.getType());
+				attribute.offset = src.getOffset();
+				attributes.push_back(attribute);
 			}
 
-			vk::VertexInputBindingDescription bindingDesc;
-			bindingDesc.binding = 0;
-			bindingDesc.inputRate = vk::VertexInputRate::eVertex;
-			bindingDesc.stride = stride;
+			mBindings = std::move(bindings);
+			mAttributes = std::move(attributes);
 
-			mBindings.push_back(bindingDesc);
-			mAttributes = std::move(attributeDescrs);
+			updateVertexInputInfo();
 		}
 
-		vk::Format VertexInput::VertexAttributeToVkFormat(VertexAttribute _vertexAttribute) {
-			switch (_vertexAttribute) {
-			case VertexAttribute::POSITION: return vk::Format::eR32G32B32Sfloat;
-			case VertexAttribute::NORMAL:	return vk::Format::eR32G32B32Sfloat;
-			case VertexAttribute::TANGENT:	return vk::Format::eR32G32B32Sfloat;
-			case VertexAttribute::UV0:		return vk::Format::eR32G32Sfloat;
-			case VertexAttribute::UV1:		return vk::Format::eR32G32Sfloat;
-			case VertexAttribute::COLOR:	return vk::Format::eR8G8B8A8Unorm;
-			default: return vk::Format::eUndefined;
+		void VertexInput::updateVertexInputInfo() {
+			mVertexInputInfo.pVertexBindingDescriptions = mBindings.data();
+			mVertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(mBindings.size());
+			mVertexInputInfo.pVertexAttributeDescriptions = mAttributes.data();
+			mVertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(mAttributes.size());
+		}
+
+		size_t VertexInputManager::VertexInputKey::Hash(const VertexInputKey& _v) {
+			size_t hash = 0;
+			Utils::HashCombine(hash, _v.srcDeclId);
+			Utils::HashCombine(hash, _v.dstDeclId);
+			return hash;
+		}
+
+		bool VertexInputManager::VertexInputKey::Hasher::operator()(const VertexInputKey& _key) const {
+			return Hash(_key);
+		}
+
+		bool VertexInputManager::VertexInputKey::operator==(const VertexInputKey& _other) const {
+			return srcDeclId == _other.srcDeclId && dstDeclId == _other.dstDeclId;
+		}
+
+		bool VertexInputManager::VertexInputKey::operator!=(const VertexInputKey& _other) const {
+			return !(*this == _other);
+		}
+
+		VertexInputManager::VertexInputManager(VertexInputManager&& _other) noexcept :mNextId(_other.mNextId), mVertexInputMap(std::move(_other.mVertexInputMap)) {
+		}
+
+		VertexInputManager& VertexInputManager::operator=(VertexInputManager&& _other) noexcept {
+			mNextId = _other.mNextId;
+			mVertexInputMap = std::move(_other.mVertexInputMap);
+			return *this;
+		}
+
+		std::shared_ptr<VertexInput> VertexInputManager::getVertexInput(const VertexDeclaration& _src, const VertexDeclaration& _dst) {
+			VertexInputKey key(_src.hash(), _dst.hash());
+
+			auto it = mVertexInputMap.find(key);
+			if (it == mVertexInputMap.end()) {
+				return addNew(_src, _dst);
 			}
+
+			return it->second;
 		}
 
-		uint32_t VertexInput::GetVertexAttributeSize(VertexAttribute _vertexAttribute) {
-			switch (_vertexAttribute) {
-			case VertexAttribute::POSITION: return 12;
-			case VertexAttribute::NORMAL:	return 12;
-			case VertexAttribute::TANGENT:	return 12;
-			case VertexAttribute::UV0:		return 8;
-			case VertexAttribute::UV1:		return 8;
-			case VertexAttribute::COLOR:	return 4;
-			default: return 0;
-			}
+		std::shared_ptr<VertexInput> VertexInputManager::addNew(const VertexDeclaration& _src, const VertexDeclaration& _dst) {
+			if (!_src.isCompatible(_dst))
+				return nullptr;
+			auto result = std::shared_ptr<VertexInput>(new VertexInput(++mNextId, _src, _dst));
+			mVertexInputMap[VertexInputKey(_src.hash(), _dst.hash())] = result;
+			return result;
 		}
+
 	}
 }

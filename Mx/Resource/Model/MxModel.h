@@ -88,7 +88,9 @@ namespace Mix {
 
 		size_t meshCount() const { return mMeshes.size(); }
 
-		GameObject* generateGameObject(const GameObjectCreateInfo& _info) const;
+		GameObject* genAllScene(const GameObjectCreateInfo& _info) const;
+
+		GameObject* genDefaultScene(const GameObjectCreateInfo& _info) const;
 
 	private:
 		std::string mName;

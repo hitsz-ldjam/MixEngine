@@ -75,11 +75,11 @@ namespace Mix {
 		switch (_format) {
 		case gli::FORMAT_RGBA8_UNORM_PACK8:
 		case gli::FORMAT_RGBA8_UNORM_PACK32:
-			return TextureFormat::R8G8B8A8_UNORM;
+			return TextureFormat::R8G8B8A8_Unorm;
 		case gli::FORMAT_BGRA8_UNORM_PACK8:
-			return TextureFormat::B8G8R8A8_UNORM;
+			return TextureFormat::B8G8R8A8_Unorm;
 		default:
-			return TextureFormat::UNKNOWN;
+			return TextureFormat::Unknown;
 		}
 	}
 

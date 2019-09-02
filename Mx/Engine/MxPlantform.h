@@ -100,6 +100,8 @@ namespace Mix {
 
 		static void ShutDown();
 
+		static const std::string& GetPlantformName();
+
 		static void SetCursorPositionGlobal(const Math::Vector2i& _screenPos);
 
 		static void HideCursor();
@@ -142,6 +144,7 @@ namespace Mix {
 		static bool sInitialized;
 		static bool sCursorVisible;
 		static bool sRelativeMouseMode;
+		static std::string sPlantformName;
 	};
 }
 

@@ -46,33 +46,6 @@ namespace Mix {
             std::vector<vk::PresentModeKHR> presentModes;
         };
 
-        struct Vertex {
-            glm::vec3 pos;
-            glm::vec3 normal;
-            glm::vec2 uv;
-
-            //get vertex input description
-            static std::vector<vk::VertexInputBindingDescription>& GetBindingDescrip() {
-                static std::vector<vk::VertexInputBindingDescription> bindingDescription = {
-                vk::VertexInputBindingDescription(0,sizeof(Vertex),vk::VertexInputRate::eVertex) };
-
-                return bindingDescription;
-            }
-
-
-
-            //get vertex input attributi description
-            static std::vector<vk::VertexInputAttributeDescription>& GetAttributeDescrip() {
-                static std::vector<vk::VertexInputAttributeDescription> attributeDescription = {
-                    vk::VertexInputAttributeDescription(0,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, pos)),
-                    vk::VertexInputAttributeDescription(1,0,vk::Format::eR32G32B32Sfloat,offsetof(Vertex, normal)),
-                    vk::VertexInputAttributeDescription(2,0,vk::Format::eR32G32Sfloat,offsetof(Vertex, uv))
-                };
-
-                return attributeDescription;
-            }
-        };
-
     }
 }
 #endif // !MX_VK_DEF_H

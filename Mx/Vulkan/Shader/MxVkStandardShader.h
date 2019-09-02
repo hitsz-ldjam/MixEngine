@@ -6,6 +6,7 @@
 #include "../Buffers/MxVkUniformBuffer.h"
 #include "../FrameBuffer/MxVkFramebuffer.h"
 #include <deque>
+#include "../Pipeline/MxVkGraphicsPipelineState.h"
 
 namespace Mix {
 	class Ui;
@@ -34,7 +35,7 @@ namespace Mix {
 			std::shared_ptr<Device> mDevice;
 			std::shared_ptr<Swapchain> mSwapchain;
 
-			std::shared_ptr<Pipeline> mPipeline;
+			std::shared_ptr<GraphicsPipelineState> mGraphicsPipelineState;
 			std::shared_ptr<RenderPass> mRenderPass;
 
 			std::vector<FrameBuffer> mFrameBuffers;

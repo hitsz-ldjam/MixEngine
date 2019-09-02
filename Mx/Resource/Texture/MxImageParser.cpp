@@ -14,10 +14,10 @@ namespace Mix {
 
 			if (_additionalParam) {
 				TextureParam* param = reinterpret_cast<TextureParam*>(_additionalParam);
-				result = std::make_shared<Texture2D>(width, height, TextureFormat::R8G8B8A8_UNORM, param->mipLevel, param->samplerInfo);
+				result = std::make_shared<Texture2D>(width, height, TextureFormat::R8G8B8A8_Unorm, param->mipLevel, param->samplerInfo);
 			}
 			else
-				result = std::make_shared<Texture2D>(width, height, TextureFormat::R8G8B8A8_UNORM);
+				result = std::make_shared<Texture2D>(width, height, TextureFormat::R8G8B8A8_Unorm);
 
 			result->setPixels(reinterpret_cast<const char*>(data), size);
 			result->apply(true);

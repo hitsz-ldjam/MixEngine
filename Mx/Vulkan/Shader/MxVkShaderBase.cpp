@@ -7,7 +7,7 @@ namespace Mix {
 		_cmd.get().bindVertexBuffers(0, _mesh.mVertexBuffer->get(), { 0 });
 		_cmd.get().bindIndexBuffer(_mesh.mIndexBuffer->get(),
 								   0,
-								   _mesh.mIndexFormat == IndexFormat::UINT16 ? vk::IndexType::eUint16 : vk::IndexType::eUint32);;
+								   _mesh.mIndexFormat == IndexFormat::UInt16 ? vk::IndexType::eUint16 : vk::IndexType::eUint32);;
 
 		_cmd.get().drawIndexed(_mesh.mSubMeshes[_submesh].indexCount,
 							   1,

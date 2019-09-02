@@ -21,11 +21,19 @@ namespace Mix {
 		}
 	}
 
-	GameObject* Model::generateGameObject(const GameObjectCreateInfo& _info) const {
+	GameObject* Model::genAllScene(const GameObjectCreateInfo& _info) const {
 		if (!mRootNode.hasChildNode())
 			return nullptr;
 		auto obj = new GameObject(_info);
 		recurBuildGameObj(*obj, mRootNode);
+		return obj;
+	}
+
+	GameObject* Model::genDefaultScene(const GameObjectCreateInfo& _info) const {
+		if (!mRootNode.hasChildNode())
+			return nullptr;
+		auto obj = new GameObject(_info);
+		recurBuildGameObj(*obj, mRootNode.getChildNodes()[0]);
 		return obj;
 	}
 

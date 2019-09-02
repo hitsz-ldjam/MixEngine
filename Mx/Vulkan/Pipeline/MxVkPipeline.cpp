@@ -15,7 +15,6 @@ namespace Mix {
 		Pipeline::~Pipeline() {
 			if(mPipeline) {
 				mRenderPass->getDevice()->get().destroyPipeline(mPipeline);
-				mRenderPass->getDevice()->get().destroyPipelineLayout(mPipelineLayout);
 			}
 		}
 

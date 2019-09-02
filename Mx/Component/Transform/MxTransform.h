@@ -3,7 +3,7 @@
 #ifndef MX_TRANSFORM_H_
 #define MX_TRANSFORM_H_
 
-#include "../../Definitions/MxDefinitions.h"
+#include "../../Definitions/MxCommonType.h"
 #include "../MxComponent.h"
 
 #include "../../Math/MxMatrix4.h"
@@ -59,9 +59,9 @@ namespace Mix {
 
         Transform* root() const;
 
-        void translate(const Math::Vector3f& _translation, const Space _relativeTo = Space::SELF); // done
+        void translate(const Math::Vector3f& _translation, const Space _relativeTo = Space::Self); // done
 
-        void translate(const float _x, const float _y, const float _z, const Space _relativeTo = Space::SELF) { //done
+        void translate(const float _x, const float _y, const float _z, const Space _relativeTo = Space::Self) { //done
             translate(Math::Vector3f(_x, _y, _z), _relativeTo);
         }
 
@@ -71,19 +71,19 @@ namespace Mix {
             translate(Math::Vector3f(_x, _y, _z), _relativeTo);
         }
 
-        void rotate(const Math::Vector3f& _eulers, const Space _relativeTo = Space::SELF) { // done
+        void rotate(const Math::Vector3f& _eulers, const Space _relativeTo = Space::Self) { // done
             rotate(Math::Quaternion::Euler(_eulers), _relativeTo);
         }
 
-        void rotate(const float _xAngle, const float _yAngle, const float _zAngle, const Space _relativeTo = Space::SELF) { // done
+        void rotate(const float _xAngle, const float _yAngle, const float _zAngle, const Space _relativeTo = Space::Self) { // done
             rotate(Math::Vector3f(_xAngle, _yAngle, _zAngle), _relativeTo);
         };
 
-        void rotate(const Math::Vector3f& _axis, const float _angle, const Space _relativeTo = Space::SELF) { // done
+        void rotate(const Math::Vector3f& _axis, const float _angle, const Space _relativeTo = Space::Self) { // done
             rotate(Math::Quaternion::AngleAxis(_angle, _axis), _relativeTo);
         }
 
-        void rotate(const Math::Quaternion& _qua, const Space _relativeTo = Space::SELF); // done
+        void rotate(const Math::Quaternion& _qua, const Space _relativeTo = Space::Self); // done
 
         void rotateAround(const Math::Vector3f& _point, const Math::Vector3f& _axis, const float _angle); // done
         

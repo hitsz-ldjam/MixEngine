@@ -11,11 +11,11 @@
 #include "../../GameObject/MxGameObject.h"
 #include "../../BuildIn/Camera/MxCamera.h"
 #include "../../Graphics/MxRenderElement.h"
-#include "../MxVulkan.h"
 #include "../../Component/Renderer/MxRenderer.h"
-#include "../Pipeline/MxVkVertexInput.h"
 #include "../../Resource/MxResourceLoader.h"
 #include "../Pipeline/MxVkShaderModule.h"
+#include "../MxVulkan.h"
+#include "../Pipeline/MxVkVertexInput.h"
 
 namespace Mix {
 	namespace Vulkan {
@@ -64,6 +64,14 @@ namespace Mix {
 			ubo.projMat = _camera.getProjMat();
 			mCameraUniforms[currFrame].setData(&ubo, sizeof(ubo));
 
+			vk::Viewport viewport{ 0.0f, 0.0f,static_cast<float>(mSwapchain->width()),static_cast<float>(mSwapchain->height()),0.0f, 1.0f
+			};
+
+			vk::Rect2D scissor{ {0, 0}, mSwapchain->extent() };
+
+			cmd.get().setViewport(0, viewport);
+			cmd.get().setScissor(0, scissor);
+
 			std::vector<vk::ClearValue> clearValues(2);
 			clearValues[0].color = std::array<float, 4>{0.0f, 0.75f, 1.0f, 1.0f};
 			clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
@@ -73,9 +81,25 @@ namespace Mix {
 										 clearValues,
 										 mSwapchain->extent());
 
-			cmd.get().bindPipeline(vk::PipelineBindPoint::eGraphics, mPipeline->get());
+			std::shared_ptr<VertexInput> currVertexInput = nullptr;
+			std::shared_ptr<Pipeline> currPipeline = nullptr;
 
 			for (auto& element : _renderElements) {
+				auto& mesh = *element.renderer.getGameObject()->getComponent<MeshFilter>()->getMesh();
+
+				// Change pipeline if need
+				auto newVertexInput = mVulkan->getVertexInputManager().getVertexInput(*mesh.getVertexDeclaration(), *mGraphicsPipelineState->getVertexDeclaration());
+				if (newVertexInput == nullptr) // This mesh is not compatiple with this pipeline
+					continue;
+				if (newVertexInput != currVertexInput) {
+					auto newPipeline = mGraphicsPipelineState->getPipeline(mRenderPass, 0, newVertexInput, mesh.getTopology(element.submesh));
+					if (newPipeline != currPipeline) {
+						cmd.get().bindPipeline(vk::PipelineBindPoint::eGraphics, newPipeline->get());
+						currPipeline = newPipeline;
+					}
+					currVertexInput = newVertexInput;
+				}
+
 				Uniform::MeshUniform uniform;
 				uniform.modelMat = element.renderer.transform().localToWorldMatrix();
 				/*uniform.normMat = uniform.modelMat.transpose().inverse();
@@ -86,7 +110,7 @@ namespace Mix {
 				mDynamicUniform[currFrame].pushBack(&uniform, sizeof uniform);
 
 				cmd.get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-											 mPipeline->pipelineLayout(),
+											 currPipeline->pipelineLayout(),
 											 0,
 											 mStaticDescriptorSets[currFrame].get(),
 											 mDynamicUniform[currFrame].getOffset());
@@ -94,13 +118,13 @@ namespace Mix {
 				updateMaterailParam(currFrame, element.material);
 
 				cmd.get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-											 mPipeline->pipelineLayout(), 1,
+											 currPipeline->pipelineLayout(), 1,
 											 mMaterialDescs[currFrame][element.material._getMaterialId()].get(),
 											 nullptr);
 
 
 				mDynamicUniform[currFrame].next();
-				DrawMesh(cmd, *element.renderer.getGameObject()->getComponent<MeshFilter>()->getMesh(), element.submesh);
+				DrawMesh(cmd, mesh, element.submesh);
 			}
 			// Test Gui
 			//if (ImGui::GetDrawData()->CmdListsCount > 0) {
@@ -197,7 +221,7 @@ namespace Mix {
 			mDescriptorPool = std::make_shared<DescriptorPool>(mDevice);
 			mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBuffer, imageCount);
 			mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBufferDynamic, imageCount);
-			mDescriptorPool->addPoolSize(vk::DescriptorType::eCombinedImageSampler, 2 * mDefaultMaterialCount * imageCount);
+			mDescriptorPool->addPoolSize(vk::DescriptorType::eCombinedImageSampler, 1 * mDefaultMaterialCount * imageCount);
 			mDescriptorPool->create((mDefaultMaterialCount + 1)*imageCount);
 
 
@@ -231,11 +255,9 @@ namespace Mix {
 		}
 
 		void StandardShader::buildPropertyBlock() {
-			mMaterialNameBindingMap["baseColorTex"] = 0;
-			mMaterialNameBindingMap["normalTex"] = 1;
+			mMaterialNameBindingMap["diffuseTex"] = 0;
 
-			mMaterialPropertySet.insert(MaterialPropertyInfo("baseColorTex", MaterialPropertyType::TEX_2D, std::shared_ptr<Texture>()));
-			mMaterialPropertySet.insert(MaterialPropertyInfo("normalTex", MaterialPropertyType::TEX_2D, std::shared_ptr<Texture>()));
+			mMaterialPropertySet.insert(MaterialPropertyInfo("diffuseTex", MaterialPropertyType::TEX_2D, std::shared_ptr<Texture>()));
 			for (auto i = 0; i < mDefaultMaterialCount; ++i)
 				mUnusedId.push_back(i);
 		}
@@ -314,8 +336,7 @@ namespace Mix {
 			mDynamicPamramDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(mDevice);
 			mDynamicPamramDescriptorSetLayout->setBindings(
 				{
-					{0,vk::DescriptorType::eCombinedImageSampler,1,vk::ShaderStageFlagBits::eFragment},
-					{1,vk::DescriptorType::eCombinedImageSampler,1,vk::ShaderStageFlagBits::eFragment}
+					{0,vk::DescriptorType::eCombinedImageSampler,1,vk::ShaderStageFlagBits::eFragment}
 				}
 			);
 			mDynamicPamramDescriptorSetLayout->create();
@@ -323,15 +344,6 @@ namespace Mix {
 		}
 
 		void StandardShader::buildPipeline() {
-			vk::Viewport viewport{
-				0.0f, 0.0f,
-				static_cast<float>(mSwapchain->width()),
-				static_cast<float>(mSwapchain->height()),
-				0.0f, 1.0f
-			};
-
-			vk::Rect2D scissor{ {0, 0}, mSwapchain->extent() };
-
 			/*vk::GraphicsPipelineCreateInfo pipelineCreateInfo = {};
 			pipelineCreateInfo.pStages = stages.data();
 			pipelineCreateInfo.stageCount = static_cast<uint32_t>(stages.size());
@@ -343,29 +355,51 @@ namespace Mix {
 			pipelineCreateInfo.pDepthStencilState = &mPipelineStates->depthStencil;
 			pipelineCreateInfo.pColorBlendState = &mPipelineStates->colorBlend;*/
 
-			PipelineFactory factory;
-			factory.begin();
+			//PipelineFactory factory;
+			//factory.begin();
 
-			// vertex input
-			auto vertexInput = VertexInput(VertexAttribute::POSITION | VertexAttribute::NORMAL | VertexAttribute::UV0);
-			factory.setVertexInput(vertexInput);
+			//// vertex input
+			//auto vertexInput = VertexInput(VertexAttribute::POSITION | VertexAttribute::NORMAL | VertexAttribute::UV0);
+			//factory.setVertexInput(vertexInput);
 
-			factory.setViewport(viewport);
-			factory.setScissor(scissor);
-			factory.setRasterization(vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise);
-			factory.setDepthTest(true);
-			factory.addDefaultBlendAttachment();
-			factory.setDescriptorSetLayout({ mStaticParamDescriptorSetLayout,mDynamicPamramDescriptorSetLayout });
+			//factory.setViewport(viewport);
+			//factory.setScissor(scissor);
+			//factory.setRasterization(vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise);
+			//factory.setDepthTest(true);
+			//factory.addDefaultBlendAttachment();
+			//factory.setDescriptorSetLayout({ mStaticParamDescriptorSetLayout,mDynamicPamramDescriptorSetLayout });
+
+			//auto vert = ResourceLoader::Get()->load<ShaderSource>("TestResources/Shaders/vShader.vert");
+			//auto frag = ResourceLoader::Get()->load<ShaderSource>("TestResources/Shaders/fShader.frag");
+			//ShaderModule vertShader = { mDevice, *vert };
+			//ShaderModule fragShader = { mDevice, *frag };
+			//factory.setShaderModule(vertShader);
+			//factory.setShaderModule(fragShader);
+
+			//mPipeline = factory.createPipeline(mRenderPass, 0);
+			GraphicsPipelineStateDesc desc;
 
 			auto vert = ResourceLoader::Get()->load<ShaderSource>("TestResources/Shaders/vShader.vert");
 			auto frag = ResourceLoader::Get()->load<ShaderSource>("TestResources/Shaders/fShader.frag");
-			ShaderModule vertShader = { mDevice, *vert };
-			ShaderModule fragShader = { mDevice, *frag };
-			factory.setShaderModule(vertShader);
-			factory.setShaderModule(fragShader);
+			std::shared_ptr<ShaderModule> vertShader = std::make_shared<ShaderModule>(mDevice, *vert);
+			std::shared_ptr<ShaderModule> fragShader = std::make_shared<ShaderModule>(mDevice, *frag);
 
-			mPipeline = factory.createPipeline(mRenderPass, 0);
+			desc.vertexDecl = std::make_shared<VertexDeclaration>(VertexAttribute::Position | VertexAttribute::Normal | VertexAttribute::UV0);
 
+			desc.gpuProgram.vertex = vertShader;
+			desc.gpuProgram.fragment = fragShader;
+
+			desc.cullMode = vk::CullModeFlagBits::eBack;
+			desc.frontFace = vk::FrontFace::eCounterClockwise;
+			desc.polygonMode = vk::PolygonMode::eFill;
+
+			desc.enableDepthTest = true;
+			desc.enableWriteDepth = true;
+
+			desc.descriptorSetLayouts = { mStaticParamDescriptorSetLayout,mDynamicPamramDescriptorSetLayout };
+			desc.blendStates = { GraphicsPipelineState::DefaultBlendAttachment };
+
+			mGraphicsPipelineState = std::make_shared<GraphicsPipelineState>(mDevice, desc);
 			/*std::ifstream inFile;
 			inFile.open("TestResources/pipeline/pipeline.json");
 			nlohmann::json json = nlohmann::json::parse(inFile);

@@ -1,5 +1,5 @@
 #include "MxKeyboard.h"
-#include "MxInputModule.h"
+#include "MxInput.h"
 #include "../Log/MxLog.h"
 
 namespace Mix {

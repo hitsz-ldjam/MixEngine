@@ -12,6 +12,7 @@ namespace Mix {
 
 		class Pipeline : public GeneralBase::NoCopyBase {
 			friend class PipelineFactory;
+			friend class GraphicsPipelineState;
 		public:
 			Pipeline(Pipeline&& _other) noexcept { swap(_other); }
 

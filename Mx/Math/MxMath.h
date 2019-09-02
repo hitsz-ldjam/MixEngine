@@ -82,6 +82,17 @@ namespace Mix {
 			return num8;
 		}
 
+		template<typename _Ty>
+		constexpr auto Lerp(const _Ty& _a, const _Ty& _b, float _t) {
+			_t = std::clamp(_t, 0.0f, 1.0f);
+			return  _b * _t + _a * (1.0f - _t);
+		}
+
+		template<typename _Ty>
+		constexpr auto LerpUnclamped(const _Ty& _a, const _Ty& _b, float _t) {
+			return  _b * _t + _a * (1.0f - _t);
+		}
+
 		template<typename _Ty, typename _Re = float>
 		constexpr _Re Normalize(_Ty _value) {
 			static_assert(!std::is_floating_point_v<_Ty>, "You can't use this function on float, double, long double");

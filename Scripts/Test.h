@@ -13,11 +13,8 @@ namespace Scripts {
 		~TestScript() = default;
 
 	private:
-		GameObject* mModel = nullptr;
-
-		void updateMouse();
-
-		void updatePos();
+		GameObject* mPlayerShip = nullptr;
+		GameObject* mEnemyShip = nullptr;
 
 		void init() override;
 
@@ -27,18 +24,26 @@ namespace Scripts {
 
 		Event<void()> mShutDownEvent;
 
-		Vector3f mTarget;
-
-		Vector2f mMouseLook;
+		Vector2f mLookDir;
 		Vector2f mSmoothMouse;
+		Vector2f mSmoothMove;
+		float mSmoothHeight = 0.0f;
+
 		float mMouseSpeed = 10.0f;
 		float mStickSpeed = 50.0f;
 
 		float mMaxMoveSpeed = 10.0f;
-		Vector3f mSmoothMove;
 
 		bool mUseCamepad = false;
 
-		void lookAtTarget(const Vector3f& _dir);
+		Vector3f mTarget;
+		bool mLockOn = false;
+		void lookAtTarget(const Vector3f& _target);
+		void lockOn(const Vector3f& _target);
+		void lockOff();
+		void updateTargetLock();
+
+		void useGamepad();
+		void useKeyboard();
 	};
 }

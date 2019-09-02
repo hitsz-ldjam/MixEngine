@@ -138,6 +138,11 @@ namespace Mix {
 			std::shared_ptr<std::set<Subpass>> mSubpasses;
 			std::shared_ptr<std::vector<vk::SubpassDependency>> mDependencies;
 		};
+
+
+		//--------------------- Test Code --------------------------
+		
+
 	}
 }
 #endif // !MX_VK_RENDERPASS_H_

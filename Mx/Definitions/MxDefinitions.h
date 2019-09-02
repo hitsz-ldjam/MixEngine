@@ -57,8 +57,6 @@ namespace Mix {
                                                                      MX_ENGINE_VERSION_MINOR,
                                                                      MX_ENGINE_VERSION_PATCH);
     }
-
-    enum class Space { WORLD, SELF };
 }
 
 #endif

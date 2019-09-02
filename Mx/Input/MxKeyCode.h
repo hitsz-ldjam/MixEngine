@@ -206,7 +206,7 @@ namespace Mix {
 		KeyboardCount = Keyboard_EnumEnd - Keyboard_EnumBegin,
 		MouseCount = Mouse_EnumEnd - Mouse_EnumBegin,
 		GamepadCount = Gamepad_EnumEnd - Gamepad_EnumBegin,
-		Count = KeyboardCount + MouseCount + GamepadCount + 1 // Add Unknown
+		EnumCount = KeyboardCount + MouseCount + GamepadCount + 1 // Add Unknown
 	};
 
 #define MX_AC_MOUSE_FLAG 0x80000000
@@ -241,7 +241,7 @@ namespace Mix {
 
 		MouseAxisCount = Mouse_EnumEnd - Mouse_EnumBegin,
 		GamepadAxisCount = Gamepad_EnumEnd - Gamepad_EnumBegin,
-		Count = MouseAxisCount + GamepadAxisCount + 1
+		EnumCount = MouseAxisCount + GamepadAxisCount + 1
 	};
 
 

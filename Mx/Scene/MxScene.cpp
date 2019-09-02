@@ -10,6 +10,7 @@
 #include "../Graphics/MxMaterial.h"
 #include "../Component/Renderer/MxRenderer.h"
 #include "../Graphics/MxGraphics.h"
+#include "../Vulkan/Pipeline/MxVkVertexInput.h"
 
 namespace Mix {
 	Scene::Scene(std::string _name, const size_t _buildIdx) : mName(std::move(_name)),
@@ -21,28 +22,55 @@ namespace Mix {
 	}
 
 	void Scene::awake() {
-		auto model0 = ResourceLoader::Get()->load<Model>("TestResources/Model/DamagedHelmet/glTF/DamagedHelmet.gltf");
-		auto object0 = model0->generateGameObject({ "Model0" });
-
 		auto param = GetAdditionalParam<Texture2D>();
 		param.mipLevel = 0;
-		param.samplerInfo.wrapModeU = TextureWrapMode::CLAMP_TO_EDGE;
-		param.samplerInfo.wrapModeV = TextureWrapMode::CLAMP_TO_EDGE;
-		param.samplerInfo.wrapModeW = TextureWrapMode::CLAMP_TO_EDGE;
-		param.samplerInfo.minFilter = TextureFilterMode::LINEAR;
-		param.samplerInfo.magFilter = TextureFilterMode::LINEAR;
-		param.samplerInfo.mipFilter = TextureMipSampleMode::LINEAR;
+		param.samplerInfo.minFilter = TextureFilterMode::Linear;
+		param.samplerInfo.magFilter = TextureFilterMode::Linear;
+		param.samplerInfo.mipFilter = TextureMipSampleMode::Linear;
 
-		auto baseColorTex = ResourceLoader::Get()->load<Texture2D>("TestResources/Model/DamagedHelmet/glTF/Default_albedo.jpg", &param);
-		auto normalTex = ResourceLoader::Get()->load<Texture2D>("TestResources/Model/DamagedHelmet/glTF/Default_normal.jpg", &param);
+		// Load player ship
+		{
+			auto model = ResourceLoader::Get()->load<Model>("TestResources/SpaceShooter/Models/player_ship.gltf");
+			auto gameObject = model->genDefaultScene({ "PlayerShip" });
+			gameObject->transform().translate(-2.0f, 0.0f, 0.0f, Space::World);
 
-		auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
-		material->setTexture("baseColorTex", baseColorTex);
-		material->setTexture("normalTex", normalTex);
+			auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("TestResources/SpaceShooter/Textures/player_ship_dif.png", &param);
+			auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
+			material->setTexture("diffuseTex", diffuseTex);
 
-		auto child = object0->getAllChildren()[0];
-		auto renderer = child->addComponent<Renderer>();
-		renderer->setMaterial(material);
+			auto renderer = gameObject->addComponent<Renderer>();
+			renderer->setMaterial(material);
+			addGameObject(gameObject);
+		}
+
+		// Load enemy ship
+		{
+			auto model = ResourceLoader::Get()->load<Model>("TestResources/SpaceShooter/Models/enemy_ship.gltf");
+			auto gameObject = model->genDefaultScene({ "EnemyShip" });
+			gameObject->transform().translate(2.0f, 0.0f, 0.0f, Space::World);
+
+			auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("TestResources/SpaceShooter/Textures/enemy_ship_diff.png", &param);
+			auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
+			material->setTexture("diffuseTex", diffuseTex);
+
+			auto renderer = gameObject->addComponent<Renderer>();
+			renderer->setMaterial(material);
+			addGameObject(gameObject);
+		}
+
+		{
+			auto model = ResourceLoader::Get()->load<Model>("TestResources/Model/BoomBox/glTF/BoomBox.gltf");
+			auto gameObject = model->genDefaultScene({ "TestBoomBox" });
+			gameObject->transform().setLocalScale(Math::Vector3f(50.0f));
+
+			auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("TestResources/Model/BoomBox/glTF/BoomBox_baseColor.png", &param);
+			auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
+			material->setTexture("diffuseTex", diffuseTex);
+
+			auto renderer = gameObject->addComponent<Renderer>();
+			renderer->setMaterial(material);
+			addGameObject(gameObject);
+		}
 
 		/*auto model1 = ResourceLoader::Get()->load<Model>("TestResources/Model/BoomBoxWithAxes/glTF/BoomBoxWithAxes.gltf");
 		auto object1 = model1->generateGameObject({ "Model1" });
@@ -55,7 +83,7 @@ namespace Mix {
 		camera->addComponent<Camera>(Window::Get()->extent());
 		camera->addComponent<Scripts::TestScript>();
 
-		addGameObject(object0);
+
 		// addGameObject(object1);
 		addGameObject(camera);
 

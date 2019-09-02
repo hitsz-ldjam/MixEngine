@@ -10,6 +10,7 @@
 #include "Shader/MxVkShaderBase.h"
 #include "Memory/MxVkAllocator.h"
 #include "../Graphics/MxRenderElement.h"
+#include "Pipeline/MxVkVertexInput.h"
 
 namespace Mix {
 	namespace Vulkan {
@@ -55,6 +56,7 @@ namespace Mix {
 		}
 
 		void VulkanAPI::build() {
+			// Initialize Vulkan API
 			createInstance();
 			pickPhysicalDevice();
 			createDevice();
@@ -68,6 +70,8 @@ namespace Mix {
 			for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
 				mGraphicsCommandBuffers.emplace_back(std::make_shared<CommandBufferHandle>(mGraphicsCommandPool));
 			}
+
+			mVertexInputManager=std::make_shared<VertexInputManager>();
 		}
 
 		void VulkanAPI::beginRender() {

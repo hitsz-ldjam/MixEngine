@@ -7,6 +7,7 @@
 #include "../MxResourceBase.h"
 #include "../../Vulkan/Descriptor/MxVkDescriptor.h"
 #include "../../Math/MxVector2.h"
+#include "../../Definitions/MxCommonType.h"
 #include <memory>
 
 namespace Mix {
@@ -14,50 +15,14 @@ namespace Mix {
 		class Buffer;
 	}
 
-	enum class TextureWrapMode {
-		REPEAT = 0,
-		CLAMP_TO_EDGE = 1,
-		MIRROR = 2,
-	};
-
-	enum class TextureFilterMode {
-		NEAREST = 0,
-		LINEAR = 1
-	};
-
-	enum class TextureMipSampleMode {
-		NEAREST = 0,
-		LINEAR = 1
-	};
-
-	enum class TextureFormat {
-		UNKNOWN = 0,
-		R8G8B8A8_UNORM = 1,
-		B8G8R8A8_UNORM = 2
-	};
-
-	enum class TextureType {
-		TEX_2D = 0,
-		CUBE = 1
-	};
-
-	enum class CubeMapFace {
-		PositiveX = 0,
-		NegativeX = 1,
-		PositiveY = 2,
-		NegativeY = 3,
-		PositiveZ = 4,
-		NegativeZ = 5,
-	};
-
 	struct SamplerInfo {
-		TextureFilterMode minFilter = TextureFilterMode::NEAREST;
-		TextureFilterMode magFilter = TextureFilterMode::NEAREST;
-		TextureMipSampleMode mipFilter = TextureMipSampleMode::NEAREST;
+		TextureFilterMode minFilter = TextureFilterMode::Nearest;
+		TextureFilterMode magFilter = TextureFilterMode::Nearest;
+		TextureMipSampleMode mipFilter = TextureMipSampleMode::Nearest;
 
-		TextureWrapMode wrapModeU = TextureWrapMode::REPEAT;
-		TextureWrapMode wrapModeV = TextureWrapMode::REPEAT;
-		TextureWrapMode wrapModeW = TextureWrapMode::REPEAT;
+		TextureWrapMode wrapModeU = TextureWrapMode::Repeat;
+		TextureWrapMode wrapModeV = TextureWrapMode::Repeat;
+		TextureWrapMode wrapModeW = TextureWrapMode::Repeat;
 	};
 
 	class Texture :public ResourceBase, public Vulkan::Descriptor, public GeneralBase::NoCopyBase {

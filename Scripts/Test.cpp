@@ -8,109 +8,168 @@
 #include "../Mx/Time/MxTime.h"
 #include "../MixEngine.h"
 #include <iostream>
-#include "../Mx/Input/MxInputModule.h"
+#include "../Mx/Input/MxInput.h"
 
 
 namespace Scripts {
 	void TestScript::init() {
-		mModel = GameObject::Find("Model0");
+		mPlayerShip = GameObject::Find("PlayerShip");
+		mEnemyShip = GameObject::Find("EnemyShip");
 		mShutDownEvent.connect(std::bind(&MixEngine::shutDown, &MixEngine::Instance()));
 	}
 
 	void TestScript::update() {
 		if (Input::Get()->isButtonDown(ButtonCode::U))
 			mUseCamepad = !mUseCamepad;
-		if (Input::Get()->isButtonDown(ButtonCode::Escape)) {
-			mShutDownEvent.trigger();
-		}
-	}
-
-	void TestScript::updateMouse() {
-		auto tran = mGameObject->getComponent<Transform>();
-		Vector2f delta;
-		if (mUseCamepad) {
-			delta = Input::Get()->getGamepadRightStickAxis()*mStickSpeed;
-		}
-		else {
-			if (Input::Get()->isButtonHold(ButtonCode::Mouse_Right)) {
-				delta = Vector2f(Input::Get()->getMousePositionDelta())*mMouseSpeed;
-				delta.y = -delta.y;
-			}
-		}
-		delta = delta * Time::FixedDeltaTime();
-		mSmoothMouse = Vector2f::Lerp(mSmoothMouse, delta, 0.8f);
-		mMouseLook += mSmoothMouse;
-
-		tran->setLocalRotation(Quaternion::AngleAxis(Radians(mMouseLook.x), Vector3f::Up) *
-							   Quaternion::AngleAxis(Radians(-mMouseLook.y), Vector3f::Right));
-
-	}
-
-	void TestScript::updatePos() {
-		auto tran = mGameObject->getComponent<Transform>();
-
-		Vector2f hDir;
-		Vector3f vDir;
-		if (mUseCamepad) {
-			hDir = Vector2f(Input::Get()->getGamepadLeftStickAxis());
-		}
-		else {
-			if (Input::Get()->isButtonHold(ButtonCode::W)) {
-				hDir += Vector2f::Up;
-			}
-			if (Input::Get()->isButtonHold(ButtonCode::S)) {
-				hDir += Vector2f::Down;
-			}
-			if (Input::Get()->isButtonHold(ButtonCode::D)) {
-				hDir += Vector2f::Right;
-			}
-			if (Input::Get()->isButtonHold(ButtonCode::A)) {
-				hDir += Vector2f::Left;
-			}
-			if (Input::Get()->isButtonHold(ButtonCode::Space)) {
-				vDir += tran->worldToLocalMatrix().multiplyDirection(Vector3f::Up);
-			}
-			if (Input::Get()->isButtonHold(ButtonCode::LCtrl)) {
-				vDir += tran->worldToLocalMatrix().multiplyDirection(Vector3f::Down);
-			}
-		}
-
-		if (hDir.length() > 0.0f) {
-			hDir = hDir.normalize();
-			hDir *= mMaxMoveSpeed * Time::FixedDeltaTime();
-			mSmoothMove = Vector3f::Lerp(mSmoothMove, Vector3f(hDir.x, 0.0f, hDir.y) + vDir * mMaxMoveSpeed, 0.8f);
-		}
-
-		mSmoothMove = Vector3f::Lerp(mSmoothMove, Vector3f::Zero, 0.1f);
-
-		tran->translate(mSmoothMove);
 	}
 
 	void TestScript::fixedUpdate() {
-		if (mUseCamepad) {
-			if (Input::Get()->isButtonHold(ButtonCode::Gamepad_LB)) {
-				mModel->transform().rotate(Vector3f::Up, Radians(60.0f * Time::FixedDeltaTime()));
-			}
-			if (Input::Get()->isButtonHold(ButtonCode::Gamepad_RB)) {
-				mModel->transform().rotate(Vector3f::Up, Radians(-60.0f * Time::FixedDeltaTime()));
-			}
-		}
-		else {
-			if (Input::Get()->isButtonHold(ButtonCode::E)) {
-				mModel->transform().rotate(Vector3f::Up, Radians(60.0f * Time::FixedDeltaTime()));
-			}
-			if (Input::Get()->isButtonHold(ButtonCode::Q)) {
-				mModel->transform().rotate(Vector3f::Up, Radians(-60.0f * Time::FixedDeltaTime()));
-			}
-		}
-
-		updateMouse();
-		updatePos();
+		if (mUseCamepad)
+			useGamepad();
+		else
+			useKeyboard();
+		updateTargetLock();
 	}
 
 	void TestScript::lookAtTarget(const Vector3f& _target) {
-		// todo
-		std::cout << "Not implement yet!" << std::endl;
+		auto equal = Math::EpsilonEqual(transform().getPosition(), _target);
+		if (equal.x && equal.y && equal.z)
+			return;
+
+		auto dir = (_target - transform().getPosition()).normalize();
+		Vector3f localDir;
+		if (mGameObject->parent())
+			localDir = mGameObject->parent()->transform().worldToLocalMatrix().multiplyDirection(dir);
+		else
+			localDir = dir;
+		auto xz = Vector2f(localDir.x, localDir.z).normalize();
+		mLookDir = { xz.y > 0.0f ? Degrees(std::asinf(xz.x)) : 180.0f - Degrees(std::asinf(xz.x)), Degrees(std::asinf(localDir.y)) };
+	}
+
+	void TestScript::lockOn(const Vector3f& _target) {
+		mLockOn = true;
+		mTarget = _target;
+	}
+
+	void TestScript::lockOff() {
+		mLockOn = false;
+	}
+
+	void TestScript::updateTargetLock() {
+		if (mLockOn)
+			lookAtTarget(mTarget);
+	}
+
+	void TestScript::useGamepad() {
+		// Update position
+		auto dir = Vector2f(Input::Get()->getGamepadLeftStickAxis());
+		auto h = Input::Get()->getAxis(AxisCode::Gamepad_RightTrigger) - Input::Get()->getAxis(AxisCode::Gamepad_LeftTrigger);
+
+		if (dir.length() > 0.0f) {
+			dir = dir.normalize() * mMaxMoveSpeed * Time::FixedDeltaTime();
+			mSmoothMove = Vector2f::Lerp(mSmoothMove, Vector2f(dir), 0.8f);
+		}
+
+		mSmoothMove = Vector2f::Lerp(mSmoothMove, Vector2f::Zero, 0.1f);
+		transform().translate(mSmoothMove.x, 0.0f, mSmoothMove.y);
+
+		mSmoothHeight = Lerp(mSmoothHeight, h, 0.8f);
+		mSmoothHeight = Lerp(mSmoothHeight, 0.0f, 0.1f);
+		transform().translate(0.0f, mSmoothHeight, 0.0f, Space::World);
+
+		if (Input::Get()->isButtonHold(ButtonCode::Gamepad_LB)) {
+			mPlayerShip->transform().rotate(Vector3f::Up, Radians(60.0f * Time::FixedDeltaTime()));
+		}
+		if (Input::Get()->isButtonHold(ButtonCode::Gamepad_RB)) {
+			mPlayerShip->transform().rotate(Vector3f::Up, Radians(-60.0f * Time::FixedDeltaTime()));
+		}
+		if (Input::Get()->isButtonDown(ButtonCode::Gamepad_X)) {
+			static bool lockFlag = false;
+			if (lockFlag)
+				lockOn(mPlayerShip->transform().getPosition());
+			else
+				lockOff();
+			lockFlag = !lockFlag;
+		}
+		if (Input::Get()->isButtonDown(ButtonCode::Gamepad_SpecialLeft)) {
+			mShutDownEvent.trigger();
+		}
+
+		// Update direction
+		Vector2f delta = Input::Get()->getGamepadRightStickAxis() * mStickSpeed * Time::FixedDeltaTime();
+		mSmoothMouse = Vector2f::Lerp(mSmoothMouse, delta, 0.8f);
+		mLookDir += mSmoothMouse;
+
+		transform().setLocalRotation(Quaternion::AngleAxis(Radians(mLookDir.x), Vector3f::Up) *
+									 Quaternion::AngleAxis(Radians(-mLookDir.y), Vector3f::Right));
+	}
+
+	void TestScript::useKeyboard() {
+		// Update direction
+		Vector2f delta;
+		if (Input::Get()->isButtonHold(ButtonCode::Mouse_Right)) {
+			delta = Vector2f(Input::Get()->getMousePositionDelta())*mMouseSpeed;
+			delta.y = -delta.y;
+		}
+		delta = delta * Time::FixedDeltaTime();
+		mSmoothMouse = Vector2f::Lerp(mSmoothMouse, delta, 0.8f);
+		mLookDir += mSmoothMouse;
+
+		transform().setLocalRotation(Quaternion::AngleAxis(Radians(mLookDir.x), Vector3f::Up) *
+									 Quaternion::AngleAxis(Radians(-mLookDir.y), Vector3f::Right));
+
+			  // Update position
+		Vector2f dir;
+		float h = 0.0f;
+		if (Input::Get()->isButtonHold(ButtonCode::W)) {
+			dir += Vector2f::Up;
+		}
+		if (Input::Get()->isButtonHold(ButtonCode::S)) {
+			dir += Vector2f::Down;
+		}
+		if (Input::Get()->isButtonHold(ButtonCode::D)) {
+			dir += Vector2f::Right;
+		}
+		if (Input::Get()->isButtonHold(ButtonCode::A)) {
+			dir += Vector2f::Left;
+		}
+		if (Input::Get()->isButtonHold(ButtonCode::Space)) {
+			h += 1.0f;
+		}
+		if (Input::Get()->isButtonHold(ButtonCode::LCtrl)) {
+			h -= 1.0f;
+		}
+		if (Input::Get()->isButtonDown(ButtonCode::Escape)) {
+			mShutDownEvent.trigger();
+		}
+
+
+		if (dir.length() > 0.0f) {
+			dir = dir.normalize() * mMaxMoveSpeed * Time::FixedDeltaTime();
+			mSmoothMove = Vector2f::Lerp(mSmoothMove, dir, 0.8f);
+		}
+
+		mSmoothMove = Vector2f::Lerp(mSmoothMove, Vector2f::Zero, 0.1f);
+		transform().translate(mSmoothMove.x, 0.0f, mSmoothMove.y);
+
+		mSmoothHeight = Lerp(mSmoothHeight, h, 0.8f);
+		mSmoothHeight = Lerp(mSmoothHeight, 0.0f, 0.1f);
+		transform().translate(0.0f, mSmoothHeight, 0.0f, Space::World);
+
+		if (Input::Get()->isButtonHold(ButtonCode::E)) {
+			mPlayerShip->transform().rotate(Vector3f::Up, Radians(60.0f * Time::FixedDeltaTime()));
+		}
+		if (Input::Get()->isButtonHold(ButtonCode::Q)) {
+			mPlayerShip->transform().rotate(Vector3f::Up, Radians(-60.0f * Time::FixedDeltaTime()));
+		}
+		if (Input::Get()->isButtonDown(ButtonCode::X)) {
+			static bool lockFlag = false;
+			if (lockFlag)
+				lockOn(mPlayerShip->transform().getPosition());
+			else
+				lockOff();
+			lockFlag = !lockFlag;
+		}
 	}
 }
 

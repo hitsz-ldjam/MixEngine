@@ -140,12 +140,12 @@ namespace Mix {
 		viewInfo.subresourceRange.layerCount = _layer;
 
 		switch (mType) {
-		case TextureType::TEX_2D:
+		case TextureType::Tex_2D:
 			imageInfo.imageType = vk::ImageType::e2D;
 			viewInfo.viewType = vk::ImageViewType::e2D;
 			break;
 
-		case TextureType::CUBE:
+		case TextureType::Cube:
 			imageInfo.imageType = vk::ImageType::e2D;
 			imageInfo.flags = vk::ImageCreateFlagBits::eCubeCompatible;
 			viewInfo.viewType = vk::ImageViewType::eCube;
@@ -192,40 +192,40 @@ namespace Mix {
 
 	vk::Format Texture::ToVkFormat(TextureFormat _format) {
 		switch (_format) {
-		case TextureFormat::R8G8B8A8_UNORM: return vk::Format::eR8G8B8A8Unorm;
-		case TextureFormat::B8G8R8A8_UNORM: return vk::Format::eB8G8R8A8Unorm;
+		case TextureFormat::R8G8B8A8_Unorm: return vk::Format::eR8G8B8A8Unorm;
+		case TextureFormat::B8G8R8A8_Unorm: return vk::Format::eB8G8R8A8Unorm;
 		default:return vk::Format::eUndefined;
 		}
 	}
 
 	TextureFormat Texture::FromVkFormat(vk::Format _format) {
 		switch (_format) {
-		case vk::Format::eR8G8B8A8Unorm:return TextureFormat::R8G8B8A8_UNORM;
-		case vk::Format::eB8G8R8A8Unorm:return TextureFormat::B8G8R8A8_UNORM;
+		case vk::Format::eR8G8B8A8Unorm:return TextureFormat::R8G8B8A8_Unorm;
+		case vk::Format::eB8G8R8A8Unorm:return TextureFormat::B8G8R8A8_Unorm;
 		}
 	}
 
 	vk::Filter Texture::ToVkFilter(TextureFilterMode _filterMode) {
 		switch (_filterMode) {
-		case TextureFilterMode::NEAREST: return vk::Filter::eNearest;
-		case TextureFilterMode::LINEAR: return vk::Filter::eLinear;
+		case TextureFilterMode::Nearest: return vk::Filter::eNearest;
+		case TextureFilterMode::Linear: return vk::Filter::eLinear;
 		default: return vk::Filter::eNearest;
 		}
 	}
 
 	vk::SamplerMipmapMode Texture::ToVkSampleMipMode(TextureMipSampleMode _mipSampleMode) {
 		switch (_mipSampleMode) {
-		case TextureMipSampleMode::NEAREST: return vk::SamplerMipmapMode::eNearest;
-		case TextureMipSampleMode::LINEAR: return vk::SamplerMipmapMode::eLinear;
+		case TextureMipSampleMode::Nearest: return vk::SamplerMipmapMode::eNearest;
+		case TextureMipSampleMode::Linear: return vk::SamplerMipmapMode::eLinear;
 		default:return vk::SamplerMipmapMode::eNearest;
 		}
 	}
 
 	vk::SamplerAddressMode Texture::ToVkSamplerAddressMode(TextureWrapMode _wrapMode) {
 		switch (_wrapMode) {
-		case TextureWrapMode::REPEAT: return vk::SamplerAddressMode::eRepeat;
-		case TextureWrapMode::CLAMP_TO_EDGE: return vk::SamplerAddressMode::eClampToEdge;
-		case TextureWrapMode::MIRROR: return vk::SamplerAddressMode::eMirroredRepeat;
+		case TextureWrapMode::Repeat: return vk::SamplerAddressMode::eRepeat;
+		case TextureWrapMode::ClampToEdge: return vk::SamplerAddressMode::eClampToEdge;
+		case TextureWrapMode::Mirror: return vk::SamplerAddressMode::eMirroredRepeat;
 		default:return vk::SamplerAddressMode::eRepeat;
 		}
 	}
@@ -510,7 +510,7 @@ namespace Mix {
 						 TextureFormat _format,
 						 uint32_t _mipLevel,
 						 SamplerInfo _samplerInfo) :
-		Texture(TextureType::TEX_2D, _width, _height, 1, _format, _mipLevel, 1, _samplerInfo) {
+		Texture(TextureType::Tex_2D, _width, _height, 1, _format, _mipLevel, 1, _samplerInfo) {
 	}
 
 	void Texture2D::setPixels(const void* _pixels, uint64_t _size, uint32_t _mipLevel) {
@@ -561,7 +561,7 @@ namespace Mix {
 					 TextureFormat _format,
 					 uint32_t _mipLevel,
 					 SamplerInfo _samplerInfo) :
-		Texture(TextureType::CUBE, _width, _width, 1, _format, _mipLevel, 1, _samplerInfo) {
+		Texture(TextureType::Cube, _width, _width, 1, _format, _mipLevel, 1, _samplerInfo) {
 	}
 
 	void CubeMap::apply(bool _updateMipmaps) {

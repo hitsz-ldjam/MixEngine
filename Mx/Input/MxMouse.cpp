@@ -1,5 +1,5 @@
 #include "MxMouse.h"
-#include "MxInputModule.h"
+#include "MxInput.h"
 
 namespace Mix {
 	Mouse::Mouse(Input* _input) :mInput(_input) {
