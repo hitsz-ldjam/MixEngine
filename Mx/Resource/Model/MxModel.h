@@ -5,7 +5,7 @@
 #include <utility>
 #include "../../Math/MxVector3.h"
 #include "../../Math/MxQuaternion.h"
-#include "MxMesh.h"
+#include "../../Graphics/Mesh/MxMesh.h"
 
 namespace Mix {
 	class GameObject;

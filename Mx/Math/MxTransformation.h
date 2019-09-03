@@ -2,6 +2,8 @@
 #ifndef MX_MATH_TRANSFORM_H_
 #define MX_MATH_TRANSFORM_H_
 
+#include "MxGLMHeader.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/quaternion.hpp>

@@ -1,5 +1,6 @@
 ﻿#include "MxTime.h"
 #include <algorithm>
+#include <cmath>
 
 namespace Mix {
     float Time::sDeltaTime = 0.0f,

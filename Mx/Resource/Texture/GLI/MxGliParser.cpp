@@ -1,6 +1,7 @@
 #include "MxGliParser.h"
 #include <gli/gli.hpp>
 #include "../../../../MixEngine.h"
+#include "../../../Graphics/Texture/MxTexture.h"
 
 namespace Mix {
 

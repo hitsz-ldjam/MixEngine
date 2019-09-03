@@ -2,11 +2,13 @@
 #ifndef MX_VECTOR3_H_
 #define WMX_VECTOR3_H_
 
+#include "MxGLMHeader.h"
+
 #include "../Exceptions/MxExceptions.hpp"
+#include "MxMath.h"
 #include <boost/format.hpp>
 #include <glm/vec3.hpp>
 #include <cmath>
-#include "MxMath.h"
 
 namespace Mix {
 	namespace Math {

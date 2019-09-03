@@ -128,7 +128,6 @@ namespace Mix {
 	}
 
 	void Input::_onGamepadDevice(const PFGamepadDeviceEventData& _data) {
-		Log::Info("Gamepad [%1%] %2%", _data.which, _data.deviceState & PFDeviceState_Added ? "Added" : "Removed");
 		if (_data.deviceState & PFDeviceState_Added) {
 			mGamepads.push_back(new Gamepad(_data.which, this));
 		}
@@ -139,7 +138,6 @@ namespace Mix {
 				mGamepads.erase(it);
 			}
 		}
-		Log::Info("Gamepad count: %1%", mGamepads.size());
 	}
 
 	Gamepad* Input::getGamepadFromId(int32_t _id) const {

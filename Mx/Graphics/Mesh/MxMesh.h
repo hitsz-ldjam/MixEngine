@@ -4,13 +4,13 @@
 #include <memory>
 #include <vector>
 #include "../../Vulkan/Buffers/MxVkBuffer.h"
-#include "../MxResourceBase.h"
+#include "../../Resource/MxResourceBase.h"
 #include "../../Math/MxVector.h"
 #include "../../Utils/MxColor.h"
 #include "../../Utils/MxArrayProxy.h"
 #include "../../Utils/MxFlags.h"
 #include "../../Definitions/MxCommonType.h"
-#include "../../Graphics/MxVertexDeclaration.h"
+#include "../MxVertexDeclaration.h"
 
 namespace Mix {
 	namespace Vulkan {

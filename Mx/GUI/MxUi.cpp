@@ -2,14 +2,14 @@
 #include "MxUi.h"
 #include "../../MixEngine.h"
 #include "../Vulkan/CommandBuffer/MxVkCommandPool.h"
-#include "../Resource/Texture/MxTexture.h"
+#include "../Graphics/Texture/MxTexture.h"
 #include "../Vulkan/Descriptor/MxVkDescriptorSet.h"
 #include "../Input/MxInput.h"
 #include "../Vulkan/Buffers/MxVkBuffer.h"
 #include "../Vulkan/Swapchain/MxVkSwapchain.h"
 #include "../Graphics/MxGraphics.h"
 #include "../Vulkan/MxVulkan.h"
-#include "../Input/MxInput.h"
+
 
 namespace Mix {
 

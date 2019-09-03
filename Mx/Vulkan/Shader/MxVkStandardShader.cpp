@@ -6,7 +6,7 @@
 #include "../FrameBuffer/MxVkFramebuffer.h"
 #include "../../Component/MeshFilter/MxMeshFilter.h"
 #include "../../Resource/Shader/MxShaderSource.h"
-#include "../../Resource/Texture/MxTexture.h"
+#include "../../Graphics/Texture/MxTexture.h"
 #include "../Pipeline/MxVkPipelineFactory.h"
 #include "../../GameObject/MxGameObject.h"
 #include "../../BuildIn/Camera/MxCamera.h"

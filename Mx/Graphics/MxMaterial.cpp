@@ -1,7 +1,6 @@
 #include "MxMaterial.h"
 #include "../Vulkan/Descriptor/MxVkDescriptorSet.h"
-#include "../Resource/Texture/MxTexture.h"
-#include "../Vulkan/Shader/MxVkShaderBase.h"
+#include "../Graphics/Texture/MxTexture.h"
 
 namespace Mix {
 	std::optional<int> MaterialPropertyBlock::getInt(const std::string& _name) const {

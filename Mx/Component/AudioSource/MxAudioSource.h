@@ -5,62 +5,65 @@
 
 #include "../Behaviour/MxBehaviour.h"
 #include "../../Audio/MxAudioClip.h"
-#include <glm/vec3.hpp>
+#include "../../Math/MxVector3.h"
 
 namespace Mix {
     // todo: add 3d roll off
     class AudioSource final : public Behaviour {
-    MX_DECLARE_RTTI
-    MX_DECLARE_CLASS_FACTORY
+        MX_DECLARE_RTTI
+            MX_DECLARE_CLASS_FACTORY
 
     public:
         /** @note Default ctor is for RTTI. DO NOT use this ctor. */
         AudioSource() : mPlayOnAwake(true),
-                        mVelocityUpdateMode(Audio::VelocityUpdateMode::AUTO),
-                        mClip(nullptr),
-                        mChannel(nullptr),
-                        mLastPos(0),
-                        mUseFixedUpdate(false),
-                        mDopplerLevel(1.0f),
-                        mLoop(false),
-                        mMute(false),
-                        mPan(0.0f),
-                        mPitch(1.0f),
-                        mPriority(128),
-                        mVolume(1.0f) {}
+            mVelocityUpdateMode(Audio::VelocityUpdateMode::AUTO),
+            mClip(nullptr),
+            mChannel(nullptr),
+            mLastPos(0),
+            mUseFixedUpdate(false),
+            mDopplerLevel(1.0f),
+            mLoop(false),
+            mMute(false),
+            mPan(0.0f),
+            mPitch(1.0f),
+            mPriority(128),
+            mVolume(1.0f) {
+        }
 
         AudioSource(AudioClip* _clip,
                     const bool _playOnAwake = true,
                     const Audio::VelocityUpdateMode _mode = Audio::VelocityUpdateMode::AUTO)
             : mPlayOnAwake(_playOnAwake),
-              mVelocityUpdateMode(_mode),
-              mClip(_clip),
-              mChannel(nullptr),
-              mLastPos(0),
-              mUseFixedUpdate(false),
-              mDopplerLevel(1.0f),
-              mLoop(false),
-              mMute(false),
-              mPan(0.0f),
-              mPitch(1.0f),
-              mPriority(128),
-              mVolume(1.0f) {}
+            mVelocityUpdateMode(_mode),
+            mClip(_clip),
+            mChannel(nullptr),
+            mLastPos(0),
+            mUseFixedUpdate(false),
+            mDopplerLevel(1.0f),
+            mLoop(false),
+            mMute(false),
+            mPan(0.0f),
+            mPitch(1.0f),
+            mPriority(128),
+            mVolume(1.0f) {
+        }
 
-        /** @note Copy constructed AudioSources are initially stopped. */
+/** @note Copy constructed AudioSources are initially stopped. */
         AudioSource(const AudioSource& _other) : Behaviour(),
-                                                 mPlayOnAwake(_other.mPlayOnAwake),
-                                                 mVelocityUpdateMode(_other.mVelocityUpdateMode),
-                                                 mClip(_other.mClip),
-                                                 mChannel(nullptr),
-                                                 mLastPos(_other.mLastPos),
-                                                 mUseFixedUpdate(_other.mUseFixedUpdate),
-                                                 mDopplerLevel(_other.mDopplerLevel),
-                                                 mLoop(_other.mLoop),
-                                                 mMute(_other.mMute),
-                                                 mPan(_other.mPan),
-                                                 mPitch(_other.mPitch),
-                                                 mPriority(_other.mPriority),
-                                                 mVolume(_other.mVolume) {}
+            mPlayOnAwake(_other.mPlayOnAwake),
+            mVelocityUpdateMode(_other.mVelocityUpdateMode),
+            mClip(_other.mClip),
+            mChannel(nullptr),
+            mLastPos(_other.mLastPos),
+            mUseFixedUpdate(_other.mUseFixedUpdate),
+            mDopplerLevel(_other.mDopplerLevel),
+            mLoop(_other.mLoop),
+            mMute(_other.mMute),
+            mPan(_other.mPan),
+            mPitch(_other.mPitch),
+            mPriority(_other.mPriority),
+            mVolume(_other.mVolume) {
+        }
 
         ~AudioSource() { stop(); }
 
@@ -116,7 +119,7 @@ namespace Mix {
         int priority() const { return mPriority; }
 
         /**
-         *  @param _priority An integer between 0 and 255. 0 = highest priority, 255 = lowest priority. 
+         *  @param _priority An integer between 0 and 255. 0 = highest priority, 255 = lowest priority.
          *  Default = 128.
          */
         void priority(const int _priority);
@@ -125,7 +128,7 @@ namespace Mix {
 
         /**
          *  @param _volume Linear volume level. Recommended be in range [0, 1].
-         *  @note Volume level can be below 0 to invert a signal and above 1 to amplify the signal. 
+         *  @note Volume level can be below 0 to invert a signal and above 1 to amplify the signal.
          *  Increasing the signal level too far may cause audible distortion.
          */
         void volume(const float _volume);
@@ -133,33 +136,33 @@ namespace Mix {
         // ----- Stream controlling -----
 
         /**
-         *  @note This function creates a new channel to play the clip. 
+         *  @note This function creates a new channel to play the clip.
          *  Nothing would happen if the clip is not ready.
          *  @see AudioSource::unpause()
          */
         void play();
 
         void pause() {
-            if(mChannel)
+            if (mChannel)
                 mChannel->setPaused(true);
         }
 
         /**
-         *  @brief Unpause the clip; no channel created. 
+         *  @brief Unpause the clip; no channel created.
          */
         void unpause() {
-            if(mChannel)
+            if (mChannel)
                 mChannel->setPaused(false);
         }
 
         void stop() {
-            if(mChannel)
+            if (mChannel)
                 mChannel->stop();
         }
 
         float time() const {
             unsigned t = 0;
-            if(mChannel)
+            if (mChannel)
                 mChannel->getPosition(&t, FMOD_TIMEUNIT_MS);
             return t / 1000.0f;
         }
@@ -168,7 +171,7 @@ namespace Mix {
          *  @brief Set the playback position in seconds.
          */
         void time(const float _time) {
-            if(mChannel)
+            if (mChannel)
                 mChannel->setPosition(static_cast<unsigned>(_time * 1000), FMOD_TIMEUNIT_MS);
         }
 
@@ -179,7 +182,7 @@ namespace Mix {
         AudioClip* mClip;
         FMOD::Channel* mChannel;
 
-        glm::vec3 mLastPos;
+        Math::Vector3f mLastPos;
         bool mUseFixedUpdate;
 
         // use FMOD::ChannelGroup instead?
@@ -196,7 +199,7 @@ namespace Mix {
         void lateUpdate() override;
 
         void initChannelParameters();
-        void updatePosAndVel(const glm::vec3& _pos, const glm::vec3& _vel);
+        void updatePosAndVel(const Math::Vector3f& _pos, const Math::Vector3f& _vel);
     };
 }
 

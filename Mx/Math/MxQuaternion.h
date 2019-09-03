@@ -2,6 +2,8 @@
 #ifndef MX_QUATERNION_H_
 #define MX_QUATERNION_H_
 
+#include "MxGLMHeader.h"
+
 #include "MxVector3.h"
 #include "MxVector4.h"
 #include <glm/gtc/quaternion.hpp>

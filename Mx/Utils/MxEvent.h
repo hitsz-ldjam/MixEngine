@@ -2,7 +2,8 @@
 #ifndef MX_EVENT_H_
 #define MX_EVENT_H_
 
-#include<mutex>
+#include <mutex>
+#include <functional>
 
 namespace Mix {
 	class ConnectionDataBase {

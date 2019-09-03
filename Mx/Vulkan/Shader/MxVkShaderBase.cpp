@@ -1,4 +1,4 @@
-#include "../../Resource/Model/MxMesh.h"
+#include "../../Graphics/Mesh/MxMesh.h"
 #include "MxVkShaderBase.h"
 #include "../CommandBuffer/MxVkCommanddBufferHandle.h"
 

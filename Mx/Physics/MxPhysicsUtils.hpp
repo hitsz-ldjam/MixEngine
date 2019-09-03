@@ -9,31 +9,29 @@
 
 namespace Mix::Physics {
     // todo: debug. bullet uses right hand coordinate system!
-    inline Transform btTransformToMixTransform(const btTransform& _btTrans) noexcept {
-        Transform trans;
-        trans.setPosition({
-            _btTrans.getOrigin().x(),
+    inline void btTransformToMixTransform(const btTransform& _btTrans, Transform& _mxTrans) noexcept {
+        _mxTrans.setPosition({
+            -_btTrans.getOrigin().x(),
             _btTrans.getOrigin().y(),
             _btTrans.getOrigin().z()
-        });
-        trans.setRotation({
-            _btTrans.getRotation().w(),
-            _btTrans.getRotation().x(),
+                             });
+        _mxTrans.setRotation({
+            -_btTrans.getRotation().w(),
+            -_btTrans.getRotation().x(),
             _btTrans.getRotation().y(),
             _btTrans.getRotation().z()
-        });
-        return trans;
+                             });
     }
 
     inline btTransform mixTransformToBtTransform(const Transform& _mixTrans) noexcept {
         return btTransform({
-                               _mixTrans.getRotation().x,
+                               -_mixTrans.getRotation().x,
                                _mixTrans.getRotation().y,
                                _mixTrans.getRotation().z,
-                               _mixTrans.getRotation().w
+                               -_mixTrans.getRotation().w
                            },
                            {
-                               _mixTrans.getPosition().x,
+                               -_mixTrans.getPosition().x,
                                _mixTrans.getPosition().y,
                                _mixTrans.getPosition().z
                            });

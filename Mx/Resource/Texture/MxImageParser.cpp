@@ -1,7 +1,7 @@
 #include "MxImageParser.h"
 #include "../../Log/MxLog.h"
-#include "MxTexture.h"
 #include <stb_image/stb_image.h>
+#include "../../Graphics/Texture/MxTexture.h"
 
 namespace Mix {
 	std::shared_ptr<ResourceBase> ImageParser::load(const std::filesystem::path& _path, const ResourceType _type, void* _additionalParam) {

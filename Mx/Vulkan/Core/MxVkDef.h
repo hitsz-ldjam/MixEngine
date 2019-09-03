@@ -2,7 +2,6 @@
 #ifndef MX_VK_DEF_H
 #define MX_VK_DEF_H_
 
-#include <glm/glm.hpp>
 #include <vulkan/vulkan.hpp>
 #include <optional>
 

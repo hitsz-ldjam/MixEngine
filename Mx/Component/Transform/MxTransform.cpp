@@ -144,7 +144,7 @@ namespace Mix {
 	}
 
 	void Transform::setPosition(const Math::Vector3f& _pos) {
-		if (mGameObject->parent()) {
+		if (mGameObject && mGameObject->parent()) {
 			mPosition = mGameObject->parent()->transform().worldToLocalMatrix().multiplyPoint(_pos);
 		} else
 			mPosition = _pos;
@@ -161,7 +161,7 @@ namespace Mix {
 	}
 
 	void Transform::setRotation(const Math::Quaternion& _qua) {
-		if (mGameObject->parent()) {
+		if (mGameObject && mGameObject->parent()) {
 			mQuat = mGameObject->parent()->transform().worldToLocalMatrix().getRotation() * _qua;
 		} else
 			mQuat = _qua;

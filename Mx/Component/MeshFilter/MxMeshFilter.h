@@ -2,7 +2,7 @@
 #ifndef MX_MESH_FILTER_H_
 #define MX_MESH_FILTER_H_
 #include "../MxComponent.h"
-#include "../../Resource/Model/MxMesh.h"
+#include "../../Graphics/Mesh/MxMesh.h"
 
 namespace Mix {
 	class MeshFilter :public Component {

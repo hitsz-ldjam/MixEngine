@@ -2,12 +2,14 @@
 #ifndef MX_VECTOR2_H_
 #define WMX_VECTOR2_H_
 
+#include "MxGLMHeader.h"
+
 #include "../Exceptions/MxExceptions.hpp"
-#include <cmath>
+#include "MxMath.h"
 #include <boost/format.hpp>
 #include <glm/vec2.hpp>
 #include <glm/gtx/compatibility.hpp>
-#include "MxMath.h"
+#include <cmath>
 
 namespace Mix {
 	namespace Math {

@@ -7,19 +7,19 @@
 
 namespace Mix {
     MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(RigidBody, Behaviour)
-    MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(RigidBody)
+        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(RigidBody)
 
-    struct RigidBody::LifeTimeManager {
+        struct RigidBody::LifeTimeManager {
         ~LifeTimeManager() {
-            for(auto* shape : shapes)
+            for (auto* shape : shapes)
                 delete shape;
         }
 
         void addShape(btCollisionShape* _shape) {
-            if(!_shape) return;
-            if(_shape->isCompound()) {
+            if (!_shape) return;
+            if (_shape->isCompound()) {
                 auto cs = static_cast<btCompoundShape*>(_shape);
-                for(auto idx = cs->getNumChildShapes() - 1; idx >= 0; --idx)
+                for (auto idx = cs->getNumChildShapes() - 1; idx >= 0; --idx)
                     addShape(cs->getChildShape(idx));
             }
             shapes.insert(_shape);
@@ -32,28 +32,29 @@ namespace Mix {
     RigidBody::LifeTimeManager RigidBody::ltm;
 
     RigidBody::RigidBody() : mMass(.0),
-                             mShape(nullptr),
-                             mRigidBody(nullptr),
-                             mFilter(false, 0, 0),
-                             mWorld(nullptr) {}
+        mShape(nullptr),
+        mRigidBody(nullptr),
+        mFilter(false, 0, 0),
+        mWorld(nullptr) {
+    }
 
     RigidBody::RigidBody(const btScalar _mass,
                          const btTransform& _startTrans,
                          btCollisionShape* _shape) : mMass(_mass),
-                                                     mShape(_shape),
-                                                     mRigidBody(nullptr),
-                                                     mFilter(false, 0, 0),
-                                                     mWorld(nullptr) {
+        mShape(_shape),
+        mRigidBody(nullptr),
+        mFilter(false, 0, 0),
+        mWorld(nullptr) {
         ltm.addShape(mShape);
         mRigidBody = CreateBtRb(Physics::RigidBodyConstructionInfo(_mass, _startTrans, _shape));
         mRigidBody->setUserPointer(this);
     }
 
     RigidBody::RigidBody(const Physics::RigidBodyConstructionInfo& _info) : mMass(_info.mass),
-                                                                            mShape(_info.shape),
-                                                                            mRigidBody(nullptr),
-                                                                            mFilter(false, 0, 0),
-                                                                            mWorld(nullptr) {
+        mShape(_info.shape),
+        mRigidBody(nullptr),
+        mFilter(false, 0, 0),
+        mWorld(nullptr) {
         ltm.addShape(mShape);
         mRigidBody = CreateBtRb(_info);
         mRigidBody->setUserPointer(this);
@@ -62,18 +63,18 @@ namespace Mix {
     RigidBody::RigidBody(const Physics::RigidBodyConstructionInfo& _info,
                          const int _group,
                          const int _mask) : mMass(_info.mass),
-                                            mShape(_info.shape),
-                                            mRigidBody(nullptr),
-                                            mFilter(true, _group, _mask),
-                                            mWorld(nullptr) {
+        mShape(_info.shape),
+        mRigidBody(nullptr),
+        mFilter(true, _group, _mask),
+        mWorld(nullptr) {
         ltm.addShape(mShape);
         mRigidBody = CreateBtRb(_info);
         mRigidBody->setUserPointer(this);
     }
 
     RigidBody::~RigidBody() {
-        if(mRigidBody) {
-            if(mWorld)
+        if (mRigidBody) {
+            if (mWorld)
                 mWorld->removeRigidBody(mRigidBody);
             delete mRigidBody->getMotionState();
         }
@@ -81,7 +82,7 @@ namespace Mix {
     }
 
     void RigidBody::setKinematic(const bool _flag) const {
-        if(_flag) {
+        if (_flag) {
             addCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
             mRigidBody->setActivationState(DISABLE_DEACTIVATION);
         }
@@ -95,7 +96,7 @@ namespace Mix {
     void RigidBody::setStatic(const bool _flag) const {
         btScalar mass;
         btVector3 inertia(0, 0, 0);
-        if(_flag)
+        if (_flag)
             mass = 0;
         else {
             mass = mMass;
@@ -107,20 +108,20 @@ namespace Mix {
     }
 
     void RigidBody::setTrigger(const bool _flag) const {
-        if(_flag)
+        if (_flag)
             addCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
         else
             removeCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
     }
 
     btRigidBody* RigidBody::CreateBtRb(const Physics::RigidBodyConstructionInfo& _info) {
-        if(!_info.shape)
+        if (!_info.shape)
             return nullptr;
         auto motionstate = new Physics::MotionState(_info.startTrans,
                                                     _info.interpolation,
                                                     _info.centerOfMassOffset);
         btVector3 inertia(0, 0, 0);
-        if(_info.mass > FLT_EPSILON)
+        if (_info.mass > FLT_EPSILON)
             _info.shape->calculateLocalInertia(_info.mass, inertia);
         btRigidBody::btRigidBodyConstructionInfo info(_info.mass,
                                                       motionstate,
@@ -134,23 +135,22 @@ namespace Mix {
 
     void RigidBody::awake() {
         mWorld = MixEngine::Instance().getModule<Physics::World>()->getWorld();
-        const auto& [customFilter, group, mask] = mFilter;
-        if(customFilter)
+        const auto&[customFilter, group, mask] = mFilter;
+        if (customFilter)
             mWorld->addRigidBody(mRigidBody, group, mask);
         else
             mWorld->addRigidBody(mRigidBody);
     }
 
     void RigidBody::update() {
-        mGameObject->transform()
-            //                                   Should be Physics::MotionState
-            = Physics::btTransformToMixTransform(static_cast<Physics::MotionState*>(mRigidBody->getMotionState())
-                                                 ->interpolatedTransform());
+                                                        // Should be Physics::MotionState
+        Physics::btTransformToMixTransform(static_cast<Physics::MotionState*>(mRigidBody->getMotionState())
+                                           ->interpolatedTransform(), mGameObject->transform());
     }
 
     void RigidBody::fixedUpdate() {
         btTransform trans;
         mRigidBody->getMotionState()->getWorldTransform(trans);
-        mGameObject->transform() = Physics::btTransformToMixTransform(trans);
+        Physics::btTransformToMixTransform(trans, mGameObject->transform());
     }
 }

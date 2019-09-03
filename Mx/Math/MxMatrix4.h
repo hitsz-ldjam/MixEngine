@@ -2,14 +2,10 @@
 #ifndef MX_MATRIX_H_
 #define MX_MATRIX_H_
 
-#define GLM_ENABLE_EXPERIMENTAL
-#define GLM_FORCE_LEFT_HANDED
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include "MxGLMHeader.h"
 
 #include "MxVector4.h"
 #include "MxVector3.h"
-#include "glm/mat4x4.hpp"
 #include "MxQuaternion.h"
 #include <glm/gtx/matrix_decompose.hpp>
 
@@ -56,20 +52,6 @@ namespace Mix {
 			Vector3f multiplyDirection(const Vector3f& _direction) const;
 
 			Matrix4 divide(const Matrix4& _other) const;
-
-			/*Matrix4 translate(const Vector4f& _vector) const;
-
-			Matrix4 translate(const Vector3f& _vector) const;
-
-			Matrix4 rotate(const Quaternion& _qua) const;
-
-			Matrix4 rotate(const Vector3f& _axis, const float _angle) const;
-
-			Matrix4 rotate(const float _xAngle, const float _yAngle, const float _zAngle) const;
-
-			Matrix4 scale(const Vector4f& _scale) const;
-
-			Matrix4 scale(const Vector3f& _scale) const;*/
 
 			Matrix4 inverse() const;
 

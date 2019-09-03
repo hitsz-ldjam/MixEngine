@@ -3,7 +3,7 @@
 #include "../../Vulkan/Buffers/MxVkBufferTransfer.h"
 #include "../../Vulkan/CommandBuffer/MxVkCommanddBufferHandle.h"
 #include "../../Vulkan/Buffers/MxVkBuffer.h"
-#include "../../Graphics/MxGraphics.h"
+#include "../MxGraphics.h"
 #include "../../Vulkan/MxVulkan.h"
 
 namespace Mix {

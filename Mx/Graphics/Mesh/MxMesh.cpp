@@ -1,7 +1,7 @@
 #include "MxMesh.h"
 #include "../../Vulkan/MxVulkan.h"
 #include <any>
-#include "../../Graphics/MxGraphics.h"
+#include "../MxGraphics.h"
 #include <iostream>
 
 namespace Mix {

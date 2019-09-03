@@ -1,8 +1,8 @@
 #include "MxGltf.h"
 #include "../../../Log/MxLog.h"
-#include "../../Texture/MxTexture.h"
 #include "../../../Math/MxPtrMake.h"
 #include "../../../Math/MxMatrix4.h"
+#include "../../../Graphics/Texture/MxTexture.h"
 #include <numeric>
 
 #define TINYGLTF_IMPLEMENTATION

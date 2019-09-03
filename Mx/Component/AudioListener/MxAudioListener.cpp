@@ -13,7 +13,7 @@ namespace Mix {
         if(mCore) return;
         if(!mGameObject) throw IndependentComponentError(getTypeName());
         mCore = MixEngine::Instance().getModule<Audio::Core>()->getCore();
-        mLastPos = mGameObject->transform().getPosition().vec;
+        mLastPos = mGameObject->transform().getPosition();
         mUseFixedUpdate = mVelocityUpdateMode == Audio::VelocityUpdateMode::FIXED ||
                           mVelocityUpdateMode == Audio::VelocityUpdateMode::AUTO && mGameObject->getComponent<RigidBody>();
     }
@@ -27,7 +27,7 @@ namespace Mix {
             updatePosAndVel({pos.x(), pos.y(), pos.z()}, {vel.x(), vel.y(), vel.z()});
         }
         else {
-            auto pos = mGameObject->transform().getPosition().vec;
+            auto pos = mGameObject->transform().getPosition();
             auto vel = (pos - mLastPos) / Time::FixedDeltaTime();
             updatePosAndVel(pos, vel);
         }
@@ -36,20 +36,20 @@ namespace Mix {
     void AudioListener::lateUpdate() {
         if(mUseFixedUpdate) return;
 
-        auto pos = mGameObject->transform().getPosition().vec;
+        auto pos = mGameObject->transform().getPosition();
         auto vel = (pos - mLastPos) / Time::DeltaTime();
         updatePosAndVel(pos, vel);
     }
 
-    void AudioListener::updatePosAndVel(const glm::vec3& _pos, const glm::vec3& _vel) {
+    void AudioListener::updatePosAndVel(const Math::Vector3f& _pos, const Math::Vector3f& _vel) {
         const auto& trans = mGameObject->transform();
 
-        auto glmVecToFmodVec = [](const glm::vec3& _vec) { return FMOD_VECTOR{_vec.x, _vec.y, _vec.z}; };
+        auto glmVecToFmodVec = [](const Math::Vector3f& _vec) { return FMOD_VECTOR{_vec.x, _vec.y, _vec.z}; };
 
         auto fvPos = glmVecToFmodVec(_pos),
              fvVel = glmVecToFmodVec(_vel),
-             fvForward = glmVecToFmodVec(trans.forward().vec),
-             fvUp = glmVecToFmodVec(trans.up().vec);
+             fvForward = glmVecToFmodVec(trans.forward()),
+             fvUp = glmVecToFmodVec(trans.up());
 
         if(mCore)
             mCore->set3DListenerAttributes(listenerIdx, &fvPos, &fvVel, &fvForward, &fvUp);

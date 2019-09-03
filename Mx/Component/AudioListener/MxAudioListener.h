@@ -5,7 +5,7 @@
 
 #include "../Behaviour/MxBehaviour.h"
 #include "../../Audio/MxAudio.hpp"
-#include <glm/vec3.hpp>
+#include "../../Math/MxVector3.h"
 
 namespace Mix {
     /** @note Each @code Scene @endcode should only have 1 @code AudioListener @endcode. */
@@ -27,14 +27,14 @@ namespace Mix {
         const int listenerIdx = 0;
         Audio::VelocityUpdateMode mVelocityUpdateMode;
         FMOD::System* mCore;
-        glm::vec3 mLastPos;
+        Math::Vector3f mLastPos;
         bool mUseFixedUpdate;
 
         void init() override;
         void fixedUpdate() override;
         void lateUpdate() override;
 
-        void updatePosAndVel(const glm::vec3& _pos, const glm::vec3& _vel);
+        void updatePosAndVel(const Math::Vector3f& _pos, const Math::Vector3f& _vel);
     };
 }
 

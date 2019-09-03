@@ -2,6 +2,7 @@
 #ifndef MX_GLI_PARSER_H_
 #define MX_GLI_PARSER_H_
 #include "../MxTextureParserBase.hpp"
+#include "../../../Graphics/Texture/MxTexture.h"
 
 namespace Mix {
 	class GliParser :public TextureParserBase {

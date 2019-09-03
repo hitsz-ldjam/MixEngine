@@ -3,7 +3,8 @@
 //#define MX_GLTF_PARSER_H_
 
 #include "../MxModelParserBase.hpp"
-#include "../../Texture/MxTexture.h"
+#include "../MxModel.h"
+
 
 #define STBI_MSC_SECURE_CRT
 #define TINYGLTF_NO_INCLUDE_JSON

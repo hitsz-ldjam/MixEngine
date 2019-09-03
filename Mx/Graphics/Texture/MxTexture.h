@@ -4,7 +4,7 @@
 #define MX_TEXTURE_H_
 
 #include "../../Vulkan/Image/MxVkImage.h"
-#include "../MxResourceBase.h"
+#include "../../Resource/MxResourceBase.h"
 #include "../../Vulkan/Descriptor/MxVkDescriptor.h"
 #include "../../Math/MxVector2.h"
 #include "../../Definitions/MxCommonType.h"
