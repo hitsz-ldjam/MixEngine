@@ -9,7 +9,7 @@
 
 namespace Mix {
 	class GameObject;
-	struct GameObjectCreateInfo;
+    struct GameObjectConInfo;
 
 	class Model :public ResourceBase {
 		friend class ModelParserBase;
@@ -88,9 +88,9 @@ namespace Mix {
 
 		size_t meshCount() const { return mMeshes.size(); }
 
-		GameObject* genAllScene(const GameObjectCreateInfo& _info) const;
+		GameObject* genAllScene(const GameObjectConInfo& _info) const;
 
-		GameObject* genDefaultScene(const GameObjectCreateInfo& _info) const;
+		GameObject* genDefaultScene(const GameObjectConInfo& _info) const;
 
 	private:
 		std::string mName;

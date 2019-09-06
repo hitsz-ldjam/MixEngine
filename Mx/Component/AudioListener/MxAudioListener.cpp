@@ -1,4 +1,4 @@
-﻿#include "MxAudioListener.h"
+#include "MxAudioListener.h"
 
 #include "../../GameObject/MxGameObject.h"
 #include "../RigidBody/MxRigidBody.h"

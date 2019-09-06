@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #ifndef MX_RIGID_BODY_UTILS_HPP_
 #define MX_RIGID_BODY_UTILS_HPP_
@@ -17,7 +17,7 @@ namespace Mix::Physics {
         /** Zero mass creates a static rigid body (@code btCollisionObject::CF_STATIC_OBJECT @endcode) */
         btScalar mass;
 
-        /** Can be cast from Transform by calling @code Physics::mixTransformToBtTransform @endcode */
+        /** Can be cast from Transform by calling @code Physics::mixTransToBtTrans @endcode */
         btTransform startTrans;
 
         /**

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #ifndef MX_RIGID_BODY_H_
 #define MX_RIGID_BODY_H_
@@ -9,11 +9,14 @@
 #include <tuple>
 
 namespace Mix {
+    class Transform;
+
     namespace Physics {
         class World;
         struct RigidBodyConstructionInfo;
     }
 
+    /** Bug: RigidBody on a child GameObject whose parent has one might not be altered correctly. */
     class RigidBody final : public Behaviour {
     MX_DECLARE_RTTI
     MX_DECLARE_CLASS_FACTORY
@@ -28,10 +31,11 @@ namespace Mix {
         RigidBody();
         /** @note Refer to Physics::RigidBodyConstructionInfo for param info. */
         RigidBody(const btScalar _mass, const btTransform& _startTrans, btCollisionShape* _shape);
+        RigidBody(const btScalar _mass, const Transform& _startTrans, btCollisionShape* _shape);
         RigidBody(const Physics::RigidBodyConstructionInfo& _info);
         /**
          *  @param _group Filter group.
-         *  @param _mask Filter mask. Indicates which groups this object should collide with. 
+         *  @param _mask Filter mask. Indicates which groups this object should collide with. Note that there are built-in groups.
          */
         RigidBody(const Physics::RigidBodyConstructionInfo& _info, const int _group, const int _mask);
         RigidBody(const RigidBody&) = delete;

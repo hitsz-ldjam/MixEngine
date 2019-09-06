@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #ifndef MX_AUDIO_LISTENER_H_
 #define MX_AUDIO_LISTENER_H_

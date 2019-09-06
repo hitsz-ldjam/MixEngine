@@ -1,4 +1,4 @@
-﻿#include "MxAudioClip.h"
+#include "MxAudioClip.h"
 #include "../../MixEngine.h"
 
 namespace Mix {

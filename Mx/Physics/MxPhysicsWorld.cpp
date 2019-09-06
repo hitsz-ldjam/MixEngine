@@ -1,6 +1,7 @@
-﻿#include "MxPhysicsWorld.h"
+#include "MxPhysicsWorld.h"
 #include "MxRigidBodyUtils.hpp"
 #include "../Component/RigidBody/MxRigidBody.h"
+#include "../../MixEngine.h"
 
 namespace Mix::Physics {
     World::World() : mConfig(nullptr),

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #ifndef MX_PHYSICS_WORLD_H_
 #define MX_PHYSICS_WORLD_H_

@@ -21,7 +21,7 @@ namespace Mix {
 		}
 	}
 
-	GameObject* Model::genAllScene(const GameObjectCreateInfo& _info) const {
+	GameObject* Model::genAllScene(const GameObjectConInfo& _info) const {
 		if (!mRootNode.hasChildNode())
 			return nullptr;
 		auto obj = new GameObject(_info);
@@ -29,7 +29,7 @@ namespace Mix {
 		return obj;
 	}
 
-	GameObject* Model::genDefaultScene(const GameObjectCreateInfo& _info) const {
+	GameObject* Model::genDefaultScene(const GameObjectConInfo& _info) const {
 		if (!mRootNode.hasChildNode())
 			return nullptr;
 		auto obj = new GameObject(_info);

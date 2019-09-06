@@ -1,4 +1,4 @@
-﻿#include "MxGameObject.h"
+#include "MxGameObject.h"
 #include <algorithm>
 
 namespace Mix {
@@ -7,44 +7,52 @@ namespace Mix {
 
     std::vector<GameObject*> GameObject::sGameObjList;
 
-    GameObject::GameObject(): mParent(nullptr),
-                              mActiveInHierarchy(true),
-                              mActiveSelf(true),
-                              mIsStatic(false),
-                              mLayer(0),
-                              mTransform(nullptr),
-                              mScene(nullptr) {}
+    GameObject::GameObject() : mParent(nullptr),
+                               mTransform(nullptr),
+                               mLayer(0),
+                               mIsStatic(false),
+                               mActiveSelf(true),
+                               mActiveInHierarchy(true),
+                               mScene(nullptr) {}
 
-    GameObject::GameObject(const GameObjectCreateInfo& _info): mParent(nullptr),
-                                                                     mActiveInHierarchy(true),
-                                                                     mActiveSelf(true),
-                                                                     mIsStatic(_info.isStatic),
-                                                                     mTag(_info.tag),
-                                                                     mLayer(_info.layer),
-                                                                     mTransform(addComponent<Transform>()),
-                                                                     mScene(nullptr) {
-        mName = _info.name;
+    GameObject::GameObject(std::string _name,
+                           Tag _tag,
+                           const LayerIndex _layerIndex,
+                           const bool _isStatic) : mParent(nullptr),
+                                                   mTransform(addComponent<Transform>()),
+                                                   mTag(std::move(_tag)),
+                                                   mLayer(_layerIndex),
+                                                   mIsStatic(_isStatic),
+                                                   mActiveSelf(true),
+                                                   mActiveInHierarchy(true),
+                                                   mScene(nullptr) {
+        mName = std::move(_name);
         setActive(mActiveSelf);
         AddGameObject(this);
     }
+
+    GameObject::GameObject(const GameObjectConInfo& _info)
+        : GameObject(_info.name, _info.tag, _info.layerIndex, _info.isStatic) {}
 
     GameObject::GameObject(GameObject&& _obj) noexcept : Object(std::move(_obj)),
                                                          mParent(_obj.mParent),
                                                          mChildren(std::move(_obj.mChildren)),
                                                          mComponents(std::move(_obj.mComponents)),
                                                          mBehaviours(std::move(_obj.mBehaviours)),
-                                                         mActiveInHierarchy(_obj.mActiveInHierarchy),
-                                                         mActiveSelf(_obj.mActiveSelf),
-                                                         mIsStatic(_obj.mIsStatic),
+                                                         mTransform(_obj.mTransform),
                                                          mTag(std::move(_obj.mTag)),
                                                          mLayer(_obj.mLayer),
-                                                         mTransform(_obj.mTransform),
+                                                         mIsStatic(_obj.mIsStatic),
+                                                         mActiveSelf(_obj.mActiveSelf),
+                                                         mActiveInHierarchy(_obj.mActiveInHierarchy),
                                                          mScene(_obj.mScene) {
         for(auto child : mChildren)
             addChild(child);
 
         for(auto component : mComponents)
             component->setGameObject(this);
+
+        // todo: remove previous object from Scene and add the new one to Scene
 
         AddGameObject(this);
     }
@@ -55,12 +63,12 @@ namespace Mix {
         mChildren = std::move(_obj.mChildren);
         mComponents = std::move(_obj.mComponents);
         mBehaviours = std::move(_obj.mBehaviours);
-        mActiveInHierarchy = _obj.mActiveInHierarchy;
-        mActiveSelf = _obj.mActiveSelf;
-        mIsStatic = _obj.mIsStatic;
+        mTransform = _obj.mTransform;
         mTag = std::move(_obj.mTag);
         mLayer = _obj.mLayer;
-        mTransform = _obj.mTransform;
+        mIsStatic = _obj.mIsStatic;
+        mActiveSelf = _obj.mActiveSelf;
+        mActiveInHierarchy = _obj.mActiveInHierarchy;
         mScene = _obj.mScene;
 
         for(auto child : mChildren)
@@ -68,6 +76,8 @@ namespace Mix {
 
         for(auto component : mComponents)
             component->setGameObject(this);
+
+        // todo: remove previous object from Scene and add the new one to Scene
 
         return *this;
     }
@@ -81,6 +91,8 @@ namespace Mix {
 
         for(auto component : mComponents)
             delete component;
+
+        // todo: remove from Scene
 
         RemoveGameObject(this);
     }
@@ -146,8 +158,16 @@ namespace Mix {
         }
     }
 
+    void GameObject::addToScene(Scene* _scene) {
+        mScene = _scene;
+    }
+
+    void GameObject::removeFromScene(Scene* _scene) {
+        mScene = nullptr;
+    }
+
     GameObject* GameObject::Find(const std::string& _name) {
-        const auto it = std::find_if(sGameObjList.begin(), sGameObjList.end(), [&](const GameObject* _obj) -> bool { return _obj->mName == _name; });
+        const auto it = std::find_if(sGameObjList.begin(), sGameObjList.end(), [&name = _name](const GameObject* _obj) -> bool { return _obj->mName == name; });
         if(it == sGameObjList.end())
             return nullptr;
 
@@ -156,15 +176,21 @@ namespace Mix {
 
     std::vector<GameObject*> GameObject::FindGameObjectsWithTag(const Tag& _tag) {
         std::vector<GameObject*> results;
-        std::for_each(sGameObjList.begin(), sGameObjList.end(), [&](GameObject* _obj)mutable { if(_obj->mTag == _tag)results.push_back(_obj); });
+        std::for_each(sGameObjList.begin(),
+                      sGameObjList.end(),
+                      [&tag = _tag, &results = results](auto* _obj) mutable {
+                          if(_obj->mTag == tag)
+                              results.push_back(_obj);
+                      });
         return results;
     }
 
     GameObject* GameObject::FindGameObjectWithTag(const Tag& _tag) {
-        const auto it = std::find_if(sGameObjList.begin(), sGameObjList.end(), [&](const GameObject* _obj) -> bool { return _obj->mTag == _tag; });
+        const auto it = std::find_if(sGameObjList.begin(),
+                                     sGameObjList.end(),
+                                     [&tag = _tag](auto* _obj) { return _obj->mTag == tag; });
         if(it == sGameObjList.end())
             return nullptr;
-
         return *it;
     }
 

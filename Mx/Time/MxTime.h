@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #ifndef MX_TIME_H_
 #define MX_TIME_H_

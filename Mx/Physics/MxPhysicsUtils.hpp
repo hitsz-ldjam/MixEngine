@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #ifndef MX_PHYSICS_UTILS_HPP_
 #define MX_PHYSICS_UTILS_HPP_
@@ -8,22 +8,21 @@
 #include <bullet3/btBulletDynamicsCommon.h>
 
 namespace Mix::Physics {
-    // todo: debug. bullet uses right hand coordinate system!
-    inline void btTransformToMixTransform(const btTransform& _btTrans, Transform& _mxTrans) noexcept {
-        _mxTrans.setPosition({
+    inline void btTransToMixTrans(const btTransform& _btTrans, Mix::Transform& _mixTrans) noexcept {
+        _mixTrans.setPosition({
             -_btTrans.getOrigin().x(),
             _btTrans.getOrigin().y(),
             _btTrans.getOrigin().z()
-                             });
-        _mxTrans.setRotation({
+        });
+        _mixTrans.setRotation({
             -_btTrans.getRotation().w(),
             -_btTrans.getRotation().x(),
             _btTrans.getRotation().y(),
             _btTrans.getRotation().z()
-                             });
+        });
     }
 
-    inline btTransform mixTransformToBtTransform(const Transform& _mixTrans) noexcept {
+    inline btTransform mixTransToBtTrans(const Mix::Transform& _mixTrans) noexcept {
         return btTransform({
                                -_mixTrans.getRotation().x,
                                _mixTrans.getRotation().y,

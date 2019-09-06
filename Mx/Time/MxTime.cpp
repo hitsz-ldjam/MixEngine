@@ -1,4 +1,4 @@
-﻿#include "MxTime.h"
+#include "MxTime.h"
 #include <algorithm>
 #include <cmath>
 

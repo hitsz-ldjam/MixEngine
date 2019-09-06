@@ -1,4 +1,4 @@
-﻿#include "MxAudioSource.h"
+#include "MxAudioSource.h"
 
 #include "../../GameObject/MxGameObject.h"
 #include "../RigidBody/MxRigidBody.h"
@@ -6,10 +6,10 @@
 
 namespace Mix {
     MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(AudioSource, Behaviour)
-        MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(AudioSource)
+    MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(AudioSource)
 
-        void AudioSource::dopplerLevel(const float _dopplerLevel) {
-        if (mChannel) {
+    void AudioSource::dopplerLevel(const float _dopplerLevel) {
+        if(mChannel) {
             mChannel->set3DDopplerLevel(_dopplerLevel);
             mChannel->get3DDopplerLevel(&mDopplerLevel);
         }
@@ -20,20 +20,20 @@ namespace Mix {
 
     bool AudioSource::isPlaying() const {
         bool is = false;
-        if (mChannel)
+        if(mChannel)
             mChannel->isPlaying(&is);
         return is;
     }
 
     bool AudioSource::isVirtual() const {
         bool iv = true;
-        if (mChannel)
+        if(mChannel)
             mChannel->isVirtual(&iv);
         return iv;
     }
 
     void AudioSource::loop(const bool _loop) {
-        if (mChannel) {
+        if(mChannel) {
             mChannel->setMode(_loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF);
             FMOD_MODE mode;
             mChannel->getMode(&mode);
@@ -45,7 +45,7 @@ namespace Mix {
     }
 
     void AudioSource::mute(const bool _mute) {
-        if (mChannel) {
+        if(mChannel) {
             mChannel->setMute(_mute);
             mChannel->getMute(&mMute);
         }
@@ -55,7 +55,7 @@ namespace Mix {
     }
 
     void AudioSource::pan(const float _pan) {
-        if (mChannel) {
+        if(mChannel) {
             mChannel->setPan(_pan);
         }
         else {
@@ -64,7 +64,7 @@ namespace Mix {
     }
 
     void AudioSource::pitch(const float _pitch) {
-        if (mChannel) {
+        if(mChannel) {
             mChannel->setPitch(_pitch);
             mChannel->getPitch(&mPitch);
         }
@@ -74,7 +74,7 @@ namespace Mix {
     }
 
     void AudioSource::priority(const int _priority) {
-        if (mChannel) {
+        if(mChannel) {
             mChannel->setPriority(_priority);
             mChannel->getPriority(&mPriority);
         }
@@ -84,7 +84,7 @@ namespace Mix {
     }
 
     void AudioSource::volume(const float _volume) {
-        if (mChannel) {
+        if(mChannel) {
             mChannel->setVolume(_volume);
             mChannel->getVolume(&mVolume);
         }
@@ -94,7 +94,7 @@ namespace Mix {
     }
 
     void AudioSource::play() {
-        if (!mClip || mClip->loadState() != Audio::LoadState::LOADED)
+        if(!mClip || mClip->loadState() != Audio::LoadState::LOADED)
             return;
         stop();
         FMOD::System* core = nullptr;
@@ -104,21 +104,21 @@ namespace Mix {
     }
 
     void AudioSource::init() {
-        if (!mGameObject)
+        if(!mGameObject)
             throw IndependentComponentError(getTypeName());
 
         play();
-        if (!mPlayOnAwake)
+        if(!mPlayOnAwake)
             pause();
     }
 
     void AudioSource::fixedUpdate() {
-        if (!mChannel || !mUseFixedUpdate) return;
+        if(!mChannel || !mUseFixedUpdate) return;
 
-        if (const auto* rb = mGameObject->getComponent<RigidBody>()) {
+        if(const auto* rb = mGameObject->getComponent<RigidBody>()) {
             const auto& pos = rb->get().getCenterOfMassPosition();
             const auto& vel = rb->get().getLinearVelocity();
-            updatePosAndVel({ pos.x(), pos.y(), pos.z() }, { vel.x(), vel.y(), vel.z() });
+            updatePosAndVel({pos.x(), pos.y(), pos.z()}, {vel.x(), vel.y(), vel.z()});
         }
         else {
             auto pos = mGameObject->transform().getPosition();
@@ -128,7 +128,7 @@ namespace Mix {
     }
 
     void AudioSource::lateUpdate() {
-        if (!mChannel || mUseFixedUpdate) return;
+        if(!mChannel || mUseFixedUpdate) return;
 
         auto pos = mGameObject->transform().getPosition();
         auto vel = (pos - mLastPos) / Time::DeltaTime();
@@ -136,11 +136,11 @@ namespace Mix {
     }
 
     void AudioSource::initChannelParameters() {
-        if (!mChannel) return;
+        if(!mChannel) return;
 
         mLastPos = mGameObject->transform().getPosition();
         mUseFixedUpdate = mVelocityUpdateMode == Audio::VelocityUpdateMode::FIXED ||
-            mVelocityUpdateMode == Audio::VelocityUpdateMode::AUTO && mGameObject->getComponent<RigidBody>();
+                          mVelocityUpdateMode == Audio::VelocityUpdateMode::AUTO && mGameObject->getComponent<RigidBody>();
 
         dopplerLevel(mDopplerLevel);
         loop(mLoop);
@@ -152,9 +152,9 @@ namespace Mix {
     }
 
     void AudioSource::updatePosAndVel(const Math::Vector3f& _pos, const Math::Vector3f& _vel) {
-        auto glmVecToFmodVec = [](const Math::Vector3f& _vec) { return FMOD_VECTOR{ _vec.x, _vec.y, _vec.z }; };
+        auto glmVecToFmodVec = [](const Math::Vector3f& _vec) { return FMOD_VECTOR{_vec.x, _vec.y, _vec.z}; };
         auto fvPos = glmVecToFmodVec(_pos),
-            fvVel = glmVecToFmodVec(_vel);
+             fvVel = glmVecToFmodVec(_vel);
         mChannel->set3DAttributes(&fvPos, &fvVel);
         mLastPos = _pos;
     }

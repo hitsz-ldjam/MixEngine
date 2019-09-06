@@ -1,57 +1,61 @@
-﻿#pragma once
+#pragma once
 
 #ifndef MX_SCENE_H_
 #define MX_SCENE_H_
 
-#include <string>
 #include <set>
+#include <string>
+#include <functional>
 
 namespace Mix {
     class GameObject;
 
+    using Hierarchy = std::set<GameObject*>;
+
+    /** @brief The function should return only the root GameObjects. */
+    using HierarchyLoader = std::function<Hierarchy()>;
+
     class Scene final {
-        friend class SceneManagerFactory;
+        friend class SceneManager;
 
     public:
-        // todo: create through SceneMgr
-        explicit Scene(std::string _name, const size_t _buildIdx = 0);
+        static const std::string defaultMainSceneName;
+        static const HierarchyLoader defaultMainSceneOnLoad;
 
-        // todo: implement copy ctor
-        Scene(const Scene& _other) = delete;
+        Scene(const Scene&) = delete;
+        ~Scene() { unload(); }
+        const std::string& name() const noexcept { return mName; }
+        size_t buildIdx() const noexcept { return mBuildIdx; }
+        bool isLoaded() const noexcept { return mIsLoaded; }
+        // bool isDirty() const noexcept { return !(mInstantiateObjs.empty() && mDestroyObjs.empty()); }
 
-        ~Scene() = default;
+        auto getRootGameObjects() const noexcept { return Hierarchy(mRootObjs); }
+
+    private:
+        std::string mName;
+        HierarchyLoader mOnLoad;
+        size_t mBuildIdx;
+
+        bool mIsLoaded;
+        Hierarchy mRootObjs;
+        // todo: GameObject::Instantiate() & GameObject::Destroy()
+        // Hierarchy mInstantiateObjs, mDestroyObjs;
+
+        explicit Scene(std::string _name,
+                       HierarchyLoader _onLoad,
+                       const size_t _buildIdx) : mName(std::move(_name)),
+                                                 mOnLoad(std::move(_onLoad)),
+                                                 mBuildIdx(_buildIdx),
+                                                 mIsLoaded(false) {}
+
+        void load();
+        void unload();
 
         void awake();
         void init();
         void update();
         void fixedUpate();
         void lateUpate();
-
-        void addGameObject(GameObject* _obj) { if(_obj) mHierarchy.insert(_obj); }
-        void removeGameObject(GameObject* _obj) { mHierarchy.erase(_obj); }
-
-        std::string& name() noexcept { return mName; }
-        const std::string& name() const noexcept { return mName; }
-        size_t buildIndex() const noexcept { return mBuildIndex; }
-        bool isLoaded() const noexcept { return mIsLoaded; }
-
-        auto begin() noexcept { return mHierarchy.begin(); }
-        auto begin() const noexcept { return mHierarchy.begin(); }
-        auto end() noexcept { return mHierarchy.end(); }
-        auto end() const noexcept { return mHierarchy.end(); }
-
-        bool operator==(const Scene& _right) { return mHierarchy == _right.mHierarchy; }
-        bool operator!=(const Scene& _right) { return !operator==(_right); }
-
-    private:
-        std::string mName;
-        size_t mBuildIndex;
-        bool mIsLoaded;
-        std::set<GameObject*> mHierarchy;
-
-        // todo: further set ups
-        void load() noexcept { mIsLoaded = true; }
-        void unload() noexcept { mIsLoaded = false; }
     };
 }
 
