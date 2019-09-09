@@ -51,6 +51,8 @@ namespace Mix {
         void update();
         void fixedUpdate();
         void lateUpdate();
+
+        void loadModule();
         void render();
         void postRender();
     };

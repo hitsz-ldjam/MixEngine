@@ -1,9 +1,19 @@
 #include "MxScene.h"
 #include "../GameObject/MxGameObject.h"
+#include "../BuildIn/Camera/MxCamera.h"
 
 namespace Mix {
     const std::string Scene::defaultMainSceneName = "MainScene";
     const HierarchyLoader Scene::defaultMainSceneOnLoad = []() { return Hierarchy(); };
+
+    GameObject* Scene::findGameObject(const std::string& _name) const {
+        return findGameObjectIf([&name = _name](GameObject* _obj) { return _obj->getName() == name; });
+    }
+
+    Camera* Scene::mainCamera() const {
+        auto obj = findGameObjectIf([](GameObject* _obj) { return _obj->getComponent<Camera>(); });
+        return obj ? obj->getComponent<Camera>() : nullptr;
+    }
 
     void Scene::load() {
         if(mIsLoaded)

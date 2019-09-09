@@ -6,9 +6,11 @@
 #include <set>
 #include <string>
 #include <functional>
+#include <queue>
 
 namespace Mix {
     class GameObject;
+    class Camera;
 
     using Hierarchy = std::set<GameObject*>;
 
@@ -27,9 +29,20 @@ namespace Mix {
         const std::string& name() const noexcept { return mName; }
         size_t buildIdx() const noexcept { return mBuildIdx; }
         bool isLoaded() const noexcept { return mIsLoaded; }
+
         // bool isDirty() const noexcept { return !(mInstantiateObjs.empty() && mDestroyObjs.empty()); }
 
         auto getRootGameObjects() const noexcept { return Hierarchy(mRootObjs); }
+
+        /** @note Using BFS. */
+        template<typename _Pr>
+        GameObject* findGameObjectIf(_Pr _pred) const;
+
+        /** @note Calls Scene::findGameObjectIf() */
+        GameObject* findGameObject(const std::string& _name) const;
+
+        /** @note This function is slow. Consider storing the Camera. */
+        Camera* mainCamera() const;
 
     private:
         std::string mName;
@@ -38,6 +51,7 @@ namespace Mix {
 
         bool mIsLoaded;
         Hierarchy mRootObjs;
+
         // todo: GameObject::Instantiate() & GameObject::Destroy()
         // Hierarchy mInstantiateObjs, mDestroyObjs;
 
@@ -57,6 +71,24 @@ namespace Mix {
         void fixedUpate();
         void lateUpate();
     };
+
+    template<typename _Pr>
+    GameObject* Scene::findGameObjectIf(_Pr _pred) const {
+        static_assert(std::is_convertible_v<std::invoke_result_t<_Pr, GameObject*>, bool>, "Invalid typename _Pr");
+        std::queue<GameObject*> queue;
+        for(auto obj : mRootObjs)
+            queue.push(obj);
+        while(!queue.empty()) {
+            auto obj = queue.front();
+            queue.pop();
+            if(_pred(obj))
+                return obj;
+            auto children = obj->getAllChildren();
+            for(auto child : children)
+                queue.push(child);
+        }
+        return nullptr;
+    }
 }
 
 #endif

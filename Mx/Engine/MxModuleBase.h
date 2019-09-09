@@ -6,14 +6,14 @@
 #include "../Utils/MxGeneralBase.hpp"
 
 namespace Mix {
-	class ModuleBase : GeneralBase::NoCopyBase {
-	public:
-		virtual void awake() = 0 {};
+    class ModuleBase : GeneralBase::NoCopyBase {
+    public:
+        virtual void awake() = 0 {};
 
-		virtual void init() = 0 {};
+        virtual void init() = 0 {};
 
-		virtual ~ModuleBase() = default;
-	};
+        virtual ~ModuleBase() = default;
+    };
 }
 
 #endif

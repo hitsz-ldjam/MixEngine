@@ -13,7 +13,7 @@ namespace Mix {
     using LayerIndex = uint32_t;
     using Tag = std::string;
 
-    // Not recommended
+    // deprecated
     struct GameObjectConInfo {
         std::string name;
         Tag tag;
@@ -44,6 +44,7 @@ namespace Mix {
                             const LayerIndex _layerIndex = 0,
                             const bool _isStatic = false);
 
+        // deprecated
         GameObject(const GameObjectConInfo& _info);
 
         GameObject(const GameObject& _obj) = delete;
@@ -199,10 +200,8 @@ namespace Mix {
                 c->lateUpdate();
         }
 
-        // todo: further setups
-
+        // todo: further Scene setups
         void addToScene(Scene* _scene);
-
         void removeFromScene(Scene* _scene);
 
         // ----- static variables and functions -----

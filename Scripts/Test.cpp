@@ -6,9 +6,10 @@
 #include "../Mx/Graphics/MxMaterial.h"
 #include "../Mx/GUI/MxUi.h"
 #include "../Mx/Time/MxTime.h"
+#include "../Mx/Input/MxInput.h"
+#include "../Mx/Physics/MxPhysicsWorld.h"
 #include "../MixEngine.h"
 #include <iostream>
-#include "../Mx/Input/MxInput.h"
 
 
 namespace Scripts {
@@ -21,6 +22,9 @@ namespace Scripts {
 	void TestScript::update() {
 		if (Input::Get()->isButtonDown(ButtonCode::U))
 			mUseCamepad = !mUseCamepad;
+
+        if(!mUseCamepad && Input::Get()->isButtonDown(ButtonCode::Z))
+            Physics::World::Get()->theWorld();
 	}
 
 	void TestScript::fixedUpdate() {
@@ -134,10 +138,10 @@ namespace Scripts {
 			dir += Vector2f::Left;
 		}
 		if (Input::Get()->isButtonHold(ButtonCode::Space)) {
-			h += 1.0f;
+			h += .4f;
 		}
 		if (Input::Get()->isButtonHold(ButtonCode::LCtrl)) {
-			h -= 1.0f;
+			h -= .4f;
 		}
 		if (Input::Get()->isButtonDown(ButtonCode::Escape)) {
 			mShutDownEvent.trigger();

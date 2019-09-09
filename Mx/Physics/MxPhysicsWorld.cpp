@@ -3,14 +3,30 @@
 #include "../Component/RigidBody/MxRigidBody.h"
 #include "../../MixEngine.h"
 
+#ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
+#include "MxPhysicsDebugDraw.h"
+#endif
+
 namespace Mix::Physics {
-    World::World() : mConfig(nullptr),
-                     mDispatcher(nullptr),
-                     mBroadphase(nullptr),
-                     mSolver(nullptr),
-                     mWorld(nullptr) {}
+    World::World() :
+#ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
+        mDebugDraw(nullptr),
+#endif
+        mConfig(nullptr),
+        mDispatcher(nullptr),
+        mBroadphase(nullptr),
+        mSolver(nullptr),
+        mWorld(nullptr),
+        mIsPaused(false) {}
 
     World::~World() {
+#ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
+        if(auto debugDraw = mWorld->getDebugDrawer()) {
+            mWorld->setDebugDrawer(nullptr);
+            if(debugDraw == mDebugDraw)
+                delete mDebugDraw;
+        }
+#endif
         delete mWorld;
         delete mSolver;
         delete mBroadphase;
@@ -25,31 +41,51 @@ namespace Mix::Physics {
             mBroadphase = new btDbvtBroadphase;
             mSolver = new btSequentialImpulseConstraintSolver;
             mWorld = new btDiscreteDynamicsWorld(mDispatcher, mBroadphase, mSolver, mConfig);
+
+            // "Scientific Correctness"
+            mWorld->setGravity(btVector3(0, -9.8f, 0));
+
+#ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
+            mDebugDraw = new DebugDraw;
+            mDebugDraw->awake();
+            mDebugDraw->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+            mWorld->setDebugDrawer(mDebugDraw);
+#endif
+
         }
-        catch(const std::exception&) {
+        catch(const std::exception& e) {
+            std::cerr << e.what() << std::endl;
             throw ThirdPartyLibInitError("Bullet");
         }
-
-        // "Scientific Correctness"
-        mWorld->setGravity(btVector3(0, -9.8f, 0));
     }
 
     void World::step(const btScalar _fixedDeltaTime) {
-        mWorld->stepSimulation(_fixedDeltaTime, 0, btScalar(0) /* if 2nd param is 0, 3rd param is not used */);
-        processCollisions();
-    }
-
-    void World::sync(const btScalar _fixedDeltaTime, const btScalar _smoothing) {
-        for(auto i = mWorld->getNumCollisionObjects() - 1; i >= 0; --i) {
-            auto colObj = mWorld->getCollisionObjectArray()[i];
-            auto rb = btRigidBody::upcast(colObj);
-            if(rb) {
-                // PLEASE use Physics::MotionState PLEASE
-                auto motionState = static_cast<MotionState*>(rb->getMotionState());
-                motionState->calculateInterpolatedTransform(_fixedDeltaTime, _smoothing);
-            }
+        if(!mIsPaused) {
+            mWorld->stepSimulation(_fixedDeltaTime, 0, btScalar(0) /* if 2nd param is 0, 3rd param is not used */);
+            processCollisions();
         }
     }
+
+    void World::sync(const btScalar _fixedDeltaTime, const btScalar _smoothing) const {
+        if(!mIsPaused)
+            for(auto i = mWorld->getNumCollisionObjects() - 1; i >= 0; --i) {
+                auto colObj = mWorld->getCollisionObjectArray()[i];
+                auto rb = btRigidBody::upcast(colObj);
+                if(rb) {
+                    // PLEASE use Physics::MotionState PLEASE
+                    auto motionState = static_cast<MotionState*>(rb->getMotionState());
+                    motionState->calculateInterpolatedTransform(_fixedDeltaTime, _smoothing);
+                }
+            }
+    }
+
+#ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
+    void World::pushDrawData() const { if(mWorld->getDebugDrawer()) mWorld->debugDrawWorld(); }
+
+    void World::render() const { mDebugDraw->render(); }
+#endif
+
+    World* World::Get() { return MixEngine::Instance().getModule<World>(); }
 
     void World::processCollisions() {
         CollisionSet currSet;

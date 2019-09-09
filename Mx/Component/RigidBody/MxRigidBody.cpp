@@ -75,6 +75,8 @@ namespace Mix {
     }
 
     RigidBody::~RigidBody() {
+        mEnterSignal.disconnect_all_slots();
+        mExitSignal.disconnect_all_slots();
         if(mRigidBody) {
             if(mWorld)
                 mWorld->removeRigidBody(mRigidBody);

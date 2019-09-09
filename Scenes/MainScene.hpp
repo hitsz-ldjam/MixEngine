@@ -35,7 +35,8 @@ namespace ScenesDebug {
         {
             auto model = ResourceLoader::Get()->load<Model>("TestResources/SpaceShooter/Models/player_ship.gltf");
             auto gameObject = model->genDefaultScene(GameObjectConInfo("PlayerShip"));
-            gameObject->transform().translate(-2.0f, 0.0f, 0.0f, Space::World);
+            //gameObject->transform().translate(-5.0f, 0.0f, 0.0f, Space::World);
+            gameObject->transform().rotate(-3.14159 / 2, 0, 0);
 
             auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("TestResources/SpaceShooter/Textures/player_ship_dif.png", &param);
             auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
@@ -43,6 +44,38 @@ namespace ScenesDebug {
 
             auto renderer = gameObject->addComponent<Renderer>();
             renderer->setMaterial(material);
+
+            {
+                auto collider = ResourceLoader::Get()
+                    ->load<Model>("TestResources/SpaceShooter/Models/playerShip_collider.gltf");
+
+                auto vertices = collider->getMeshes()[0]->getPositions();
+
+                auto shape = new btConvexHullShape;
+                for(auto& v : vertices)
+                    shape->addPoint({v.x / 10, v.y / 10, v.z / 10}, false);
+                shape->recalcLocalAabb();
+
+                auto proxy = new btCompoundShape;
+                btTransform trans(btTransform::getIdentity());
+                trans.setRotation({0, -3.14159, 0});
+                proxy->addChildShape(trans, shape);
+
+                auto rb = gameObject->addComponent<RigidBody>(5.f,
+                                                              gameObject->transform(),
+                                                              proxy);
+                //rb->setTrigger(true);
+                rb->get().setFriction(.0f);
+                rb->get().setRestitution(1.f);
+                rb->get().setSleepingThresholds(.005f, .02f);
+                rb->get().setLinearFactor({0, 1, 0});
+                rb->registerExitSlot([rb = rb](RigidBody* _other) {
+                    if(_other->getGameObject()->getName() == "The floor")
+                        if(rb->get().getLinearVelocity().y() < 12.522)
+                            rb->get().setLinearVelocity({0, 12.522, 0});
+                });
+            }
+
             hierarchy.insert(gameObject);
         }
 
@@ -50,7 +83,7 @@ namespace ScenesDebug {
         {
             auto model = ResourceLoader::Get()->load<Model>("TestResources/SpaceShooter/Models/enemy_ship.gltf");
             auto gameObject = model->genDefaultScene(GameObjectConInfo("EnemyShip"));
-            gameObject->transform().translate(2.0f, 0.0f, 0.0f, Space::World);
+            gameObject->transform().translate(0.0f, 15.0f, 0.0f, Space::World);
 
             auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("TestResources/SpaceShooter/Textures/enemy_ship_diff.png", &param);
             auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
@@ -58,29 +91,14 @@ namespace ScenesDebug {
 
             auto renderer = gameObject->addComponent<Renderer>();
             renderer->setMaterial(material);
-            hierarchy.insert(gameObject);
-        }
 
-        {
-            auto model = ResourceLoader::Get()->load<Model>("TestResources/Model/BoomBox/glTF/BoomBox.gltf");
-            auto gameObject = model->genDefaultScene(GameObjectConInfo("TestBoomBox"));
-            gameObject->transform().setLocalScale(Math::Vector3f(50.0f));
-
-            auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("TestResources/Model/BoomBox/glTF/BoomBox_baseColor.png", &param);
-            auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
-            material->setTexture("diffuseTex", diffuseTex);
-
-            auto renderer = gameObject->addComponent<Renderer>();
-            renderer->setMaterial(material);
-
-            Physics::RigidBodyConstructionInfo info(10.0f, Physics::mixTransToBtTrans(gameObject->transform()), new btSphereShape(1));
-            info.furtherSetup = [](btRigidBody::btRigidBodyConstructionInfo& _i) {
-                _i.m_friction = .0f;
-                _i.m_restitution = 1.f;
-                _i.m_linearSleepingThreshold = .005f;
-                _i.m_angularSleepingThreshold = .02f;
-            };
-            gameObject->addComponent<RigidBody>(info);
+            auto sphere = gameObject->addComponent<RigidBody>(2.f,
+                                                              gameObject->transform(),
+                                                              new btSphereShape(1));
+            sphere->get().setFriction(.0f);
+            sphere->get().setRestitution(1.f);
+            sphere->get().setSleepingThresholds(.005f, .02f);
+            sphere->get().setLinearFactor({0, 1, 0});
 
             hierarchy.insert(gameObject);
         }
@@ -97,17 +115,13 @@ namespace ScenesDebug {
             hierarchy.insert(gameObject);
         }
 
-        /*auto model1 = ResourceLoader::Get()->load<Model>("TestResources/Model/BoomBoxWithAxes/glTF/BoomBoxWithAxes.gltf");
-        auto object1 = model1->generateGameObject({ "Model1" });
-
-        object1->transform().translate(3.0f, 0.0f, 0.0f, Space::WORLD);
-        object1->transform().setLocalScale(Math::Vector3f(50.0f, 50.0f, 50.0f));*/
-
-        auto camera = new GameObject("Camera");
-        camera->transform().setPosition(Math::Vector3f(0.0f, 0.0f, -5.0f));
-        camera->addComponent<Camera>(Window::Get()->extent());
-        camera->addComponent<Scripts::TestScript>();
-        hierarchy.insert(camera);
+        {
+            auto camera = new GameObject("Camera");
+            camera->transform().setPosition(Math::Vector3f(0.0f, 0.0f, -5.0f));
+            camera->addComponent<Camera>(Window::Get()->extent());
+            camera->addComponent<Scripts::TestScript>();
+            hierarchy.insert(camera);
+        }
 
         return hierarchy;
     };

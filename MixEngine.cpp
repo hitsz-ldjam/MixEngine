@@ -8,7 +8,7 @@
 #include "Mx/GUI/MxUi.h"
 #include "Mx/Resource/MxResourceLoader.h"
 #include "Mx/Graphics/MxGraphics.h"
-#include "Mx/Scene/MxSceneManager.hpp"
+#include "Mx/Scene/MxSceneManager.h"
 #include "Mx/Engine/MxPlantform.h"
 
 namespace Mix {
@@ -25,6 +25,7 @@ namespace Mix {
 
     int MixEngine::exec() {
         try {
+            loadModule();
             awake();
             init();
             while(!mQuit) {
@@ -43,20 +44,11 @@ namespace Mix {
     }
 
     void MixEngine::awake() {
-        Time::Awake();
-        mModuleHolder.add<Window>("Mix Engine Demo", Math::Vector2i{1024, 760}, WindowFlag::VULKAN | WindowFlag::SHOWN);
-        mModuleHolder.add<Input>()->awake();
-        mModuleHolder.add<Audio::Core>()->awake();
-        mModuleHolder.add<Physics::World>()->awake();
-        mModuleHolder.add<Graphics>()->awake();
-        mModuleHolder.add<ResourceLoader>()->awake();
-        mModuleHolder.add<SceneManager>()->awake(); // might be buggy
+        mModuleHolder.get<SceneManager>()->awake();
     }
 
     void MixEngine::init() {
-        auto modules = mModuleHolder.getAllOrdered();
-        for(auto m : modules)
-            m->init();
+        mModuleHolder.get<SceneManager>()->init();
     }
 
     void MixEngine::update() {
@@ -84,6 +76,10 @@ namespace Mix {
         mModuleHolder.get<Physics::World>()->step(Time::FixedDeltaTime());
 
         mModuleHolder.get<SceneManager>()->fixedUpate();
+
+#ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
+        mModuleHolder.get<Physics::World>()->pushDrawData();
+#endif
     }
 
     void MixEngine::lateUpdate() {
@@ -92,7 +88,27 @@ namespace Mix {
         mModuleHolder.get<Audio::Core>()->update();
     }
 
+    void MixEngine::loadModule() {
+        Time::Awake();
+        mModuleHolder.add<Window>("Mix Engine Demo", Math::Vector2i{1024, 760}, WindowFlag::VULKAN | WindowFlag::SHOWN);
+        mModuleHolder.add<Input>()->awake();
+        mModuleHolder.add<Audio::Core>()->awake();
+        mModuleHolder.add<Physics::World>()->awake();
+        mModuleHolder.add<Graphics>()->awake();
+        mModuleHolder.add<ResourceLoader>()->awake();
+
+        auto modules = mModuleHolder.getAllOrdered();
+        for(auto m : modules)
+            m->init();
+
+        mModuleHolder.add<SceneManager>();
+    }
+
     void MixEngine::render() {
+#ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
+        mModuleHolder.get<Physics::World>()->render();
+#endif
+
         mModuleHolder.get<Graphics>()->update();
         mModuleHolder.get<Graphics>()->render();
     }

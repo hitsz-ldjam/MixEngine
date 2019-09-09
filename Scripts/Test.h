@@ -29,10 +29,10 @@ namespace Scripts {
 		Vector2f mSmoothMove;
 		float mSmoothHeight = 0.0f;
 
-		float mMouseSpeed = 10.0f;
+		float mMouseSpeed = 8.0f;
 		float mStickSpeed = 50.0f;
 
-		float mMaxMoveSpeed = 10.0f;
+		float mMaxMoveSpeed = 15.0f;
 
 		bool mUseCamepad = false;
 
