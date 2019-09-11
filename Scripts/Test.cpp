@@ -8,6 +8,7 @@
 #include "../Mx/Time/MxTime.h"
 #include "../Mx/Input/MxInput.h"
 #include "../Mx/Physics/MxPhysicsWorld.h"
+#include "../Mx/Component/RigidBody/MxRigidBody.h"
 #include "../MixEngine.h"
 #include <iostream>
 
@@ -33,6 +34,11 @@ namespace Scripts {
 		else
 			useKeyboard();
 		updateTargetLock();
+
+        if(auto hit = Physics::World::Get()->raycast({.0f, 15.0f, .0f}, {.0f, -1.f, .0f}, 15)) {
+            auto& name = hit.rigidbody->getGameObject()->getName();
+            std::cout << "hit on: " << name << ' ' << hit.point << std::endl;
+        }
 	}
 
 	void TestScript::lookAtTarget(const Vector3f& _target) {

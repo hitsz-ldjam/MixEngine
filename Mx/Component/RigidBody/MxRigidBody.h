@@ -35,7 +35,8 @@ namespace Mix {
         RigidBody(const Physics::RigidBodyConstructionInfo& _info);
         /**
          *  @param _group Filter group.
-         *  @param _mask Filter mask. Indicates which groups this object should collide with. Note that there are built-in groups.
+         *  @param _mask Filter mask. Indicates which groups this object should collide with.
+         *  @note Filters should not conflict with built in groups. See btBroadphaseProxy::CollisionFilterGroups
          */
         RigidBody(const Physics::RigidBodyConstructionInfo& _info, const int _group, const int _mask);
         RigidBody(const RigidBody&) = delete;

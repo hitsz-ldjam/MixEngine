@@ -14,7 +14,6 @@
 #include "../Mx/Component/RigidBody/MxRigidBody.h"
 #include "../Mx/Component/Renderer/MxRenderer.h"
 #include "../Mx/BuildIn/Camera/MxCamera.h"
-#include "../MixEngine.h"
 #include "../Scripts/Test.h"
 
 // todo
@@ -52,8 +51,10 @@ namespace ScenesDebug {
                 auto vertices = collider->getMeshes()[0]->getPositions();
 
                 auto shape = new btConvexHullShape;
-                for(auto& v : vertices)
-                    shape->addPoint({v.x / 10, v.y / 10, v.z / 10}, false);
+                for(auto& v : vertices) {
+                    float scale = 50.f;
+                    shape->addPoint({v.x / scale, v.y / scale, v.z / scale}, false);
+                }
                 shape->recalcLocalAabb();
 
                 auto proxy = new btCompoundShape;
@@ -105,12 +106,11 @@ namespace ScenesDebug {
 
         {
             auto gameObject = new GameObject("The floor");
-            gameObject->transform().translate(0.0f, -8.0f, 0.0f);
+            gameObject->transform().translate(0.0f, -10.0f, 0.0f);
 
             auto box = gameObject->addComponent<RigidBody>(.0f, gameObject->transform(), new btBoxShape({10.0f, 1.0f, 10.0f}));
             box->get().setFriction(.0f);
             box->get().setRestitution(1.f);
-            box->get().setSleepingThresholds(.005f, .02f);
 
             hierarchy.insert(gameObject);
         }
@@ -121,6 +121,17 @@ namespace ScenesDebug {
             camera->addComponent<Camera>(Window::Get()->extent());
             camera->addComponent<Scripts::TestScript>();
             hierarchy.insert(camera);
+        }
+
+        {
+            auto trigger = new GameObject("Quad");
+
+            auto box = trigger->addComponent<RigidBody>(.0f,
+                                                        trigger->transform(),
+                                                        new btBoxShape({5.0f, .02f, 5.0f}));
+            box->setTrigger(true);
+
+            hierarchy.insert(trigger);
         }
 
         return hierarchy;
