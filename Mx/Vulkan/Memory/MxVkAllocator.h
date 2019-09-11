@@ -6,119 +6,122 @@
 #include "../../Math/MxMath.h"
 
 namespace Mix {
-	namespace Vulkan {
-		struct MemoryBlock {
-			vk::DeviceMemory memory = nullptr;
-			vk::DeviceSize offset = 0;
-			vk::DeviceSize size = 0;
+    namespace Vulkan {
+        struct MemoryBlock {
+            vk::DeviceMemory memory = nullptr;
+            vk::DeviceSize offset = 0;
+            vk::DeviceSize size = 0;
 
-			bool free = false;
-			void* ptr = nullptr;
+            bool free = false;
+            void* ptr = nullptr;
 
-			bool operator==(const MemoryBlock& _block) const {
-				return (memory == _block.memory &&
-						offset == _block.offset &&
-						size == _block.size &&
-						free == _block.free &&
-						ptr == _block.ptr);
-			}
-		};
+            bool operator==(const MemoryBlock& _block) const {
+                return (memory == _block.memory &&
+                        offset == _block.offset &&
+                        size == _block.size &&
+                        free == _block.free &&
+                        ptr == _block.ptr);
+            }
 
-		class Chunk :public GeneralBase::NoCopyBase {
-		public:
-			Chunk(const std::shared_ptr<Device>& _device,
-				  const vk::DeviceSize& _size,
-				  uint32_t _memoryTypeIndex);
+        private:
+            friend class Chunk;
+        };
 
-			Chunk(Chunk&& _chunk) noexcept;
+        class Chunk :public GeneralBase::NoCopyBase {
+        public:
+            Chunk(const std::shared_ptr<Device>& _device,
+                  const vk::DeviceSize& _size,
+                  uint32_t _memoryTypeIndex);
 
-			Chunk& operator=(Chunk&& _chunk) noexcept;
+            Chunk(Chunk&& _chunk) noexcept;
 
-			~Chunk();
+            Chunk& operator=(Chunk&& _chunk) noexcept;
 
-			bool allocate(const vk::DeviceSize& _size, const vk::DeviceSize& _alignment, MemoryBlock& _block);
+            ~Chunk();
 
-			bool isIn(const MemoryBlock& _block) const {
-				return mMem == _block.memory;
-			}
-			void deallocate(const MemoryBlock& _block);
+            bool allocate(const vk::DeviceSize& _size, const vk::DeviceSize& _alignment, MemoryBlock& _block);
 
-			uint32_t memoryTypeIndex() const {
-				return mMemTypeIndex;
-			}
+            bool isIn(const MemoryBlock& _block) const {
+                return mMem == _block.memory;
+            }
+            void deallocate(const MemoryBlock& _block);
 
-		private:
-			std::shared_ptr<Device> mDevice;
-			vk::DeviceMemory mMem = nullptr;
-			vk::DeviceSize mSize;
+            uint32_t memoryTypeIndex() const {
+                return mMemTypeIndex;
+            }
 
-			uint32_t mMemTypeIndex;
-			std::vector<MemoryBlock> mBlocks;
-			void* mPtr = nullptr;
+        private:
+            std::shared_ptr<Device> mDevice;
+            vk::DeviceMemory mMem = nullptr;
+            vk::DeviceSize mSize;
 
-		};
+            uint32_t mMemTypeIndex;
+            std::vector<MemoryBlock> mBlocks;
+            void* mPtr = nullptr;
 
-		class ChunkFactory {
-			static const vk::DeviceSize MinChunkSize = 8 * 1024 * 1024;
-		public:
-			ChunkFactory() = default;
+        };
 
-			explicit ChunkFactory(const std::shared_ptr<Device>& _device) :mDevice(_device) {}
+        class ChunkFactory {
+            static const vk::DeviceSize MinChunkSize = 8 * 1024 * 1024;
+        public:
+            ChunkFactory() = default;
 
-			void setMinChunkSize(const vk::DeviceSize _size) {
-				assert(Math::IsPowerOf2(_size));
-				mMinChunkSize = _size;
-			}
+            explicit ChunkFactory(const std::shared_ptr<Device>& _device) :mDevice(_device) {}
 
-			std::unique_ptr<Chunk> getChunk(vk::DeviceSize _size, uint32_t _memTypeIndex);
+            void setMinChunkSize(const vk::DeviceSize _size) {
+                assert(Math::IsPowerOf2(_size));
+                mMinChunkSize = _size;
+            }
 
-		private:
-			std::shared_ptr<Device> mDevice;
-			vk::DeviceSize mMinChunkSize = MinChunkSize;
-		};
+            std::unique_ptr<Chunk> getChunk(vk::DeviceSize _size, uint32_t _memTypeIndex);
 
-		class AbstractAllocator : public GeneralBase::NoCopyBase {
-		public:
-			virtual MemoryBlock allocate(const vk::DeviceSize& _size, const vk::DeviceSize& _alignment, uint32_t _memoryTypeIndex) = 0;
-			virtual void deallocate(MemoryBlock &_block) = 0;
+        private:
+            std::shared_ptr<Device> mDevice;
+            vk::DeviceSize mMinChunkSize = MinChunkSize;
+        };
 
-			virtual ~AbstractAllocator() = default;
-		};
+        class AbstractAllocator : public GeneralBase::NoCopyBase {
+        public:
+            virtual MemoryBlock allocate(const vk::DeviceSize& _size, const vk::DeviceSize& _alignment, uint32_t _memoryTypeIndex) = 0;
+            virtual void deallocate(MemoryBlock &_block) = 0;
 
-		class DeviceAllocator :public AbstractAllocator {
-		public:
-			explicit DeviceAllocator(const std::shared_ptr<Device>& _device)
-				: mDevice(_device), mChunkFactory(_device) {
-			}
+            virtual ~AbstractAllocator() = default;
+        };
 
-			DeviceAllocator(DeviceAllocator&& _other) noexcept { swap(_other); }
+        class DeviceAllocator :public AbstractAllocator {
+        public:
+            explicit DeviceAllocator(const std::shared_ptr<Device>& _device)
+                : mDevice(_device), mChunkFactory(_device) {
+            }
 
-			DeviceAllocator& operator=(DeviceAllocator&& _other) noexcept { swap(_other); return *this; }
+            DeviceAllocator(DeviceAllocator&& _other) noexcept { swap(_other); }
 
-			void swap(DeviceAllocator& _other) noexcept;
+            DeviceAllocator& operator=(DeviceAllocator&& _other) noexcept { swap(_other); return *this; }
 
-			std::shared_ptr<Device> getDevice() const { return mDevice; }
+            void swap(DeviceAllocator& _other) noexcept;
 
-			MemoryBlock allocate(const vk::DeviceSize& _size,
-								 const vk::DeviceSize& _alignment,
-								 uint32_t _memoryTypeIndex) override;
+            std::shared_ptr<Device> getDevice() const { return mDevice; }
 
-			MemoryBlock allocate(const vk::Image& _image,
-								 const vk::MemoryPropertyFlags & _properties,
-								 vk::MemoryRequirements* _memReq = nullptr);
+            MemoryBlock allocate(const vk::DeviceSize& _size,
+                                 const vk::DeviceSize& _alignment,
+                                 uint32_t _memoryTypeIndex) override;
 
-			MemoryBlock allocate(const vk::Buffer& _buffer,
-								 const vk::MemoryPropertyFlags& _properties,
-								 vk::MemoryRequirements* _memReq = nullptr);
+            MemoryBlock allocate(const vk::Image& _image,
+                                 const vk::MemoryPropertyFlags & _properties,
+                                 vk::MemoryRequirements* _memReq = nullptr);
 
-			void deallocate(MemoryBlock& _block) override;
+            MemoryBlock allocate(const vk::Buffer& _buffer,
+                                 const vk::MemoryPropertyFlags& _properties,
+                                 vk::MemoryRequirements* _memReq = nullptr);
 
-		private:
-			std::shared_ptr<Device> mDevice;
-			ChunkFactory mChunkFactory;
-			std::vector<std::unique_ptr<Chunk>> mChunks;
-		};
-	}
+            void deallocate(MemoryBlock& _block) override;
+
+        private:
+            std::shared_ptr<Device> mDevice;
+            ChunkFactory mChunkFactory;
+            std::vector<std::unique_ptr<Chunk>> mChunks;
+        };
+    }
 }
 
 #endif // !MX_VK_ALLOCATOR_H_
