@@ -66,7 +66,7 @@ namespace Mix {
 		return mAxisState[MX_AC_GAMEPAD_INDEX(_axis)];
 	}
 
-	Math::Vector2f Gamepad::getAxis(AxisCode _x, AxisCode _y) const {
+	Vector2f Gamepad::getAxis(AxisCode _x, AxisCode _y) const {
 		return {
 			mAxisState[MX_AC_GAMEPAD_INDEX(_x)],
 			mAxisState[MX_AC_GAMEPAD_INDEX(_y)]

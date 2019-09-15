@@ -3,7 +3,6 @@
 #define MX_PLANTFORM_H_
 
 #include "../Utils/MxGeneralBase.hpp"
-#include "../Math/MxVector.h"
 #include "../Utils/MxEvent.h"
 #include "../Input/MxKeyCode.h"
 
@@ -55,8 +54,8 @@ namespace Mix {
 	};
 
 	struct PFMouseMoveEventData {
-		Math::Vector2i pos;
-		Math::Vector2i relativePos;
+		Vector2i pos;
+		Vector2i relativePos;
 		uint8_t state = 0; /**< Test with PFMpuseButton */
 	};
 
@@ -64,11 +63,11 @@ namespace Mix {
 		uint8_t state = 0; /**< Test with PFButtonState */
 		uint8_t clicks = 0;
 		ButtonCode button; /**< Test with PFMouseButton, only one bit will be set */
-		Math::Vector2i pos;
+		Vector2i pos;
 	};
 
 	struct PFMouseWheelEventData {
-		Math::Vector2i xy;
+		Vector2i xy;
 	};
 
 	struct PFKeyboardEventData {
@@ -94,7 +93,7 @@ namespace Mix {
 		int32_t which = 0;
 	};
 
-	class Plantform :public GeneralBase::StaticBase {
+	class Platform :public GeneralBase::StaticBase {
 	public:
 		static bool Initialize();
 
@@ -102,7 +101,7 @@ namespace Mix {
 
 		static const std::string& GetPlantformName();
 
-		static void SetCursorPositionGlobal(const Math::Vector2i& _screenPos);
+		static void SetCursorPositionGlobal(const Vector2i& _screenPos);
 
 		static void HideCursor();
 
@@ -122,6 +121,14 @@ namespace Mix {
 
 		static void Update();
 
+        static void PushQuitEvent();
+
+        /**
+         * \brief Make the current thread sleep for specified amount of time.
+         * \param _duration Duration in milliseconds.
+         */
+        static void Sleep(uint32_t _duration);
+
 		// Events
 		static Event<void(const PFMouseMoveEventData&)> MouseMoveEvent;
 
@@ -137,7 +144,7 @@ namespace Mix {
 
 		static Event<void(const PFGamepadDeviceEventData&)> GamepadDeviceEvent;
 
-		static Event<void()> RequireQuitEvent;
+		static Event<void()> QuitEvent;
 	private:
 		static void PollEvent();
 

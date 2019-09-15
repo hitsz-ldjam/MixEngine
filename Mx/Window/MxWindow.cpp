@@ -10,7 +10,7 @@ namespace Mix {
 		return MixEngine::Instance().getModule<Window>();
 	}
 
-	Window::Window(const std::string& _title, const Math::Vector2i& _size, Flags<WindowFlag> _windowFlag) {
+	Window::Window(const std::string& _title, const Vector2i& _size, Flags<WindowFlag> _windowFlag) {
 		if (SDL_Init(SDL_INIT_VIDEO))
 			throw ThirdPartyLibInitError("SDL2");
 
@@ -58,15 +58,15 @@ namespace Mix {
 		stbi_image_free(data);
 	}
 
-	Math::Vector2i Window::drawableSize() const {
-		Math::Vector2i size;
+	Vector2i Window::getDrawableSize() const {
+		Vector2i size;
 		if (mWindow)
 			SDL_Vulkan_GetDrawableSize(mWindow, &size.x, &size.y);
 		return size;
 	}
 
-	Math::Vector2i Window::extent() const {
-		Math::Vector2i size;
+	Vector2i Window::getExtent() const {
+		Vector2i size;
 		if (mWindow)
 			SDL_GetWindowSize(mWindow, &size.x, &size.y);
 		return size;

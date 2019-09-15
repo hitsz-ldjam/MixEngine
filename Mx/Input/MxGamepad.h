@@ -2,10 +2,12 @@
 #ifndef MX_GAMEPAD_H_
 #define MX_GAMEPAD_H_
 
-#include "../Engine/MxPlantform.h"
+#include "../Engine/MxPlatform.h"
 #include <SDL2/SDL.h>
 
 namespace Mix {
+    class Input;
+
 	class Gamepad :GeneralBase::NoCopyBase {
 		friend class Input;
 
@@ -26,7 +28,7 @@ namespace Mix {
 
 		float getAxis(AxisCode _axis) const;
 
-		Math::Vector2f getAxis(AxisCode _x, AxisCode _y) const;
+		Vector2f getAxis(AxisCode _x, AxisCode _y) const;
 
 		void nextFrame();
 

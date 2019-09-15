@@ -9,7 +9,6 @@
 namespace Mix {
 	class Camera;
 	class Mesh;
-	struct RenderElement;
 
 	namespace Vulkan {
 		class CommandBufferHandle;
@@ -20,7 +19,7 @@ namespace Mix {
 
 			virtual ~ShaderBase() = default;
 
-			virtual void render(Shader& _shader, ArrayProxy<const RenderElement> _renderElements, const Camera& _camera) = 0;
+			virtual void render(Shader& _shader, const SceneRenderInfo& _renderInfo) = 0;
 
 			const MaterialPropertySet& getMaterialPropertySet() const { return mMaterialPropertySet; }
 

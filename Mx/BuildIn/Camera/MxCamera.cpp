@@ -1,36 +1,56 @@
 #include "MxCamera.h"
 #include "../../Input/MxInput.h"
-#include "../../Time/MxTime.h"
-#include "../../Log/MxLog.h"
-#include "../../../MixEngine.h"
 #include "../../Window/MxWindow.h"
 
 namespace Mix {
-	using namespace Math;
+    MX_IMPLEMENT_RTTI(Camera, Behaviour);
 
-	Camera::Camera(const Math::Vector2i& _extent,
-				   float _fov) :mExtent(_extent) {
-		mFov = _fov;
-		setFov(_fov);
-	}
+    Camera::Camera(const Vector2i& _extent,
+                   float _fov) :mExtent(_extent), mDirty(true) {
+        mFov = _fov;
+        setFov(_fov);
+    }
 
-	Matrix4 Camera::getViewMat() const {
-		return Matrix4::ViewMatrix(mGameObject->transform().getPosition(), mGameObject->transform().forward() + mGameObject->transform().getPosition(), Vector3f::Up);
-	}
+    Matrix4 Camera::getViewMat() const {
+        updateMatrix();
+        return mViewMat;
+    }
 
-	Matrix4 Camera::getProjMat() const {
-		Matrix4 proj = Matrix4::Perspective(Radians(mFov), float(mExtent.x) / mExtent.y, 0.1f, 1000.0f);
-		proj[1][1] *= -1.0f;
-		return proj;
-	}
+    Matrix4 Camera::getProjMat() const {
+        updateMatrix();
+        return mProjMat;
+    }
 
-	void Camera::setFov(float _fov) {
-		if (10.0f < _fov && _fov < 170.0f)
-			mFov = _fov;
-	}
+    void Camera::setFov(float _fov) {
+        if (10.0f < _fov && _fov < 170.0f) {
+            mFov = _fov;
+            mDirty = true;
+        }
+    }
 
-	void Camera::setExtent(const Math::Vector2i& _extent) {
-		if (_extent.x > 0 && _extent.y > 0)
-			mExtent = _extent;
-	}
+    void Camera::setExtent(const Vector2i& _extent) {
+        if (_extent.x > 0 && _extent.y > 0) {
+            mExtent = _extent;
+            mDirty = true;
+        }
+    }
+
+    Vector3f Camera::worldToScreenPoint(const Vector3f& _point) const {
+        updateMatrix();
+        auto clipSpacePos = mProjMat * mViewMat * Vector4f(_point, 1.0f);
+        if (clipSpacePos.w == 0.0f)
+            return Vector3f(_point.x, _point.y, 0.0f);
+        auto ndcSpacePos = Vector3f(clipSpacePos) / clipSpacePos.w;
+        auto windowPos = (Vector2f(ndcSpacePos) + 1.0f) / 2.0f * mExtent;
+        return Vector3f(windowPos.x, windowPos.y, ndcSpacePos.z);
+    }
+
+    void Camera::updateMatrix() const {
+        if (mDirty) {
+            mProjMat = Matrix4::Perspective(Math::Radians(mFov), float(mExtent.x) / mExtent.y, 0.1f, 1000.0f);
+            mViewMat = Matrix4::ViewMatrix(mGameObject->transform().getPosition(), mGameObject->transform().forward() + mGameObject->transform().getPosition(), mGameObject->transform().up());
+
+            mDirty = false;
+        }
+    }
 }

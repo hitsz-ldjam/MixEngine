@@ -2,13 +2,23 @@
 #include "../GameObject/MxGameObject.h"
 
 namespace Mix {
-    MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(Component, Object)
+    MX_IMPLEMENT_RTTI(Component, Object);
 
-    const Transform& Component::transform() const {
-        return mGameObject->transform();
+    void Component::destroy(bool _immediate) {
+        mGameObject->removeComponent(mThisHandle, _immediate);
     }
 
-    Transform& Component::transform() {
-        return mGameObject->transform();
+    HTransform Component::transform() const {
+        return mGameObject != nullptr ? mGameObject->transformHandle() : HTransform();
+    }
+
+    void Component::destroyInternal(SceneObjectHandleBase& _handle, bool _immediate) {
+        if (_immediate)
+            SceneObjectManager::Get()->unregisterObject(_handle);
+        else
+            SceneObjectManager::Get()->pushToDestroyQueue(_handle);
+    }
+
+    Component::Component(const HGameObject& _gameObject) :mGameObject(_gameObject) {
     }
 }

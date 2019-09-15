@@ -15,7 +15,7 @@ namespace Mix {
 		Color(float _r, float _b, float _g, float _a) :r(_r), g(_g), b(_b), a(_a) {
 		}
 
-		Color(const Math::Vector4f& _vec) :r(_vec.r), g(_vec.g), b(_vec.b), a(_vec.a) {
+		Color(const Vector4f& _vec) :r(_vec.r), g(_vec.g), b(_vec.b), a(_vec.a) {
 		}
 
 		static const Color Black;
@@ -39,7 +39,7 @@ namespace Mix {
 
 		float& operator[](const uint32_t _index);
 
-		operator Math::Vector4f() const;
+		operator Vector4f() const;
 
 		std::string toString() const {
 			return (boost::format("Color(%f, %f, %f, %f)") % r % g % b % a).str();

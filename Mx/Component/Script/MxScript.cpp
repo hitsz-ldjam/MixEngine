@@ -1,5 +1,5 @@
-#include "MxScript.h"
+﻿#include "MxScript.h"
 
 namespace Mix {
-    MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(Script, Behaviour)
+    MX_IMPLEMENT_RTTI(Script, Behaviour)
 }

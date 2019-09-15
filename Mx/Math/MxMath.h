@@ -2,6 +2,9 @@
 #ifndef MX_MATH_H_
 #define MX_MATH_H_
 #include "../Utils/MxGeneralBase.hpp"
+#include "MxVector2.h"
+#include "MxVector3.h"
+#include "MxVector4.h"
 #include <cmath>
 
 namespace Mix {
@@ -49,6 +52,26 @@ namespace Mix {
         template<typename _Ty>
         bool EpsilonEqual(_Ty const& _a, _Ty const& _b, _Ty const& _epsilon = static_cast<_Ty>(Constants::Epsilon)) {
             return std::abs(_a - _b) < _epsilon;
+        }
+
+        template<typename _Ty>
+        Vector2<bool> EpsilonEqual(const Vector2<_Ty>& _a, const Vector2<_Ty>& _b, _Ty const& _epsilon = static_cast<_Ty>(Math::Constants::Epsilon)) {
+            return Vector2<bool>(std::abs(_a.x - _b.x) < _epsilon, std::abs(_a.y - _b.y) < _epsilon);
+        }
+
+        template<typename _Ty>
+        Vector3<bool> EpsilonEqual(const Vector3<_Ty>& _a, const Vector3<_Ty>& _b, _Ty const& _epsilon = static_cast<_Ty>(Math::Constants::Epsilon)) {
+            return Vector3<bool>(std::abs(_a.x - _b.x) < _epsilon,
+                                 std::abs(_a.y - _b.y) < _epsilon,
+                                 std::abs(_a.z - _b.z) < _epsilon);
+        }
+
+        template<typename _Ty>
+        Vector4<bool> EpsilonEqual(const Vector4<_Ty>& _a, const Vector4<_Ty>& _b, _Ty const& _epsilon = static_cast<_Ty>(Math::Constants::Epsilon)) {
+            return Vector4<bool>(std::abs(_a.x - _b.x) < _epsilon,
+                                 std::abs(_a.y - _b.y) < _epsilon,
+                                 std::abs(_a.z - _b.z) < _epsilon,
+                                 std::abs(_a.w - _b.w) < _epsilon);
         }
 
         template<typename _Ty>

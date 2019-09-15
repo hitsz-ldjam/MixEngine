@@ -2,7 +2,7 @@
 #ifndef MX_KEYBOARD_H_
 #define MX_KEYBOARD_H_
 
-#include "../Engine/MxPlantform.h"
+#include "../Engine/MxPlatform.h"
 #include <SDL2/SDL.h>
 
 namespace Mix {

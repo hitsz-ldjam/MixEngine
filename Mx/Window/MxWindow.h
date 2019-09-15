@@ -31,19 +31,19 @@ namespace Mix {
 
 		explicit Window(SDL_Window* _window = nullptr) : mWindow(_window) {}
 
-		Window(const std::string& _title, const Math::Vector2i& _size, Flags<WindowFlag> _windowFlag);
+		Window(const std::string& _title, const Vector2i& _size, Flags<WindowFlag> _windowFlag);
 
 		~Window();
 
-		void awake() override {};
+		void load() override {};
 
 		void init() override {};
 
 		void setIcon(const std::filesystem::path& _path);
 
-		Math::Vector2i drawableSize() const;
+		Vector2i getDrawableSize() const;
 
-		Math::Vector2i extent() const;
+		Vector2i getExtent() const;
 
 		SDL_Window* rawPtr() const { return mWindow; }
 

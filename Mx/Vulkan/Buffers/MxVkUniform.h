@@ -13,55 +13,55 @@ namespace Mix {
 			};
 
 			struct AbstractLightUniform :public AbstractUniform {
-				Math::Vector4f color;
+				Vector4f color;
 			protected:
 				AbstractLightUniform() :color(0.0f, 0.0f, 0.0f, 1.0f) {}
 			};
 
 			struct AbstractCameraUniform :public AbstractUniform {
 				union {
-					Math::Vector4f _vec4_1_;
-					Math::Vector3f position;
+					Vector4f _vec4_1_;
+					Vector3f position;
 				};
 
 				union {
-					Math::Vector4f _vec4_2_;
-					Math::Vector3f forward;
+					Vector4f _vec4_2_;
+					Vector3f forward;
 				};
 
-				Math::Matrix4 viewMat;
-				Math::Matrix4 projMat;
+				Matrix4 viewMat;
+				Matrix4 projMat;
 			protected:
 				AbstractCameraUniform() :
 					position(0),
-					forward(Math::Vector3f::Forward),
-					viewMat(Math::Matrix4::Identity),
-					projMat(Math::Matrix4::Identity) {
+					forward(Vector3f::Forward),
+					viewMat(Matrix4::Identity),
+					projMat(Matrix4::Identity) {
 				}
 			};
 
 			struct MeshUniform :public AbstractUniform {
-				Math::Matrix4 modelMat;
+				Matrix4 modelMat;
 
 				MeshUniform() :
-					modelMat(Math::Matrix4::Identity) {
+					modelMat(Matrix4::Identity) {
 				}
 			};
 
 			struct DirectionLightUniform :public AbstractLightUniform {
 				union {
-					Math::Vector4f _vec4_1_;
-					Math::Vector3f direction;
+					Vector4f _vec4_1_;
+					Vector3f direction;
 				};
 
 				DirectionLightUniform() :
-					direction(Math::Vector3f::Forward) {
+					direction(Vector3f::Forward) {
 				}
 			};
 
 			struct PointLightUniform :public AbstractLightUniform {
 				float constant;
-				Math::Vector3f position;
+				Vector3f position;
 				float linear;
 				float quadratic;
 
@@ -74,9 +74,9 @@ namespace Mix {
 			};
 
 			struct SpotLightUniform :public AbstractLightUniform {
-				Math::Vector3f position;
+				Vector3f position;
 				float innerCutoff;
-				Math::Vector3f direction;
+				Vector3f direction;
 				float outerCutoff;
 				float constant;
 				float linear;
@@ -85,7 +85,7 @@ namespace Mix {
 				SpotLightUniform() :
 					position(0),
 					innerCutoff(0),
-					direction(Math::Vector3f::Forward),
+					direction(Vector3f::Forward),
 					outerCutoff(0),
 					constant(0),
 					linear(0),

@@ -17,17 +17,17 @@ namespace Mix {
 		return std::nullopt;
 	}
 
-	std::optional<Math::Matrix4> MaterialPropertyBlock::getMatrix(const std::string& _name) const {
+	std::optional<Matrix4> MaterialPropertyBlock::getMatrix(const std::string& _name) const {
 		auto it = mPropertyMap.find(_name);
 		if (it != mPropertyMap.end() && it->second.type == MaterialPropertyType::MATRIX)
-			return std::any_cast<Math::Matrix4>(it->second.value);
+			return std::any_cast<Matrix4>(it->second.value);
 		return std::nullopt;
 	}
 
-	std::optional<Math::Vector4f> MaterialPropertyBlock::getVector(const std::string& _name) const {
+	std::optional<Vector4f> MaterialPropertyBlock::getVector(const std::string& _name) const {
 		auto it = mPropertyMap.find(_name);
 		if (it != mPropertyMap.end() && it->second.type == MaterialPropertyType::VECTOR)
-			return std::any_cast<Math::Vector4f>(it->second.value);
+			return std::any_cast<Vector4f>(it->second.value);
 		return std::nullopt;
 	}
 
@@ -46,11 +46,11 @@ namespace Mix {
 		mPropertyMap[_name] = Property{ MaterialPropertyType::FLOAT, _value };
 	}
 
-	void MaterialPropertyBlock::setMatrix(const std::string& _name, const Math::Matrix4& _value) {
+	void MaterialPropertyBlock::setMatrix(const std::string& _name, const Matrix4& _value) {
 		mPropertyMap[_name] = Property{ MaterialPropertyType::MATRIX, _value };
 	}
 
-	void MaterialPropertyBlock::setVector(const std::string& _name, const Math::Vector4f& _value) {
+	void MaterialPropertyBlock::setVector(const std::string& _name, const Vector4f& _value) {
 		mPropertyMap[_name] = Property{ MaterialPropertyType::VECTOR, _value };
 	}
 
@@ -86,14 +86,14 @@ namespace Mix {
 		}
 	}
 
-	void Material::setMatrix(const std::string& _name, const Math::Matrix4& _value) {
+	void Material::setMatrix(const std::string& _name, const Matrix4& _value) {
 		if (mMaterialProperties.hasProperty(_name)) {
 			mMaterialProperties.setMatrix(_name, _value);
 			mChangedList.insert(_name);
 		}
 	}
 
-	void Material::setVector(const std::string& _name, const Math::Vector4f& _value) {
+	void Material::setVector(const std::string& _name, const Vector4f& _value) {
 		if (mMaterialProperties.hasProperty(_name)) {
 			mMaterialProperties.setVector(_name, _value);
 			mChangedList.insert(_name);

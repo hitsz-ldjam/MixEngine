@@ -46,8 +46,8 @@ namespace Mix {
 		return const_cast<float&>(static_cast<const Color&>(*this)[_index]);
 	}
 
-	Color::operator Math::Vector4<float>() const {
-		return Math::Vector4f(r, g, b, a);
+	Color::operator Vector4<float>() const {
+		return Vector4f(r, g, b, a);
 	}
 
 	Color32::Color32(const Color& _color) {

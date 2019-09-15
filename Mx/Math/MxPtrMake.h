@@ -3,7 +3,6 @@
 #define MX_PTR_MAKE_H_
 
 namespace Mix {
-	namespace Math {
 		template<typename _Ty>
 		class Vector2;
 
@@ -58,8 +57,6 @@ namespace Mix {
 						   static_cast<float>(_ptr[14]),
 						   static_cast<float>(_ptr[15]));
 		}
-
-	}
 }
 
 #endif

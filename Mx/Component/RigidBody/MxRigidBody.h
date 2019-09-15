@@ -18,8 +18,7 @@ namespace Mix {
 
     /** Bug: RigidBody on a child GameObject whose parent has one might not be altered correctly. */
     class RigidBody final : public Behaviour {
-    MX_DECLARE_RTTI
-    MX_DECLARE_CLASS_FACTORY
+        MX_DECLARE_RTTI;
 
         friend Physics::World;
 
@@ -99,7 +98,7 @@ namespace Mix {
         static btRigidBody* CreateBtRb(const Physics::RigidBodyConstructionInfo& _info);
 
         void forceReload() const {
-            if(!mRigidBody->isInWorld())
+            if (!mRigidBody->isInWorld())
                 return;
             mWorld->removeRigidBody(mRigidBody);
             mWorld->addRigidBody(mRigidBody);

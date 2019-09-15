@@ -5,28 +5,36 @@
 #include "../../Math/MxVector.h"
 
 namespace Mix {
-	class Camera :public Behaviour {
-	public:
-		Camera(const Math::Vector2i& _extent,
-			   float _fov = 45.0f);
+    class Camera :public Behaviour {
+        MX_DECLARE_RTTI;
+    public:
+        Camera(const Vector2i& _extent,
+               float _fov = 45.0f);
 
-		Math::Matrix4 getViewMat() const;
+        Matrix4 getViewMat() const;
 
-		Math::Matrix4 getProjMat() const;
+        Matrix4 getProjMat() const;
 
-		float getFov() const { return mFov; }
+        float getFov() const { return mFov; }
 
-		void setFov(float _fov);
+        void setFov(float _fov);
 
-		Math::Vector2i getExtent() const { return mExtent; }
+        Vector2i getExtent() const { return mExtent; }
 
-		void setExtent(const Math::Vector2i& _extent);
+        void setExtent(const Vector2i& _extent);
 
-	private:
-		Math::Vector3f mTarget;
-		Math::Vector2i mExtent;
-		float mFov;
-	};
+        Vector3f worldToScreenPoint(const Vector3f& _point) const;
+
+    private:
+        mutable bool mDirty;
+        Vector2i mExtent;
+        float mFov;
+
+        mutable Matrix4 mProjMat;
+        mutable Matrix4 mViewMat;
+        void updateMatrix() const;
+
+    };
 }
 
 #endif

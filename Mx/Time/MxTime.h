@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_TIME_H_
 #define MX_TIME_H_
@@ -25,6 +25,8 @@ namespace Mix {
 
         static auto FixedTime() noexcept { return sFixedTime; }
 
+        static float RealTime() noexcept;
+
         /**
          *  @brief Set the maximum time of a frame. If a frame takes longer than it, fixedUpdate()
          *  will not be performed.
@@ -41,12 +43,12 @@ namespace Mix {
         using Duration = Clock::duration;
         using TimePoint = std::chrono::time_point<Clock>;
 
-        static float sDeltaTime,
-                     sTime,
-                     sFixedDeltaTime,
-                     sFixedTime,
-                     sMaximumDeltaTime,
-                     sSmoothingFactor;
+        static float sDeltaTime;
+        static float sTime;
+        static float sFixedDeltaTime;
+        static float sFixedTime;
+        static float sMaximumDeltaTime;
+        static float sSmoothingFactor;
 
         static unsigned sFixedClampedSteps;
 

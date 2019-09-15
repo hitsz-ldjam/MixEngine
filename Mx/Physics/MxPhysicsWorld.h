@@ -13,7 +13,7 @@ namespace Mix {
 		public:
 			World();
 			~World();
-			void awake() override;
+			void load() override;
 			void init() override {};
 			/**
 			 *  @brief This function steps simulation.
