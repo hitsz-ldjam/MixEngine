@@ -1,6 +1,7 @@
 #include "MxGameObject.h"
 #include <algorithm>
 #include "../Scene/MxSceneManager.hpp"
+#include "../Component/MxComponent.h"
 #include "../Log/MxLog.h"
 
 namespace Mix {
@@ -95,7 +96,10 @@ namespace Mix {
     //}
 
     GameObject::~GameObject() {
-
+        if (!mThisHandle.isDestroyed()) {
+            MX_LOG_WARNING("Object [%1%] is being deleted without being destroyed first?", mName);
+            destroyInternal(mThisHandle, true);
+        }
     }
 
     HGameObject GameObject::Create(const std::string& _name, Tag _tag, const LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) {
@@ -115,8 +119,19 @@ namespace Mix {
 
     void GameObject::destroyInternal(SceneObjectHandleBase& _handle, bool _immediate) {
         if (_immediate) {
+            // Remove children
             for (auto iter = mChildren.begin(); iter != mChildren.end(); ++iter)
                 (*iter)->destroyInternal(*iter, true);
+
+            mChildren.clear();
+
+            // Remove component
+            while (!mComponents.empty()) {
+                auto& component = mComponents.back();
+                component->destroyInternal(component, true);
+                mComponents.erase(mComponents.end() - 1);
+            }
+
 
             if (mScene)
                 mScene->unregisterGameObject(mThisHandle);

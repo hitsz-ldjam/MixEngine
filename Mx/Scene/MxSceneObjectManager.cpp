@@ -16,6 +16,7 @@ namespace Mix {
 
     void SceneObjectManager::postRender() {
         destroyObjectsInQueue();
+        Log::Info("Object count: %1%", mObjects.size());
     }
 
     SceneObjectHandleBase SceneObjectManager::registerObject(const std::shared_ptr<SceneObject>& _object) {

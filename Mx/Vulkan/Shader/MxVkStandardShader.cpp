@@ -59,6 +59,7 @@ namespace Mix {
             mCurrPipeline = nullptr;
 
             updateShaderParam(_shader);
+            updateMaterialParams(_renderInfo.renderers);
 
             auto camera = _renderInfo.camera;
             auto& cmd = mVulkan->getCurrDrawCmd();
@@ -140,16 +141,23 @@ namespace Mix {
             _shader._updated();
         }
 
-        void StandardShader::setMaterailParam(Material& _material) {
-            if (!_material._getChangedList().empty()) {
-                std::vector<WriteDescriptorSet> writes;
-                for (auto& name : _material._getChangedList()) {
-                    writes.push_back(_material.getTexture(name)->getWriteDescriptor(mMaterialNameBindingMap[name], vk::DescriptorType::eCombinedImageSampler));;
+        void StandardShader::updateMaterialParams(ArrayProxy<Renderer* const> _renderers) {
+            for (auto renderer : _renderers) {
+                auto materials = renderer->getMaterials();
+                for (auto& material : materials) {
+                    if (!material->_getChangedList().empty()) {
+                        std::vector<WriteDescriptorSet> writes;
+                        for (auto& name : material->_getChangedList()) {
+                            if (material->getTexture(name))
+                                writes.push_back(material->getTexture(name)->getWriteDescriptor(mMaterialNameBindingMap[name], vk::DescriptorType::eCombinedImageSampler));;
+                        }
+                        mMaterialDescs[mCurrFrame][material->_getMaterialId()].updateDescriptor(writes);
+                    }
                 }
-                mMaterialDescs[mCurrFrame][_material._getMaterialId()].updateDescriptor(writes);
-                // _material._updated();
             }
+        }
 
+        void StandardShader::setMaterailParam(Material& _material) {
             mCurrCmd->get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                                                mCurrPipeline->pipelineLayout(), 1,
                                                mMaterialDescs[mCurrFrame][_material._getMaterialId()].get(),
@@ -162,7 +170,7 @@ namespace Mix {
             for (auto& element : _renderInfo.renderers) {
                 beginRenderer(*element);
                 auto& mesh = *element->getGameObject()->getComponent<MeshFilter>()->getMesh();
-                auto materials = element->getMaterials();
+                auto& materials = element->getMaterials();
 
                 for (uint32_t i = 0; i < mesh.subMeshCount(); ++i) {
                     if (i >= materials.size())

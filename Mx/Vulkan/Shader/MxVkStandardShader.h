@@ -76,6 +76,7 @@ namespace Mix {
             void endRenderer(const Renderer& _renderer);
             bool choosePipeline(const Mesh& _mesh, uint32_t _submesh);
             void updateShaderParam(Shader& _shader);
+            void updateMaterialParams(ArrayProxy<Renderer* const> _renderers);
             void setMaterailParam(Material& _material);
             void endFrame();
 
