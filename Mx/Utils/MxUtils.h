@@ -17,7 +17,7 @@ namespace Mix {
                 int a[] = { (f % _args,0)... };
                 result = f.str();
             }
-            catch (boost::io::bad_format_string& e) {
+            catch (std::exception& e) {
                 std::cerr << e.what() << std::endl;
             }
             return result;

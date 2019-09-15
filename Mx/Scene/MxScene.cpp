@@ -61,7 +61,7 @@ namespace Mix {
             if (!mRegisteredCamera.empty())
                 setMainCamera(mRegisteredCamera[0]);
             else
-            MX_EXCEPT("No camera was registered in the scene.");
+                MX_EXCEPT("No camera was registered in the scene.");
         }
 
         return mMainCamera;
@@ -95,8 +95,10 @@ namespace Mix {
     }
 
     void Scene::sceneUpdate() {
-        for (auto& rootObject : mRootObjects)
-            rootObject.second->update();
+        for (auto& rootObject : mRootObjects) {
+            if (rootObject.second->activeSelf())
+                rootObject.second->update();
+        }
     }
 
     void Scene::sceneFixedUpate() {
@@ -131,6 +133,7 @@ namespace Mix {
             _object->setActive(false);
             mNeedAwakeAndInit.push_back(_object);
         }
+        _object->setScene(mThisPtr.lock());
     }
 
     void Scene::unregisterGameObject(const HGameObject& _object) {
@@ -139,7 +142,7 @@ namespace Mix {
             return;
         }
 
-        if (_object->getParent() != nullptr) {
+        if (_object->getParent() == nullptr) {
             mRootObjects.erase(mRootObjects.find(_object.get()->getInstanceId()));
         }
     }

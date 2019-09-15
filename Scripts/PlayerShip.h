@@ -6,7 +6,6 @@
 
 namespace Scripts {
     using namespace Mix;
-    using namespace Math;
 
     class ShipAdapter;
 

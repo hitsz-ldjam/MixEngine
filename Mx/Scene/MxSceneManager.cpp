@@ -105,6 +105,10 @@ namespace Mix {
         mActiveScene->sceneLateUpate();
     }
 
+    void SceneManager::scenePostRender() {
+        mActiveScene->scenePostRender();
+    }
+
     void SceneManager::registerGameObjectToMS(const HGameObject& _object) {
         mActiveScene->registerGameObject(_object);
     }

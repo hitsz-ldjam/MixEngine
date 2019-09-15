@@ -1,8 +1,6 @@
 #pragma once
 #include "../Mx/Component/Script/MxScript.h"
 #include "../Mx/GameObject/MxGameObject.h"
-#include "../Mx/Math/MxVector.h"
-#include "../Mx/Utils/MxEvent.h"
 
 namespace Scripts {
     using namespace Mix;

@@ -6,7 +6,6 @@
 
 namespace Scripts {
     using namespace Mix;
-    using namespace Math;
 
     class ShipAdapter :public Script {
         MX_DECLARE_RTTI;
@@ -17,11 +16,13 @@ namespace Scripts {
 
         void attack();
 
-        void setMaxSpeed(float _speed);
+        void setMoveSpeed(float _speed);
 
-        void attackSpeed(float _speed);
+        float getMoveSpeed() const { return mMoveSpeed; }
 
     private:
+        void awake() override;
+
         void init() override;
 
         void update() override;
@@ -40,8 +41,5 @@ namespace Scripts {
         float mRoolAccelerate = 0.2f;
         float mMaxRollAngle = 30.0f;
 
-        // Attack
-        float mLastAttackTime = 0.0f;
-        float mAttackSpeed = 1.0f;
     };
 }

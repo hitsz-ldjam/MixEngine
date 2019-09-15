@@ -8,7 +8,7 @@
 namespace Mix {
     namespace Vulkan {
         const vk::PipelineColorBlendAttachmentState GraphicsPipelineState::DefaultBlendAttachment = {
-            false,
+            true,
             vk::BlendFactor::eSrcAlpha,
             vk::BlendFactor::eOneMinusSrcAlpha,
             vk::BlendOp::eAdd,

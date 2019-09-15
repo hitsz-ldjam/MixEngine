@@ -78,6 +78,8 @@ namespace Mix {
 
         void sceneLateUpdate();
 
+        void scenePostRender();
+
     private:
         friend GameObject;
 

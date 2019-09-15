@@ -375,43 +375,10 @@ namespace Mix {
         }
 
         void StandardShader::buildPipeline() {
-            /*vk::GraphicsPipelineCreateInfo pipelineCreateInfo = {};
-            pipelineCreateInfo.pStages = stages.data();
-            pipelineCreateInfo.stageCount = static_cast<uint32_t>(stages.size());
-            pipelineCreateInfo.pVertexInputState = &inputState;
-            pipelineCreateInfo.pInputAssemblyState = &mPipelineStates->inputAssembly;
-            pipelineCreateInfo.pViewportState = &viewportState;
-            pipelineCreateInfo.pRasterizationState = &mPipelineStates->rasterization;
-            pipelineCreateInfo.pMultisampleState = &mPipelineStates->multisample;
-            pipelineCreateInfo.pDepthStencilState = &mPipelineStates->depthStencil;
-            pipelineCreateInfo.pColorBlendState = &mPipelineStates->colorBlend;*/
-
-            //PipelineFactory factory;
-            //factory.begin();
-
-            //// vertex input
-            //auto vertexInput = VertexInput(VertexAttribute::POSITION | VertexAttribute::NORMAL | VertexAttribute::UV0);
-            //factory.setVertexInput(vertexInput);
-
-            //factory.setViewport(viewport);
-            //factory.setScissor(scissor);
-            //factory.setRasterization(vk::PolygonMode::eFill, vk::CullModeFlagBits::eBack, vk::FrontFace::eCounterClockwise);
-            //factory.setDepthTest(true);
-            //factory.addDefaultBlendAttachment();
-            //factory.setDescriptorSetLayout({ mStaticParamDescriptorSetLayout,mDynamicPamramDescriptorSetLayout });
-
-            //auto vert = ResourceLoader::Get()->load<ShaderSource>("TestResources/Shaders/vShader.vert");
-            //auto frag = ResourceLoader::Get()->load<ShaderSource>("TestResources/Shaders/fShader.frag");
-            //ShaderModule vertShader = { mDevice, *vert };
-            //ShaderModule fragShader = { mDevice, *frag };
-            //factory.setShaderModule(vertShader);
-            //factory.setShaderModule(fragShader);
-
-            //mPipeline = factory.createPipeline(mRenderPass, 0);
             GraphicsPipelineStateDesc desc;
 
-            auto vert = ResourceLoader::Get()->load<ShaderSource>("TestResources/Shaders/vShader.vert");
-            auto frag = ResourceLoader::Get()->load<ShaderSource>("TestResources/Shaders/fShader.frag");
+            auto vert = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/vShader.vert");
+            auto frag = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/fShader.frag");
             std::shared_ptr<ShaderModule> vertShader = std::make_shared<ShaderModule>(mDevice, *vert);
             std::shared_ptr<ShaderModule> fragShader = std::make_shared<ShaderModule>(mDevice, *frag);
 

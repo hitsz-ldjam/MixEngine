@@ -180,6 +180,8 @@ namespace Mix {
 
     void MixEngine::postRender() {
         mApp->onPostRender();
+        mModuleHolder.get<SceneManager>()->scenePostRender();
+        mModuleHolder.get<SceneObjectManager>()->postRender();
         mModuleHolder.get<Input>()->nextFrame();
     }
 

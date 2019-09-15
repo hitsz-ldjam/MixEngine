@@ -26,6 +26,8 @@ namespace Mix {
 
         void lateUpdate();
 
+        void postRender();
+
         SceneObjectHandleBase registerObject(const std::shared_ptr<SceneObject>& _object);
 
         void unregisterObject(SceneObjectHandleBase& _object);

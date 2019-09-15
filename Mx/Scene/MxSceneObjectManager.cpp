@@ -12,6 +12,9 @@ namespace Mix {
     }
 
     void SceneObjectManager::lateUpdate() {
+    }
+
+    void SceneObjectManager::postRender() {
         destroyObjectsInQueue();
     }
 

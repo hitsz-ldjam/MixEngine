@@ -14,6 +14,7 @@
 #include "Scripts/EnemyShip.h"
 #include "Scripts/ShipAdapter.h"
 #include "Mx/BuildIn/Camera/MxCamera.h"
+#include "Scripts/ShipWeapon.h"
 
 namespace Mix {
 
@@ -48,12 +49,12 @@ namespace Mix {
 
         // Load player ship
         {
-            auto model = ResourceLoader::Get()->load<Model>("TestResources/SpaceShooter/Models/player_ship.gltf");
+            auto model = ResourceLoader::Get()->load<Model>("Resource/Models/player_ship.gltf");
             auto gameObject = model->genDefaultGameObjects("PlayerShip");
 
             gameObject->transform().setRotation(Quaternion::Identity);
 
-            auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("TestResources/SpaceShooter/Textures/player_ship_dif.png", &param);
+            auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("Resource/Textures/player_ship_dif.png", &param);
             auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
             material->setTexture("diffuseTex", diffuseTex);
 
@@ -62,9 +63,10 @@ namespace Mix {
 
             gameObject->addComponent<Scripts::PlayerShipScript>();
             gameObject->addComponent<Scripts::ShipAdapter>();
+            gameObject->addComponent<Scripts::ShipWeapon>();
 
             //{
-            //    auto collider = ResourceLoader::Get()->load<Model>("TestResources/SpaceShooter/Models/playerShip_collider.gltf");
+            //    auto collider = ResourceLoader::Get()->load<Model>("Resource/Models/playerShip_collider.gltf");
 
             //    auto vertices = collider->getMeshes()[0]->getPositions();
 
@@ -96,12 +98,12 @@ namespace Mix {
 
         // Load enemy ship
         {
-            auto model = ResourceLoader::Get()->load<Model>("TestResources/SpaceShooter/Models/enemy_ship.gltf");
+            auto model = ResourceLoader::Get()->load<Model>("Resource/Models/enemy_ship.gltf");
             auto gameObject = model->genDefaultGameObjects("EnemyShip");
 
             gameObject->transform().setRotation(Quaternion::Identity);
 
-            auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("TestResources/SpaceShooter/Textures/enemy_ship_diff.png", &param);
+            auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("Resource/Textures/enemy_ship_diff.png", &param);
             auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
             material->setTexture("diffuseTex", diffuseTex);
 
@@ -142,7 +144,7 @@ namespace Mix {
             auto meshFilter = gameObject->addComponent<MeshFilter>();
             meshFilter->setMesh(mesh);
 
-            auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("TestResources/SpaceShooter/Textures/background.png");
+            auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("Resource/Textures/background.png");
             auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
             material->setTexture("diffuseTex", diffuseTex);
 
@@ -156,7 +158,7 @@ namespace Mix {
 
     void ApplicationBase::onInit() {
         auto mainCamaera = SceneManager::Get()->getActiveScene()->getMainCamera();
-        mainCamaera->transform()->translate(Vector3f(0.0f, 0.0f, -20.0f));
+        mainCamaera->transform()->translate(Vector3f(0.0f, 0.0f, -40.0f));
         mainCamaera->transform()->lookAt(Vector3f::Zero);
     }
 

@@ -1,8 +1,8 @@
 #include "ShipAdapter.h"
-#include "../Mx/Input/MxInput.h"
 #include "../Mx/BuildIn/Camera/MxCamera.h"
 #include "../Mx/Log/MxLog.h"
 #include "../Mx/Window/MxWindow.h"
+#include "ShipWeapon.h"
 
 namespace Scripts {
     MX_IMPLEMENT_RTTI(ShipAdapter, Script);
@@ -16,21 +16,20 @@ namespace Scripts {
 
         int hDir = moveDir.x > 0.0f ? -1 : (moveDir.x < 0.0f ? 1 : 0);
         mSmoothRollAngle = Math::Lerp(mSmoothRollAngle, mMaxRollAngle*hDir, mRoolAccelerate);
-        transform()->setLocalRotation(Quaternion::AngleAxis(Radians(mSmoothRollAngle), Vector3f::Up));
+        transform()->setLocalRotation(Quaternion::AngleAxis(Math::Radians(mSmoothRollAngle), Vector3f::Up));
     }
 
     void ShipAdapter::attack() {
-
-        Log::Info("Fuck you");
+        auto weapon = mGameObject->getComponent<ShipWeapon>();
+        if (weapon != nullptr)
+            weapon->attack();
     }
 
-    void ShipAdapter::setMaxSpeed(float _speed) {
+    void ShipAdapter::setMoveSpeed(float _speed) {
         mMoveSpeed = _speed;
     }
 
-    void ShipAdapter::attackSpeed(float _speed) {
-        if (_speed >= 0.0f)
-            mAttackSpeed = _speed;
+    void ShipAdapter::awake() {
     }
 
     void ShipAdapter::init() {
