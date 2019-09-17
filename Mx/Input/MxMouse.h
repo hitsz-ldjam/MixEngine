@@ -2,7 +2,7 @@
 #ifndef MX_MOUSE_H_
 #define MX_MOUSE_H_
 
-#include "../Engine/MxPlantform.h"
+#include "../Engine/MxPlatform.h"
 #include "SDL2/SDL.h"
 
 namespace Mix {
@@ -18,11 +18,11 @@ namespace Mix {
 
 		uint8_t getButtonState(ButtonCode _button);
 
-		const Math::Vector2i& getPosState() const { return mPosState; }
+		const Vector2i& getPosState() const { return mPosState; }
 
-		const Math::Vector2i& getPosDeltaState() const { return mDeltaPosState; }
+		const Vector2i& getPosDeltaState() const { return mDeltaPosState; }
 
-		const Math::Vector2i& getMouseWheelState() const { return mWheelState; }
+		const Vector2i& getMouseWheelState() const { return mWheelState; }
 
 		float getAxis(AxisCode _axis);
 
@@ -33,9 +33,9 @@ namespace Mix {
 
 		Input* mInput;
 
-		Math::Vector2i mPosState;
-		Math::Vector2i mDeltaPosState;
-		Math::Vector2i mWheelState;
+		Vector2i mPosState;
+		Vector2i mDeltaPosState;
+		Vector2i mWheelState;
 		uint8_t mButtonState[sButtonCount]{};
 
 		void updatePos(const PFMouseMoveEventData& _data);

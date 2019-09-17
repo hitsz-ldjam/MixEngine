@@ -28,10 +28,10 @@ namespace Mix {
 			MeshTopology topology = MeshTopology::Triangles_List;
 		};
 
-		using PositionType = Math::Vector3f;
-		using NormalType = Math::Vector3f;
-		using TangentType = Math::Vector4f;
-		using UV2DType = Math::Vector2f;
+		using PositionType = Vector3f;
+		using NormalType = Vector3f;
+		using TangentType = Vector3f;
+		using UV2DType = Vector2f;
 		using ColorType = Color32;
 
 		using Index32Type = uint32_t;
@@ -66,6 +66,10 @@ namespace Mix {
 		void setIndices(std::vector<uint32_t>&& _indices, MeshTopology _topology, uint32_t _submesh, uint32_t _baseVertex = 0);
 		std::vector<uint32_t>& getIndices(uint32_t _submesh);
 		void getIndices(std::vector<uint32_t>& _indices, uint32_t _submesh);
+
+        void recalculateNormals();
+
+        void recalculateTangents();
 
 		void uploadMeshData(bool _markNoLongerReadable);
 

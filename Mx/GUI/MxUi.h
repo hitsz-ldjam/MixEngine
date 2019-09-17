@@ -36,9 +36,9 @@ namespace Mix {
 
 		vk::IndexType getIndexType() const;
 
-		Math::Vector2f getScale() const;
+		Vector2f getScale() const;
 
-		Math::Vector2f getTranslate() const;
+		Vector2f getTranslate() const;
 
 		void update();
 

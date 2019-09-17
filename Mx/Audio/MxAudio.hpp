@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_AUDIO_HPP_
 #define MX_AUDIO_HPP_
@@ -28,16 +28,16 @@ namespace Mix::Audio {
     class Core final : public ModuleBase {
     public:
         Core() : mCore(nullptr) {}
-        ~Core() { if(mCore) mCore->release(); }
+        ~Core() { if (mCore) mCore->release(); }
 
         auto getCore() const noexcept { return mCore; }
 
-        void awake() override {
+        void load() override {
             auto result = FMOD::System_Create(&mCore);
-            if(result != FMOD_OK)
+            if (result != FMOD_OK)
                 throw ThirdPartyLibInitError("FMOD");
             result = mCore->init(512, FMOD_INIT_NORMAL, nullptr);
-            if(result != FMOD_OK)
+            if (result != FMOD_OK)
                 throw ThirdPartyLibInitError("FMOD");
         }
 
@@ -49,7 +49,7 @@ namespace Mix::Audio {
 
         // Auto called when ModuleHolder destructs?
         void release() {
-            if(mCore)
+            if (mCore)
                 mCore->release();
             mCore = nullptr;
         }

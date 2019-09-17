@@ -75,7 +75,7 @@ namespace Mix {
 		static void PopulateMeshAttributeData(MixMeshData& _meshData, const tinygltf::Model& _gltfModel, const tinygltf::Mesh& _gltfMesh);
 		static void ConstructMesh(Mesh& _mesh, MixMeshData& _meshData);
 
-		static void ConvertTransformToLeftHanded(Math::Vector3f& _translation, Math::Quaternion& _rotation, Math::Vector3f& _scale);
+		static void ConvertTransformToLeftHanded(Vector3f& _translation, Quaternion& _rotation, Vector3f& _scale);
 
 		struct TempData {
 			std::vector<std::shared_ptr<Mesh>> meshes;

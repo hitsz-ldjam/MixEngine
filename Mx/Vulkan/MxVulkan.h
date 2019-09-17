@@ -8,9 +8,9 @@
 #include "../Definitions/MxDefinitions.h"
 #include "Core/MxVkDef.h"
 #include "CommandBuffer/MxVkCommanddBufferHandle.h"
+#include "../Definitions/MxVersion.h"
 
 namespace Mix {
-	struct RenderElement;
 	class Camera;
 
 	namespace Vulkan {
@@ -34,7 +34,7 @@ namespace Mix {
 
 		struct VulkanSettings {
 			struct {
-				VersionInt appVersion;
+				Version appVersion;
 				std::string appName;
 			}appInfo;
 			bool debugMode;

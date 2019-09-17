@@ -43,7 +43,7 @@ namespace Mix {
 
 		uint32_t height(uint32_t _mipLevel = 0) const;
 
-		Math::Vector2i extent(uint32_t _mipLevel = 0) const;
+		Vector2i extent(uint32_t _mipLevel = 0) const;
 
 		uint32_t mipLevels() const { return mImage->mipLevels(); }
 
@@ -59,7 +59,7 @@ namespace Mix {
 
 		static uint32_t GetMipmapLevel(uint32_t _width, uint32_t _height);
 
-		static Math::Vector2ui GetMipmapExtent(uint32_t _width, uint32_t _height, uint32_t _mipLevel);
+		static Vector2ui GetMipmapExtent(uint32_t _width, uint32_t _height, uint32_t _mipLevel);
 
 	protected:
 		Texture(TextureType _type,
@@ -78,8 +78,8 @@ namespace Mix {
 		struct CopyToDstImageInfo {
 			uint32_t mipLevel;
 			uint32_t layer;
-			Math::Vector2ui offset;
-			Math::Vector2ui extent;
+			Vector2ui offset;
+			Vector2ui extent;
 		};
 
 		std::vector<std::pair<CopyToDstImageInfo, std::shared_ptr<Vulkan::Buffer>>> mTransfers;

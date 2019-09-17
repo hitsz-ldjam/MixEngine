@@ -4,21 +4,76 @@
 #define MIX_ENGINE_H_
 
 #include "Mx/Engine/MxModuleHolder.h"
+#include "Mx/Utils/MxEvent.h"
 
 namespace Mix {
     class Window;
+    class ApplicationBase;
 
     class MixEngine : public GeneralBase::SingletonBase<MixEngine> {
         friend SingletonBase<MixEngine>;
-
     public:
         ~MixEngine();
 
-        int exec();
+        int execute(std::shared_ptr<ApplicationBase> _app);
 
-        void shutDown() { mQuit = true; }
+        void requestQuit();
 
-        // ----- ModuleHolder -----
+    private:
+        explicit MixEngine(int _argc = 0, char** _argv = nullptr);
+
+        void quit() { mQuit = true; mRunning = false; }
+
+        bool mRunning = true;
+        bool mQuit = false;
+
+        //////////////////////////////////////////////////////////////////
+        //                              FPS                             //
+        //////////////////////////////////////////////////////////////////
+
+    public:
+        void setFPSLimit(uint32_t _limit);
+
+        float getFPS() const { return mFramePerSecond; }
+
+    private:
+        uint32_t mFPSLimit = 0;
+        uint32_t mFrameCount = 0;
+        uint32_t mFrameSampleRate = 5;
+        float mFramePerSecond = 0.0f;
+        float mLastFrameTime = 0.0f;
+        float mFrameStep = 0.0f;
+
+        //////////////////////////////////////////////////////////////////
+        //                         Setup scene                          //
+        //////////////////////////////////////////////////////////////////
+        void loadMainScene();
+
+
+        //////////////////////////////////////////////////////////////////
+        //                          Main loop                           //
+        //////////////////////////////////////////////////////////////////
+    private:
+        void awake();
+        void init();
+        void update();
+        void fixedUpdate();
+        void lateUpdate();
+
+        //////////////////////////////////////////////////////////////////
+        //                           Render                             //
+        //////////////////////////////////////////////////////////////////
+    private:
+        void render();
+        void postRender();
+
+        //////////////////////////////////////////////////////////////////
+        //                           Modules                            //
+        //////////////////////////////////////////////////////////////////
+
+    public:
+        void loadModule();
+        void initModule();
 
         template<typename _Ty>
         bool hasModule() const { return mModuleHolder.has<_Ty>(); }
@@ -35,26 +90,40 @@ namespace Mix {
         ModuleHolder& getModuleHolder() { return mModuleHolder; }
 
     private:
-        explicit MixEngine(int _argc = 0, char** _argv = nullptr);
-
-        bool mQuit;
-
+        std::shared_ptr<ApplicationBase> mApp;
         ModuleHolder mModuleHolder;
 
-        // todo: make this a utility class
-        uint32_t mFrameCount = 0u,
-                 mFrameSampleRate = 10u;
-        float mFramePerSecond = .0f;
+        //////////////////////////////////////////////////////////////////
+        //                           Callbacks                          //
+        //////////////////////////////////////////////////////////////////
+        void onQuitRequested();
 
-        void awake();
-        void init();
-        void update();
-        void fixedUpdate();
-        void lateUpdate();
 
-        void loadModule();
-        void render();
-        void postRender();
+        //////////////////////////////////////////////////////////////////
+        //                            Events                            //
+        //////////////////////////////////////////////////////////////////
+
+    /*public:
+        Event<void()> ModuleLoadedEvent;
+        Event<void()> MoudleInitializedEvent;
+        Event<void()> MainSceneCreatedEvent;
+        Event<void()> AwakeEvent;
+        Event<void()> InitEvent;
+        Event<void()> UpdateEvent;
+        Event<void()> FixedUpdateEvent;
+        Event<void()> LateUpdateEvent;
+        Event<void()> RenderEvent;
+        Event<void()> PostRenderEvent;*/
+
+
+        //////////////////////////////////////////////////////////////////
+        //                        Command lines                         //
+        //////////////////////////////////////////////////////////////////
+    public:
+        const std::vector<std::string>& getCommandLines() const { return mCommandLines; }
+
+    private:
+        std::vector<std::string> mCommandLines;
     };
 }
 

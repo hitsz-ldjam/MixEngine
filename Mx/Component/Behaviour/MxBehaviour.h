@@ -7,11 +7,8 @@
 
 namespace Mix {
     class Behaviour : public Component {
-    MX_DECLARE_RTTI
-    MX_DECLARE_NO_CLASS_FACTORY
-
+        MX_DECLARE_RTTI;
         friend class GameObject;
-
     public:
         Behaviour() = default;
         virtual ~Behaviour() = 0 {}

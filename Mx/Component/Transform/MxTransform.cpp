@@ -6,22 +6,21 @@
 using namespace Mix::Math;
 
 namespace Mix {
-	MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(Transform, Component);
-	MX_IMPLEMENT_DEFAULT_CLASS_FACTORY(Transform);
+	MX_IMPLEMENT_RTTI(Transform, Component);
 
-	Math::Vector3f Transform::forward() const {
+	Vector3f Transform::forward() const {
 		updateLocalToWorldMatrix();
-		return mLocalToWorld.multiplyDirection(Math::Vector3f::Forward);
+		return mLocalToWorld.multiplyDirection(Vector3f::Forward);
 	}
 
-	Math::Vector3f Transform::right() const {
+	Vector3f Transform::right() const {
 		updateLocalToWorldMatrix();
-		return mLocalToWorld.multiplyDirection(Math::Vector3f::Right);
+		return mLocalToWorld.multiplyDirection(Vector3f::Right);
 	}
 
-	Math::Vector3f Transform::up() const {
+	Vector3f Transform::up() const {
 		updateLocalToWorldMatrix();
-		return mLocalToWorld.multiplyDirection(Math::Vector3f::Up);
+		return mLocalToWorld.multiplyDirection(Vector3f::Up);
 	}
 
 	const Matrix4& Transform::localToWorldMatrix() const {
@@ -29,28 +28,28 @@ namespace Mix {
 		return mLocalToWorld;
 	}
 
-	Math::Matrix4 Transform::worldToLocalMatrix() const {
+	Matrix4 Transform::worldToLocalMatrix() const {
 		updateLocalToWorldMatrix();
 		return mLocalToWorld.inverse();
 	}
 
 	Transform* Transform::root() const {
 		auto p = mGameObject;
-		while (p->parent() != nullptr) p = p->parent();
+		while (p->getParent() != nullptr) p = p->getParent();
 		return &p->transform();
 	}
 
-	void Transform::translate(const Math::Vector3f& _translation, const Space _relativeTo) {
+	void Transform::translate(const Vector3f& _translation, const Space _relativeTo) {
 		Vector3f tr;
 		switch (_relativeTo) {
 		case Space::Self:
 			tr = mQuat * _translation;
-			if (mGameObject && mGameObject->parent())
-				tr /= mGameObject->parent()->transform().getLocalScale();
+			if (mGameObject && mGameObject->getParent())
+				tr /= mGameObject->getParent()->transform().getLocalScale();
 			break;
 		case Space::World:
-			if (mGameObject && mGameObject->parent()) {
-				tr = (mGameObject->parent()->transform().worldToLocalMatrix().multiplyPoint(_translation));
+			if (mGameObject && mGameObject->getParent()) {
+				tr = (mGameObject->getParent()->transform().worldToLocalMatrix().multiplyPoint(_translation));
 			} else {
 				tr = _translation;
 			}
@@ -60,19 +59,19 @@ namespace Mix {
 		recurSetHasChanged();
 	}
 
-	void Transform::translate(const Math::Vector3f& _translation, const Transform& _relativeTo) {
+	void Transform::translate(const Vector3f& _translation, const Transform& _relativeTo) {
 		auto tr = _relativeTo.localToWorldMatrix().multiplyDirection(_translation);
 		translate(tr, Space::World);
 	}
 
-	void Transform::rotate(const Math::Quaternion& _qua, const Space _relativeTo) {
+	void Transform::rotate(const Quaternion& _qua, const Space _relativeTo) {
 		switch (_relativeTo) {
 		case Space::Self:
 			mQuat = mQuat * _qua;
 			break;
 		case Space::World:
-			if (mGameObject && mGameObject->parent()) {
-				auto p = mGameObject->parent()->transform().getRotation();
+			if (mGameObject && mGameObject->getParent()) {
+				auto p = mGameObject->getParent()->transform().getRotation();
 				mQuat = p.inverse() * _qua * p * mQuat;
 			} else
 				mQuat = _qua * mQuat;
@@ -81,7 +80,7 @@ namespace Mix {
 		recurSetHasChanged();
 	}
 
-	void Transform::rotateAround(const Math::Vector3f& _point, const Math::Vector3f& _axis, const float _angle) {
+	void Transform::rotateAround(const Vector3f& _point, const Vector3f& _axis, const float _angle) {
 		auto pos = getPosition();
 		auto rot = Quaternion::AngleAxis(_angle, _axis);
 		auto dir = pos - _point;
@@ -91,7 +90,7 @@ namespace Mix {
 		setRotation(rot * oldRot);
 	}
 
-	void Transform::lookAt(const Math::Vector3f& _worldPosition, const Math::Vector3f& _worldUp) {
+	void Transform::lookAt(const Vector3f& _worldPosition, const Vector3f& _worldUp) {
 		// if worldPosition is equal to camera position, do nothing
 		if (_worldPosition == getPosition())
 			return;
@@ -99,7 +98,7 @@ namespace Mix {
 		const Vector3f dir = (_worldPosition - getPosition()).normalize();
 		float theta = dir.dot(forward());
 		// if dir and forward is in same direction, do nothing
-		if (EpsilonEqual(theta, 1.0f)) {
+		if (Math::EpsilonEqual(theta, 1.0f)) {
 			return;
 		}
 
@@ -121,8 +120,8 @@ namespace Mix {
 	void Transform::updateLocalToWorldMatrix() const {
 		if (mChanged) {
 			mLocalToWorld = Matrix4::TRS(mPosition, mQuat, mScale);
-			if (mGameObject && mGameObject->parent())
-				mLocalToWorld = mGameObject->parent()->transform().localToWorldMatrix()*mLocalToWorld;
+			if (mGameObject && mGameObject->getParent())
+				mLocalToWorld = mGameObject->getParent()->transform().localToWorldMatrix()*mLocalToWorld;
 			mChanged = false;
 		}
 	}
@@ -138,38 +137,38 @@ namespace Mix {
 	}
 
 	Vector3f Transform::getPosition() const {
-		if (!mGameObject || !mGameObject->parent())
+		if (!mGameObject || !mGameObject->getParent())
 			return mPosition;
-		return mGameObject->parent()->transform().localToWorldMatrix().multiplyPoint(mPosition);
+		return mGameObject->getParent()->transform().localToWorldMatrix().multiplyPoint(mPosition);
 	}
 
-	void Transform::setPosition(const Math::Vector3f& _pos) {
-		if (mGameObject && mGameObject->parent()) {
-			mPosition = mGameObject->parent()->transform().worldToLocalMatrix().multiplyPoint(_pos);
+	void Transform::setPosition(const Vector3f& _pos) {
+		if (mGameObject && mGameObject->getParent()) {
+			mPosition = mGameObject->getParent()->transform().worldToLocalMatrix().multiplyPoint(_pos);
 		} else
 			mPosition = _pos;
 		recurSetHasChanged();
 	}
 
-	Math::Quaternion Transform::getRotation() const {
+	Quaternion Transform::getRotation() const {
 		// get rotation from LocalToWorldMatrix maybe slow
 		// avoid using this if has no parent
-		if (!mGameObject || !mGameObject->parent())
+		if (!mGameObject || !mGameObject->getParent())
 			return mQuat;
 
-		return mGameObject->parent()->transform().getRotation() * mQuat;
+		return mGameObject->getParent()->transform().getRotation() * mQuat;
 	}
 
-	void Transform::setRotation(const Math::Quaternion& _qua) {
-		if (mGameObject && mGameObject->parent()) {
-			mQuat = mGameObject->parent()->transform().worldToLocalMatrix().getRotation() * _qua;
+	void Transform::setRotation(const Quaternion& _qua) {
+		if (mGameObject && mGameObject->getParent()) {
+			mQuat = mGameObject->getParent()->transform().worldToLocalMatrix().getRotation() * _qua;
 		} else
 			mQuat = _qua;
 		recurSetHasChanged();
 	}
 
 	Vector3f Transform::getLossyScale() const {
-		if (!mGameObject || !mGameObject->parent())
+		if (!mGameObject || !mGameObject->getParent())
 			return mScale;
 
 		Matrix4 m = Matrix4::TRS(getPosition(), getRotation(), Vector3f::One).inverse()*localToWorldMatrix();

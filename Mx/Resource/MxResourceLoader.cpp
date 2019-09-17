@@ -14,7 +14,7 @@ namespace Mix {
 		return MixEngine::Instance().getModule<ResourceLoader>();
 	}
 
-	void ResourceLoader::awake() {
+	void ResourceLoader::load() {
 		mLoaderRegister = std::make_shared<ParserRegister>();
 
 		mLoaderRegister->registerParser(std::make_shared<Gltf>());

@@ -14,7 +14,7 @@ namespace Mix {
 	class Camera;
 	class Material;
 	class Texture;
-	struct RenderElement;
+    struct SceneRenderInfo;
 
 	namespace Vulkan {
 		class ShaderBase;
@@ -61,14 +61,14 @@ namespace Mix {
 
 		std::optional<int>				getInt(const std::string& _name) const;
 		std::optional<float>			getFloat(const std::string& _name) const;
-		std::optional<Math::Matrix4>	getMatrix(const std::string& _name)	const;
-		std::optional<Math::Vector4f>	getVector(const std::string& _name)	const;
+		std::optional<Matrix4>	getMatrix(const std::string& _name)	const;
+		std::optional<Vector4f>	getVector(const std::string& _name)	const;
 		std::shared_ptr<Texture>		getTexture(const std::string& _name) const;
 
 		void setInt(const std::string& _name, int _value);
 		void setFloat(const std::string& _name, float _value);
-		void setMatrix(const std::string& _name, const Math::Matrix4& _value);
-		void setVector(const std::string& _name, const Math::Vector4f& _value);
+		void setMatrix(const std::string& _name, const Matrix4& _value);
+		void setVector(const std::string& _name, const Vector4f& _value);
 		void setTexture(const std::string& _name, std::shared_ptr<Texture> _value);
 
 		void clear() { mPropertyMap.clear(); }
@@ -92,14 +92,14 @@ namespace Mix {
 	public:
 		std::optional<int>				getGlobalInt(const std::string& _name) const { return mGlobalProperties.getInt(_name); }
 		std::optional<float>			getGlobalFloat(const std::string& _name) const { return mGlobalProperties.getFloat(_name); }
-		std::optional<Math::Matrix4>	getGlobalMatrix(const std::string& _name) const { return mGlobalProperties.getMatrix(_name); }
-		std::optional<Math::Vector4f>	getGlobalVector(const std::string& _name) const { return mGlobalProperties.getVector(_name); }
+		std::optional<Matrix4>	getGlobalMatrix(const std::string& _name) const { return mGlobalProperties.getMatrix(_name); }
+		std::optional<Vector4f>	getGlobalVector(const std::string& _name) const { return mGlobalProperties.getVector(_name); }
 		std::shared_ptr<Texture>		getGlobalTexture(const std::string& _name) const { return mGlobalProperties.getTexture(_name); }
 
 		void setGlobalInt(const std::string& _name, int _value);
 		void setGlobalFloat(const std::string& _name, float _value);
-		void setGlobalMatrix(const std::string& _name, const Math::Matrix4& _value);
-		void setGlobalVector(const std::string& _name, const Math::Vector4f& _value);
+		void setGlobalMatrix(const std::string& _name, const Matrix4& _value);
+		void setGlobalVector(const std::string& _name, const Vector4f& _value);
 		void setGlobalTexture(const std::string& _name, std::shared_ptr<Texture> _value);
 
 		const std::string& name() const { return mName; }
@@ -112,7 +112,7 @@ namespace Mix {
 
 		void _updated();
 
-		void _render(ArrayProxy<const RenderElement> _renderElements, const Camera& _camera);
+		void _render(const SceneRenderInfo& _renderInfo);
 	private:
 		Shader(std::shared_ptr<Vulkan::ShaderBase> _shader, uint32_t _id, std::string _name, const MaterialPropertySet& _shaerPropertySet, const MaterialPropertySet& _materialPropertySet)
 			:mShader(std::move(_shader)),

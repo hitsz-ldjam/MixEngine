@@ -15,24 +15,6 @@ public:\
 };
 
 namespace Mix {
-    class FactoryFunctionRepetitionException : public std::exception {
-    public:
-        explicit FactoryFunctionRepetitionException(const std::string& _className) {
-            mWhat = "[ERROR] Attempting to re-register factory function of type [" + _className + "]";
-        }
-
-        explicit FactoryFunctionRepetitionException(const char* _className) {
-            mWhat = "[ERROR] Attempting to re-register factory function of type [" + std::string(_className) + "]";
-        }
-
-        const char* what() const override {
-            return mWhat.c_str();
-        }
-
-    private:
-        std::string mWhat;
-    };
-
 
     class Exception : std::exception {
     public:
@@ -41,7 +23,7 @@ namespace Mix {
             mWhat = Utils::StringFormat(_format, std::forward<_Args>(_args)...);
         }
 
-        explicit Exception(std::string _str) : mWhat(std::move((_str))) { }
+        explicit Exception(std::string _str) : mWhat(std::move((_str))) {}
 
         char const* what() const override {
             return mWhat.c_str();
@@ -53,10 +35,10 @@ namespace Mix {
 
     MX_DECLARE_RUNTIME_ERROR(ComponentCastingError, [ERROR] Cannot cast type to Component)
 
-    class IndependentComponentError final : public std::runtime_error {
-    public:
-        explicit IndependentComponentError(const std::string& _name)
-            : std::runtime_error("[ERROR] Component [" + _name + "] is not attached to a GameObject") {}
+        class IndependentComponentError final : public std::runtime_error {
+        public:
+            explicit IndependentComponentError(const std::string& _name)
+                : std::runtime_error("[ERROR] Component [" + _name + "] is not attached to a GameObject") {}
     };
 
     class ThirdPartyLibInitError final : public std::runtime_error {
@@ -67,7 +49,15 @@ namespace Mix {
 
     MX_DECLARE_RUNTIME_ERROR(WindowCreationError, [ERROR] Failed to create window)
 
-    MX_DECLARE_RUNTIME_ERROR(WindowIconLoadingError, [ERROR] Failed to load icon image)
+        MX_DECLARE_RUNTIME_ERROR(WindowIconLoadingError, [ERROR] Failed to load icon image)
+
+#ifndef MX_EXCEPT
+#define MX_EXCEPT(desc) \
+    {\
+        throw Exception("- Error: %1%\n- In Function: %2%\n- In File %3% : %4%", desc, __FUNCTION__, __FILE__, __LINE__);\
+    }
 }
+
+#endif
 
 #endif

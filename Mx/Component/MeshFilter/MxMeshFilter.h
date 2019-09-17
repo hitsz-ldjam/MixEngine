@@ -7,7 +7,6 @@
 namespace Mix {
 	class MeshFilter :public Component {
 		MX_DECLARE_RTTI;
-		MX_DECLARE_CLASS_FACTORY;
 	public:
 		std::shared_ptr<Mesh> getMesh() const {
 			return mMesh;
@@ -18,6 +17,7 @@ namespace Mix {
 		}
 	private:
 		std::shared_ptr<Mesh> mMesh;
+
 	};
 }
 

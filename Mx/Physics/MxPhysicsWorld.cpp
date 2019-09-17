@@ -31,7 +31,7 @@ namespace Mix::Physics {
         delete mConfig;
     }
 
-    void World::awake() {
+    void World::load() {
         try {
             mConfig = new btDefaultCollisionConfiguration;
             mDispatcher = new btCollisionDispatcher(mConfig);

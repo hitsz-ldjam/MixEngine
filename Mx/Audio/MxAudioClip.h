@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifndef MX_AUDIO_CLIP_H_
 #define MX_AUDIO_CLIP_H_

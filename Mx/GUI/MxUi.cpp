@@ -148,8 +148,8 @@ namespace Mix {
 		mMouseCursors[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 
 		// size
-		auto extent = Window::Get()->extent();
-		auto drawableExtent = Window::Get()->drawableSize();
+		auto extent = Window::Get()->getExtent();
+		auto drawableExtent = Window::Get()->getDrawableSize();
 		io.DisplaySize = ImVec2(static_cast<float>(extent.x), static_cast<float>(extent.y));
 		if (extent.x > 0 && extent.y > 0)
 			io.DisplayFramebufferScale = ImVec2(static_cast<float>(drawableExtent.x) / extent.x,
@@ -169,16 +169,16 @@ namespace Mix {
 		mFontTexture->apply(false);
 	}
 
-	Math::Vector2f Ui::getScale() const {
+	Vector2f Ui::getScale() const {
 		return ImGui::GetDrawData() ?
-			Math::Vector2f(2.0f / ImGui::GetDrawData()->DisplaySize.x, 2.0f / ImGui::GetDrawData()->DisplaySize.y)
-			: Math::Vector2f();
+			Vector2f(2.0f / ImGui::GetDrawData()->DisplaySize.x, 2.0f / ImGui::GetDrawData()->DisplaySize.y)
+			: Vector2f();
 	}
 
-	Math::Vector2f Ui::getTranslate() const {
+	Vector2f Ui::getTranslate() const {
 		auto drawData = ImGui::GetDrawData();
 		if (!drawData)
-			return Math::Vector2f::Zero; // (0, 0);
+			return Vector2f::Zero; // (0, 0);
 
 		auto scale = getScale();
 		return { -1.0f - drawData->DisplayPos.x * scale[0],-1.0f - drawData->DisplayPos.y * scale[1] };
@@ -223,8 +223,8 @@ namespace Mix {
 			break;
 		case SDL_WINDOWEVENT_SHOWN:
 		case SDL_WINDOWEVENT_RESIZED:
-			auto extent = Window::Get()->extent();
-			auto drawableExtent = Window::Get()->drawableSize();
+			auto extent = Window::Get()->getExtent();
+			auto drawableExtent = Window::Get()->getDrawableSize();
 			io.DisplaySize = ImVec2(static_cast<float>(extent.x), static_cast<float>(extent.y));
 			if (extent.x > 0 && extent.y > 0)
 				io.DisplayFramebufferScale = ImVec2(static_cast<float>(drawableExtent.x) / extent.x,

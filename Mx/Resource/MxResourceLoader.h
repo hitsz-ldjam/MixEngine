@@ -16,7 +16,7 @@ namespace Mix {
 		/**
 		 * \brief Initialize the Resources
 		 */
-		void awake() override;
+		void load() override;
 
 		void init() override {}
 

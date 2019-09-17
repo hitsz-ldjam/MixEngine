@@ -8,6 +8,7 @@
 
 namespace Mix {
 	class Window;
+    struct SceneRenderInfo;
 
 	namespace Vulkan {
 		class VulkanAPI;
@@ -19,7 +20,7 @@ namespace Mix {
 
 		~Graphics();
 
-		void awake() override;
+		void load() override;
 
 		void init() override;
 

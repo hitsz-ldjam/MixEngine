@@ -7,8 +7,8 @@ namespace Mix {
 			switch (property.type) {
 			case MaterialPropertyType::INT: setInt(property.name, std::any_cast<int>(property.defaultValue)); break;
 			case MaterialPropertyType::FLOAT: setFloat(property.name, std::any_cast<float>(property.defaultValue)); break;
-			case MaterialPropertyType::MATRIX: setMatrix(property.name, std::any_cast<Math::Matrix4>(property.defaultValue)); break;
-			case MaterialPropertyType::VECTOR: setVector(property.name, std::any_cast<Math::Vector4f>(property.defaultValue)); break;
+			case MaterialPropertyType::MATRIX: setMatrix(property.name, std::any_cast<Matrix4>(property.defaultValue)); break;
+			case MaterialPropertyType::VECTOR: setVector(property.name, std::any_cast<Vector4f>(property.defaultValue)); break;
 			case MaterialPropertyType::TEX_2D: setTexture(property.name, std::any_cast<std::shared_ptr<Texture>>(property.defaultValue)); break;
 			}
 		}
@@ -28,14 +28,14 @@ namespace Mix {
 		}
 	}
 
-	void Shader::setGlobalMatrix(const std::string& _name, const Math::Matrix4& _value) {
+	void Shader::setGlobalMatrix(const std::string& _name, const Matrix4& _value) {
 		if (mGlobalProperties.hasProperty(_name)) {
 			mGlobalProperties.setMatrix(_name, _value);
 			mChangedList.push_back(_name);
 		}
 	}
 
-	void Shader::setGlobalVector(const std::string& _name, const Math::Vector4f& _value) {
+	void Shader::setGlobalVector(const std::string& _name, const Vector4f& _value) {
 		if (mGlobalProperties.hasProperty(_name)) {
 			mGlobalProperties.setVector(_name, _value);
 			mChangedList.push_back(_name);
@@ -61,7 +61,7 @@ namespace Mix {
 		mChangedList.clear();
 	}
 
-	void Shader::_render(ArrayProxy<const RenderElement> _renderElements, const Camera& _camera) {
-		mShader->render(*this, _renderElements, _camera);
+	void Shader::_render(const SceneRenderInfo& _renderInfo) {
+		mShader->render(*this, _renderInfo);
 	}
 }

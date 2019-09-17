@@ -47,6 +47,8 @@ namespace Mix {
 
 			std::shared_ptr<VertexDeclaration> getVertexDeclaration() const { return mVertexDecl; }
 
+            const vk::PipelineLayout& getPipelineLayout() const;
+
 			std::shared_ptr<Pipeline> getPipeline(const std::shared_ptr<RenderPass>& _renderPass,
 												  uint32_t _subpassIndex,
 												  const std::shared_ptr<VertexInput>& _vertexInput,

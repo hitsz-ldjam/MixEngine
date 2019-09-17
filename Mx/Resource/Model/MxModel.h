@@ -6,98 +6,123 @@
 #include "../../Math/MxVector3.h"
 #include "../../Math/MxQuaternion.h"
 #include "../../Graphics/Mesh/MxMesh.h"
+#include "../../GameObject/MxGameObject.h"
 
 namespace Mix {
-	class GameObject;
+    class GameObject;
     struct GameObjectConInfo;
 
-	class Model :public ResourceBase {
-		friend class ModelParserBase;
-	public:
-		/**
-		 * \brief A node in a Model.
-		 */
-		class Node {
-		public:
-			Node() = default;
+    class Model :public ResourceBase {
+        friend class ModelParserBase;
+    public:
+        /**
+         * \brief A node in a Model.
+         */
+        class Node {
+        public:
+            Node() = default;
 
-			explicit Node(std::string _name) :mName(std::move(_name)) {}
+            explicit Node(std::string _name) :mName(std::move(_name)) {}
 
-			void setName(const std::string& _name) { mName = _name; }
-			const std::string& getName() const { return mName; }
+            void setName(const std::string& _name) { mName = _name; }
 
-			void setTranslation(const Math::Vector3f& _translation) { mTranslation = _translation; }
-			void setRotation(const Math::Quaternion& _rotation) { mRotation = _rotation; }
-			void setScale(const Math::Vector3f& _scale) { mScale = _scale; }
+            const std::string& getName() const { return mName; }
 
-			const Math::Vector3f& getTranslation() const { return mTranslation; }
-			const Math::Quaternion& getRotation()const { return mRotation; }
-			const Math::Vector3f& getScale()const { return mScale; }
+            void setTranslation(const Vector3f& _translation) { mTranslation = _translation; }
 
-			void setMeshRef(int32_t _meshIndex) { _meshIndex < 0 ? mMesh = -1 : mMesh = _meshIndex; }
-			int32_t getMeshRef() const { return mMesh; }
+            void setRotation(const Quaternion& _rotation) { mRotation = _rotation; }
 
-			void addChildNode(const Node& _node);
+            void setScale(const Vector3f& _scale) { mScale = _scale; }
 
-			void addChildNode(Node&& _node);
+            const Vector3f& getTranslation() const { return mTranslation; }
 
-			bool hasChildNode() const { return mChildren.has_value() && !mChildren.value().empty(); }
+            const Quaternion& getRotation()const { return mRotation; }
 
-			size_t childNodeCount() const { return mChildren.has_value() ? mChildren.value().size() : 0; }
+            const Vector3f& getScale()const { return mScale; }
 
-			const std::vector<Node>& getChildNodes() const { return mChildren.value(); }
+            void setMeshRef(int32_t _meshIndex) { _meshIndex < 0 ? mMesh = -1 : mMesh = _meshIndex; }
 
-			std::vector<Node>& getChildNodes() { return mChildren.value(); }
+            int32_t getMeshRef() const { return mMesh; }
 
-			void removeChildNode(uint32_t _index);
+            void addChildNode(const Node& _node);
 
-		private:
-			std::string mName;
-			// a node will have transform info
-			Math::Vector3f mTranslation;
-			Math::Quaternion mRotation;
-			Math::Vector3f mScale = Math::Vector3f::One;
+            void addChildNode(Node&& _node);
 
-			// a node may have children
-			std::optional<std::vector<Node>> mChildren;
-			// a node may have a mesh
-			int32_t mMesh = -1;
-		};
+            bool hasChildNode() const { return mChildren.has_value() && !mChildren.value().empty(); }
 
-		Model() = default;
+            size_t childNodeCount() const { return mChildren.has_value() ? mChildren.value().size() : 0; }
 
-		explicit Model(std::string _name) :mName(std::move(_name)) {}
+            const std::vector<Node>& getChildNodes() const { return mChildren.value(); }
 
-		void setName(const std::string& _name) { mName = _name; }
+            std::vector<Node>& getChildNodes() { return mChildren.value(); }
 
-		const std::string& getName() const { return mName; }
+            void removeChildNode(uint32_t _index);
 
-		const Node& getRootNode() const { return mRootNode; }
+        private:
+            std::string mName;
+            // a node will have transform info
+            Vector3f mTranslation;
+            Quaternion mRotation;
+            Vector3f mScale = Vector3f::One;
 
-		Node& getRootNode() { return mRootNode; }
+            // a node may have children
+            std::optional<std::vector<Node>> mChildren;
+            // a node may have a mesh
+            int32_t mMesh = -1;
+        };
 
-		void setMeshes(const std::vector<std::shared_ptr<Mesh>>& _meshes) { mMeshes = _meshes; }
+        Model() = default;
 
-		void setMeshes(std::vector<std::shared_ptr<Mesh>>&& _meshes) { mMeshes = std::move(_meshes); }
+        explicit Model(std::string _name) :mName(std::move(_name)) {}
 
-		void addMesh(std::shared_ptr<Mesh> _mesh) { mMeshes.push_back(std::move(_mesh)); }
+        void setName(const std::string& _name) { mName = _name; }
 
-		void addMesh(std::shared_ptr<Mesh>&& _mesh) { mMeshes.push_back(std::move(_mesh)); }
+        const std::string& getName() const { return mName; }
 
-		const std::vector<std::shared_ptr<Mesh>>& getMeshes() const { return mMeshes; }
+        const Node& getRootNode() const { return mRootNode; }
 
-		size_t meshCount() const { return mMeshes.size(); }
+        Node& getRootNode() { return mRootNode; }
 
-		GameObject* genAllScene(const GameObjectConInfo& _info) const;
+        void setMeshes(const std::vector<std::shared_ptr<Mesh>>& _meshes) { mMeshes = _meshes; }
 
-		GameObject* genDefaultScene(const GameObjectConInfo& _info) const;
+        void setMeshes(std::vector<std::shared_ptr<Mesh>>&& _meshes) { mMeshes = std::move(_meshes); }
 
-	private:
-		std::string mName;
-		Node mRootNode;
-		std::vector<std::shared_ptr<Mesh>> mMeshes;
+        void addMesh(std::shared_ptr<Mesh> _mesh) { mMeshes.push_back(std::move(_mesh)); }
 
-		void recurBuildGameObj(GameObject& _obj, const Node& _node) const;
-	};
+        void addMesh(std::shared_ptr<Mesh>&& _mesh) { mMeshes.push_back(std::move(_mesh)); }
+
+        const std::vector<std::shared_ptr<Mesh>>& getMeshes() const { return mMeshes; }
+
+        size_t meshCount() const { return mMeshes.size(); }
+
+        HGameObject genAllGameObjects(const std::string& _name,
+                                      const Tag& _tag               = "",
+                                      LayerIndex _layerIndex  = 0,
+                                      Flags<GameObjectFlags> _flags = {}) const;
+
+        HGameObject genAllGameObjects(const std::shared_ptr<Scene>& _scene,
+                                      const std::string& _name,
+                                      const Tag& _tag               = "",
+                                      LayerIndex _layerIndex        = 0,
+                                      Flags<GameObjectFlags> _flags = {}) const;
+
+        HGameObject genDefaultGameObjects(const std::string& _name,
+                                          const Tag& _tag               = "",
+                                          LayerIndex _layerIndex        = 0,
+                                          Flags<GameObjectFlags> _flags = {}) const;
+
+        HGameObject genDefaultGameObjects(const std::shared_ptr<Scene>& _scene,
+                                          const std::string& _name,
+                                          const Tag& _tag               = "",
+                                          LayerIndex _layerIndex        = 0,
+                                          Flags<GameObjectFlags> _flags = {}) const;
+
+    private:
+        std::string mName;
+        Node mRootNode;
+        std::vector<std::shared_ptr<Mesh>> mMeshes;
+
+        void recurBuildGameObj(const std::shared_ptr<Scene>& _scene, const HGameObject& _obj, const Node& _node) const;
+    };
 }
 #endif

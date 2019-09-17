@@ -88,7 +88,7 @@ namespace Mix {
 		return extent(_mipLevel).y;
 	}
 
-	Math::Vector2i Texture::extent(uint32_t _mipLevel) const {
+	Vector2i Texture::extent(uint32_t _mipLevel) const {
 		return GetMipmapExtent(mImage->extent().width, mImage->extent().height, _mipLevel);
 	}
 
@@ -100,7 +100,7 @@ namespace Mix {
 		return static_cast<uint32_t>(std::floor(std::log2(std::max(_width, _height)))) + 1;
 	}
 
-	Math::Vector2ui Texture::GetMipmapExtent(uint32_t _width, uint32_t _height, uint32_t _mipLevel) {
+	Vector2ui Texture::GetMipmapExtent(uint32_t _width, uint32_t _height, uint32_t _mipLevel) {
 		for (uint32_t i = 0; i < _mipLevel; ++i) {
 			_width > 1 ? _width >>= 1 : 1;
 			_height > 1 ? _height >>= 1 : 1;
@@ -202,6 +202,7 @@ namespace Mix {
 		switch (_format) {
 		case vk::Format::eR8G8B8A8Unorm:return TextureFormat::R8G8B8A8_Unorm;
 		case vk::Format::eB8G8R8A8Unorm:return TextureFormat::B8G8R8A8_Unorm;
+        default: return TextureFormat::Unknown;
 		}
 	}
 
@@ -533,7 +534,7 @@ namespace Mix {
 														_size, _pixels);
 
 			mTransfers.emplace_back(std::piecewise_construct,
-									std::forward_as_tuple(CopyToDstImageInfo{ _mipLevel, 0,Math::Vector2ui(_x,_y),Math::Vector2ui(_width,_height) }),
+									std::forward_as_tuple(CopyToDstImageInfo{ _mipLevel, 0,Vector2ui(_x,_y),Vector2ui(_width,_height) }),
 									std::forward_as_tuple(src));
 		}
 	}
@@ -585,7 +586,7 @@ namespace Mix {
 														_size, _pixels);
 
 			mTransfers.emplace_back(std::piecewise_construct,
-									std::forward_as_tuple(CopyToDstImageInfo{ _mipLevel,GetFaceLayerIndex(_face),Math::Vector2ui(_x,_y),Math::Vector2ui(_width,_height) }),
+									std::forward_as_tuple(CopyToDstImageInfo{ _mipLevel,GetFaceLayerIndex(_face),Vector2ui(_x,_y),Vector2ui(_width,_height) }),
 									std::forward_as_tuple(src));
 		}
 	}
