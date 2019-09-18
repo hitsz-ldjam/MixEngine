@@ -26,7 +26,7 @@ namespace Mix {
             explicit StandardShader(VulkanAPI* _vulkan);
 
             ~StandardShader() override;
-            
+
             void render(RenderElement& _element) override;
 
             void update(const Shader& _shader) override;
@@ -42,11 +42,11 @@ namespace Mix {
         private:
             void setCamera(const Camera& _camera);
 
-             void beginElement(const RenderElement& _element);
+            void beginElement(const RenderElement& _element);
 
             void endElement();
 
-            bool choosePipeline(const Mesh& _mesh, uint32_t _submesh);
+            bool choosePipeline(const Material& _material, const Mesh& _mesh, uint32_t _submesh);
 
             void updateMaterial(Material& _material);
 
@@ -54,12 +54,8 @@ namespace Mix {
 
 
             std::shared_ptr<Device> mDevice;
-            std::shared_ptr<Swapchain> mSwapchain;
 
             std::shared_ptr<GraphicsPipelineState> mGraphicsPipelineState;
-            std::shared_ptr<RenderPass> mRenderPass;
-
-            std::vector<FrameBuffer> mFrameBuffers;
 
             std::shared_ptr<Image> mDepthStencil;
             vk::ImageView mDepthStencilView;
@@ -82,8 +78,8 @@ namespace Mix {
 
             std::shared_ptr<Pipeline> mGuiPipeline;*/
 
-            void buildRenderPass();
-            void buildFrameBuffer();
+            // void buildRenderPass();
+            // void buildFrameBuffer();
             void buildDescriptorSetLayout();
             void buildPipeline();
             void buildDescriptorSet();

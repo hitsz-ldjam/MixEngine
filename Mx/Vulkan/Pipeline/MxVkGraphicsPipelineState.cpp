@@ -176,11 +176,14 @@ namespace Mix {
         std::shared_ptr<Pipeline> GraphicsPipelineState::getPipeline(const std::shared_ptr<RenderPass>& _renderPass,
                                                                      uint32_t _subpassIndex,
                                                                      const std::shared_ptr<VertexInput>& _vertexInput,
-                                                                     MeshTopology _drawMode) {
-            // todo Find a nother way to generate the id of RenderPass
+                                                                     MeshTopology _drawMode,
+                                                                     bool _depthTest,
+                                                                     bool _depthWrite,
+                                                                     bool _stencilTest) {
+                               // todo Find a nother way to generate the id of RenderPass
             auto renderPassKey = static_cast<uint32_t>(reinterpret_cast<intptr_t>(_renderPass.get()));
 
-            PipelineKey key{ renderPassKey,_subpassIndex,_drawMode,_vertexInput->getId() };
+            PipelineKey key{ renderPassKey,_subpassIndex,_drawMode,_vertexInput->getId(),_depthTest,_depthWrite,_stencilTest };
 
             // A suitable graphice pipeline exists
             auto it = mPipelineMap.find(key);
@@ -221,9 +224,15 @@ namespace Mix {
         std::shared_ptr<Pipeline> GraphicsPipelineState::createPipeline(const std::shared_ptr<RenderPass>& _renderPass,
                                                                         uint32_t _subpassIndex,
                                                                         MeshTopology _drawMode,
-                                                                        const std::shared_ptr<VertexInput>& _vertexInput) {
-            // todo Add more other common options
+                                                                        const std::shared_ptr<VertexInput>& _vertexInput,
+                                                                        bool _depthTest,
+                                                                        bool _depthWrite,
+                                                                        bool _stencilTest) {
+               // todo Add more other common options
             mPipelineStateData.inputAssemblyInfo.topology = VulkanUtils::GetTopology(_drawMode);
+            mPipelineStateData.depthStencilInfo.depthTestEnable = _depthTest;
+            mPipelineStateData.depthStencilInfo.depthWriteEnable = _depthWrite;
+            mPipelineStateData.depthStencilInfo.stencilTestEnable = _stencilTest;
             mPipelineStateData.pipelineCreateInfo.renderPass = _renderPass->get();
             mPipelineStateData.pipelineCreateInfo.subpass = _subpassIndex;
             mPipelineStateData.pipelineCreateInfo.pVertexInputState = &_vertexInput->getVertexInputStateInfo();
@@ -239,6 +248,8 @@ namespace Mix {
             Utils::HashCombine(hash, _v.subpass);
             Utils::HashCombine(hash, _v.drawMode);
             Utils::HashCombine(hash, _v.vertexInputId);
+            uint32_t flag = (_v.depthTest << 2 | _v.depthWrite << 1 | _v.stencilTest);
+            Utils::HashCombine(hash, flag);
             return hash;
         }
 
@@ -247,7 +258,13 @@ namespace Mix {
         }
 
         bool GraphicsPipelineState::PipelineKey::operator==(const PipelineKey& _other) const {
-            return renderPassId == _other.renderPassId && subpass == _other.subpass && drawMode == _other.drawMode && vertexInputId == _other.vertexInputId;
+            return renderPassId == _other.renderPassId &&
+                subpass == _other.subpass &&
+                drawMode == _other.drawMode &&
+                vertexInputId == _other.vertexInputId &&
+                depthTest == _other.depthTest &&
+                depthWrite == _other.depthWrite &&
+                stencilTest == _other.stencilTest;
         }
 
         bool GraphicsPipelineState::PipelineKey::operator!=(const PipelineKey& _other) const {

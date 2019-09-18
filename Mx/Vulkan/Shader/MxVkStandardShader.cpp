@@ -21,9 +21,8 @@ namespace Mix {
     namespace Vulkan {
         StandardShader::StandardShader(VulkanAPI* _vulkan) :ShaderBase(_vulkan) {
             mDevice = mVulkan->getLogicalDevice();
-            mSwapchain = mVulkan->getSwapchain();
 
-            auto imageCount = mSwapchain->imageCount();
+            auto imageCount = mVulkan->getSwapchain()->imageCount();
             mDynamicUniform.reserve(imageCount);
             // mTestDynamic.reserve(imageCount);
             mCameraUniforms.reserve(imageCount);
@@ -40,8 +39,8 @@ namespace Mix {
                                              sizeof(Uniform::CameraUniform));
             }
 
-            buildRenderPass();
-            buildFrameBuffer();
+            // buildRenderPass();
+            // buildFrameBuffer();
             buildDescriptorSetLayout();
             buildPipeline();
             buildDescriptorSet();
@@ -62,20 +61,10 @@ namespace Mix {
 
             // update Camera
             setCamera(_camera);
-
-            std::vector<vk::ClearValue> clearValues(2);
-            clearValues[0].color = std::array<float, 4>{0.0f, 0.75f, 1.0f, 1.0f};
-            clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
-
-            mRenderPass->beginRenderPass(cmd.get(),
-                                         mFrameBuffers[mCurrFrame].get(),
-                                         clearValues,
-                                         mSwapchain->extent());
         }
 
         void StandardShader::endRender() {
-            mDynamicUniform[mCurrFrame].reset();
-            mRenderPass->endRenderPass(mCurrCmd->get());
+            // mDynamicUniform[mCurrFrame].reset();
         }
 
         void StandardShader::setCamera(const Camera& _camera) {
@@ -118,12 +107,14 @@ namespace Mix {
             // mDynamicUniform[mCurrFrame].next();
         }
 
-        bool StandardShader::choosePipeline(const Mesh& _mesh, uint32_t _submesh) {
+        bool StandardShader::choosePipeline(const Material& _material, const Mesh& _mesh, uint32_t _submesh) {
+            bool depthTest = _material.getRenderType() != RenderType::Transparent;
+
             auto newVertexInput = mVulkan->getVertexInputManager().getVertexInput(*_mesh.getVertexDeclaration(), *mGraphicsPipelineState->getVertexDeclaration());
             if (newVertexInput == nullptr) // This mesh is not compatiple with this pipeline
                 return false;
             if (newVertexInput != mCurrVertexInput) {
-                auto newPipeline = mGraphicsPipelineState->getPipeline(mRenderPass, 0, newVertexInput, _mesh.getTopology(_submesh));
+                auto newPipeline = mGraphicsPipelineState->getPipeline(mVulkan->getRenderPass(), 0, newVertexInput, _mesh.getTopology(_submesh), depthTest, depthTest);
                 if (newPipeline != mCurrPipeline) {
                     mCurrCmd->get().bindPipeline(vk::PipelineBindPoint::eGraphics, newPipeline->get());
                     mCurrPipeline = newPipeline;
@@ -157,7 +148,7 @@ namespace Mix {
         void StandardShader::render(RenderElement& _element) {
             beginElement(_element);
 
-            choosePipeline(*_element.mesh, _element.submesh);
+            choosePipeline(*_element.material, *_element.mesh, _element.submesh);
             setMaterail(*_element.material);
             DrawMesh(*mCurrCmd, *_element.mesh, _element.submesh);
 
@@ -251,7 +242,7 @@ namespace Mix {
         }
 
         void StandardShader::buildDescriptorSet() {
-            auto imageCount = mSwapchain->imageCount();
+            auto imageCount = mVulkan->getSwapchain()->imageCount();
 
             mDescriptorPool = std::make_shared<DescriptorPool>(mDevice);
             mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBuffer, imageCount);
@@ -297,51 +288,51 @@ namespace Mix {
                 mUnusedId.push_back(i);
         }
 
-        void StandardShader::buildRenderPass() {
-            mDepthStencil = Image::CreateDepthStencil(mVulkan->getAllocator(),
-                                                      mSwapchain->extent(),
-                                                      vk::SampleCountFlagBits::e1);
-            mDepthStencilView = Image::CreateVkImageView2D(mDevice->get(),
-                                                           mDepthStencil->get(),
-                                                           mDepthStencil->format(),
-                                                           vk::ImageAspectFlagBits::eDepth |
-                                                           vk::ImageAspectFlagBits::eStencil);
+        //void StandardShader::buildRenderPass() {
+        //    mDepthStencil = Image::CreateDepthStencil(mVulkan->getAllocator(),
+        //                                              mSwapchain->extent(),
+        //                                              vk::SampleCountFlagBits::e1);
+        //    mDepthStencilView = Image::CreateVkImageView2D(mDevice->get(),
+        //                                                   mDepthStencil->get(),
+        //                                                   mDepthStencil->format(),
+        //                                                   vk::ImageAspectFlagBits::eDepth |
+        //                                                   vk::ImageAspectFlagBits::eStencil);
 
-            // RenderPass
-            mRenderPass = std::make_shared<RenderPass>(mVulkan->getLogicalDevice());
+        //    // RenderPass
+        //    mRenderPass = std::make_shared<RenderPass>(mVulkan->getLogicalDevice());
 
-            mRenderPass->addAttachment({
-                {0, Attachment::Type::PRESENT, mSwapchain->surfaceFormat().format},
-                {1, Attachment::Type::DEPTH_STENCIL, mDepthStencil->format()}
-                                       });
+        //    mRenderPass->addAttachment({
+        //        {0, Attachment::Type::PRESENT, mSwapchain->surfaceFormat().format},
+        //        {1, Attachment::Type::DEPTH_STENCIL, mDepthStencil->format()}
+        //                               });
 
-            Subpass subpass(0);
-            subpass.addRef({
-                {AttachmentRef::Type::COLOR, 0},
-                {AttachmentRef::Type::DEPTH_STENCIL, 1}
-                           });
+        //    Subpass subpass(0);
+        //    subpass.addRef({
+        //        {AttachmentRef::Type::COLOR, 0},
+        //        {AttachmentRef::Type::DEPTH_STENCIL, 1}
+        //                   });
 
-            mRenderPass->addSubpass(subpass);
+        //    mRenderPass->addSubpass(subpass);
 
-            mRenderPass->addDependency({
-                VK_SUBPASS_EXTERNAL,
-                0,
-                vk::PipelineStageFlagBits::eColorAttachmentOutput,
-                vk::PipelineStageFlagBits::eColorAttachmentOutput,
-                vk::AccessFlags(),
-                vk::AccessFlagBits::eColorAttachmentRead |
-                vk::AccessFlagBits::eColorAttachmentWrite
-                                       });
-            mRenderPass->create();
-        }
+        //    mRenderPass->addDependency({
+        //        VK_SUBPASS_EXTERNAL,
+        //        0,
+        //        vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        //        vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        //        vk::AccessFlags(),
+        //        vk::AccessFlagBits::eColorAttachmentRead |
+        //        vk::AccessFlagBits::eColorAttachmentWrite
+        //                               });
+        //    mRenderPass->create();
+        //}
 
-        void StandardShader::buildFrameBuffer() {
+        /*void StandardShader::buildFrameBuffer() {
             for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
                 mFrameBuffers.emplace_back(mRenderPass, mVulkan->getSwapchain()->extent());
                 mFrameBuffers.back().addAttachments({ mSwapchain->getImageViews()[i], mDepthStencilView });
                 mFrameBuffers.back().create();
             }
-        }
+        }*/
 
         void StandardShader::buildDescriptorSetLayout() {
             mStaticParamDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(mDevice);

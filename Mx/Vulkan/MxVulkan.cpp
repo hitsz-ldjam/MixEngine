@@ -12,6 +12,8 @@
 #include "Pipeline/MxVkVertexInput.h"
 #include "../Definitions/MxSystemInfo.h"
 #include "MxVkUtils.h"
+#include "Image/MxVkImage.h"
+#include "FrameBuffer/MxVkFramebuffer.h"
 
 namespace Mix {
     namespace Vulkan {
@@ -65,6 +67,8 @@ namespace Mix {
             createSwapchain();
             createCommandPool();
             createAllocator();
+            createRenderPass();
+            createFrameBuffer();
 
             mGraphicsCommandBuffers.reserve(mSwapchain->imageCount());
             for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
@@ -80,9 +84,20 @@ namespace Mix {
             mCurrCmd->wait();
             mSwapchain->acquireNextImage();
             mCurrCmd->begin();
+
+            std::vector<vk::ClearValue> clearValues(2);
+            clearValues[0].color = std::array<float, 4>{0.0f, 0.75f, 1.0f, 1.0f};
+            clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
+
+            mRenderPass->beginRenderPass(mCurrCmd->get(),
+                                         mFrameBuffers[mCurrFrame].get(),
+                                         clearValues,
+                                         mSwapchain->extent());
         }
 
         void VulkanAPI::endRender() {
+            mRenderPass->endRenderPass(mCurrCmd->get());
+
             mCurrCmd->end();
             mCurrCmd->submit({ mSwapchain->presentFinishedSph() }, // wait for image
                              { vk::PipelineStageFlagBits::eColorAttachmentOutput },
@@ -180,6 +195,52 @@ namespace Mix {
 
         void VulkanAPI::createAllocator() {
             mAllocator = std::make_shared<DeviceAllocator>(mDevice);
+        }
+
+        void VulkanAPI::createRenderPass() {
+            mDepthStencil = Image::CreateDepthStencil(getAllocator(),
+                                                      mSwapchain->extent(),
+                                                      vk::SampleCountFlagBits::e1);
+            mDepthStencilView = Image::CreateVkImageView2D(mDevice->get(),
+                                                           mDepthStencil->get(),
+                                                           mDepthStencil->format(),
+                                                           vk::ImageAspectFlagBits::eDepth |
+                                                           vk::ImageAspectFlagBits::eStencil);
+
+            // RenderPass
+            mRenderPass = std::make_shared<RenderPass>(getLogicalDevice());
+
+            mRenderPass->addAttachment({
+                {0, Attachment::Type::PRESENT, mSwapchain->surfaceFormat().format},
+                {1, Attachment::Type::DEPTH_STENCIL, mDepthStencil->format()}
+                                       });
+
+            Subpass subpass(0);
+            subpass.addRef({
+                {AttachmentRef::Type::COLOR, 0},
+                {AttachmentRef::Type::DEPTH_STENCIL, 1}
+                           });
+
+            mRenderPass->addSubpass(subpass);
+
+            mRenderPass->addDependency({
+                VK_SUBPASS_EXTERNAL,
+                0,
+                vk::PipelineStageFlagBits::eColorAttachmentOutput,
+                vk::PipelineStageFlagBits::eColorAttachmentOutput,
+                vk::AccessFlags(),
+                vk::AccessFlagBits::eColorAttachmentRead |
+                vk::AccessFlagBits::eColorAttachmentWrite
+                                       });
+            mRenderPass->create();
+        }
+
+        void VulkanAPI::createFrameBuffer() {
+            for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
+                mFrameBuffers.emplace_back(mRenderPass, getSwapchain()->extent());
+                mFrameBuffers.back().addAttachments({ mSwapchain->getImageViews()[i], mDepthStencilView });
+                mFrameBuffers.back().create();
+            }
         }
     }
 }

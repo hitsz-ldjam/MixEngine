@@ -8,7 +8,7 @@ layout(set = 0, binding = 0) uniform CameraUniform {
     mat4 projMat;
 }camera;
 
-layout(set = 0, binding = 1) uniform MeshUniform {
+layout(push_constant) uniform MeshConstant {
 	mat4 modelMat;
 }mesh;
 
