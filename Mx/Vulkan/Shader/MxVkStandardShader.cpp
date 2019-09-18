@@ -108,13 +108,13 @@ namespace Mix {
         }
 
         bool StandardShader::choosePipeline(const Material& _material, const Mesh& _mesh, uint32_t _submesh) {
-            bool depthTest = _material.getRenderType() != RenderType::Transparent;
+            bool depthWrite = _material.getRenderType() != RenderType::Transparent;
 
             auto newVertexInput = mVulkan->getVertexInputManager().getVertexInput(*_mesh.getVertexDeclaration(), *mGraphicsPipelineState->getVertexDeclaration());
             if (newVertexInput == nullptr) // This mesh is not compatiple with this pipeline
                 return false;
             if (newVertexInput != mCurrVertexInput) {
-                auto newPipeline = mGraphicsPipelineState->getPipeline(mVulkan->getRenderPass(), 0, newVertexInput, _mesh.getTopology(_submesh), depthTest, depthTest);
+                auto newPipeline = mGraphicsPipelineState->getPipeline(mVulkan->getRenderPass(), 0, newVertexInput, _mesh.getTopology(_submesh), true, depthWrite);
                 if (newPipeline != mCurrPipeline) {
                     mCurrCmd->get().bindPipeline(vk::PipelineBindPoint::eGraphics, newPipeline->get());
                     mCurrPipeline = newPipeline;

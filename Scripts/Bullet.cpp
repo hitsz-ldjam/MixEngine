@@ -7,7 +7,6 @@ namespace Scripts {
     MX_IMPLEMENT_RTTI(Bullet, Script);
 
     void Bullet::awake() {
-        Log::Info("%1% bullet generated!", mGameObject->getName());
     }
 
     void Bullet::init() {

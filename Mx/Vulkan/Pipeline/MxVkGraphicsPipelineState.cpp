@@ -192,7 +192,7 @@ namespace Mix {
 
             // No suitable graphice pipeline
             // Create a new one
-            auto newPipeline = createPipeline(_renderPass, _subpassIndex, _drawMode, _vertexInput);
+            auto newPipeline = createPipeline(_renderPass, _subpassIndex, _drawMode, _vertexInput, _depthTest, _depthWrite, _stencilTest);
             mPipelineMap[key] = newPipeline;
             return newPipeline;
         }

@@ -9,11 +9,9 @@ namespace Scripts {
     MX_IMPLEMENT_RTTI(EnemyShipScript, Script);
 
     void EnemyShipScript::init() {
-        // Log::Info("Enemy ship script init");
     }
 
     void EnemyShipScript::update() {
-
     }
 
     void EnemyShipScript::fixedUpdate() {
