@@ -5,7 +5,7 @@
 
 // todo: delete debug code
 #include "../Scene/MxSceneManager.h"
-#include "../BuildIn/Camera/MxCamera.h"
+#include "../Component/Camera/MxCamera.h"
 // -----
 
 #ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
@@ -113,7 +113,7 @@ namespace Mix::Physics::DebugDrawImpl {
                     glUseProgram(mID);
                 }
 
-                void setUniform(const char* _uniform, const Math::Matrix4& _value) const {
+                void setUniform(const char* _uniform, const Matrix4& _value) const {
                     glUniformMatrix4fv(uniformLocation(_uniform), 1, GL_FALSE, &_value[0][0]);
                 }
 
@@ -200,9 +200,9 @@ namespace Mix::Physics::DebugDrawImpl {
                       mVAO(nullptr),
                       mVBO(nullptr) {}
 
-        void pushLine(const Math::Vector3f& _from,
-                      const Math::Vector3f& _to,
-                      const Math::Vector3f& _color) {
+        void pushLine(const Vector3f& _from,
+                      const Vector3f& _to,
+                      const Vector3f& _color) {
             mNewData.insert(mNewData.end(), std::begin(_from.linear), std::end(_from.linear));
             mNewData.insert(mNewData.end(), std::begin(_color.linear), std::end(_color.linear));
             mNewData.insert(mNewData.end(), std::begin(_to.linear), std::end(_to.linear));
@@ -273,15 +273,13 @@ namespace Mix::Physics::DebugDrawImpl {
             mProgram->useSelf();
 
             // todo: pass from Camera
-            static auto camera = SceneManager::Get()->activeScene()->mainCamera();
+            static auto camera = SceneManager::Get()->getActiveScene()->getMainCamera();
             {
-                using namespace Math;
-
                 mProgram->setUniform("model", Matrix4::Identity);
                 mProgram->setUniform("view", camera->getViewMat());
                 auto proj = camera->getProjMat();
-                proj[0][0] *= -1.0f;
-                proj[1][1] *= -1.0f;
+                //proj[0][0] *= -1.0f;
+                //proj[1][1] *= -1.0f;
                 mProgram->setUniform("projection", proj);
             }
 

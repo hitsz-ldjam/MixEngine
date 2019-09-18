@@ -2,7 +2,7 @@
 #include "../GameObject/MxGameObject.h"
 #include "../Log/MxLog.h"
 #include "../Component/Renderer/MxRenderer.h"
-#include "../BuildIn/Camera/MxCamera.h"
+#include "../Component/Camera/MxCamera.h"
 #include "../Window/MxWindow.h"
 
 namespace Mix {

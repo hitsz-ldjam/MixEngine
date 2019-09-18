@@ -1,6 +1,6 @@
 #include "EnemyShip.h"
 #include "../Mx/Time/MxTime.h"
-#include "../Mx/BuildIn/Camera/MxCamera.h"
+#include "../Mx/Component/Camera/MxCamera.h"
 #include "../Mx/Log/MxLog.h"
 #include "../Mx/Window/MxWindow.h"
 #include "../Mx/Input/MxInput.h"

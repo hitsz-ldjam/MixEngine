@@ -8,7 +8,7 @@
 #include "Mx/GUI/MxUi.h"
 #include "Mx/Resource/MxResourceLoader.h"
 #include "Mx/Graphics/MxGraphics.h"
-#include "Mx/Scene/MxSceneManager.hpp"
+#include "Mx/Scene/MxSceneManager.h"
 #include "Mx/Engine/MxPlatform.h"
 #include "MxApplicationBase.h"
 
@@ -25,7 +25,7 @@ namespace Mix {
     void MixEngine::setFPSLimit(uint32_t _limit) {
         mFPSLimit = _limit;
         if (mFPSLimit > 0)
-            mFrameStep = 1 / mFPSLimit;
+            mFrameStep = 1. / mFPSLimit;
     }
 
     MixEngine::~MixEngine() {

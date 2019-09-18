@@ -6,15 +6,16 @@
 #include "Mx/Graphics/MxMaterial.h"
 #include "Mx/Component/Renderer/MxRenderer.h"
 #include "Mx/Graphics/MxGraphics.h"
-#include "Mx/Scene/MxSceneManager.hpp"
+#include "Mx/Scene/MxSceneManager.h"
 #include "Mx/Graphics/Mesh/MxMeshUtils.h"
 #include "Mx/Component/MeshFilter/MxMeshFilter.h"
 
 #include "Scripts/PlayerShip.h"
 #include "Scripts/EnemyShip.h"
 #include "Scripts/ShipAdapter.h"
-#include "Mx/BuildIn/Camera/MxCamera.h"
+#include "Mx/Component/Camera/MxCamera.h"
 #include "Scripts/ShipWeapon.h"
+#include "Mx/Component/RigidBody/MxRigidBody.h"
 
 namespace Mix {
 
@@ -150,6 +151,14 @@ namespace Mix {
 
             auto renderer = gameObject->addComponent<Renderer>();
             renderer->setMaterial(material);
+        }
+
+        {
+            auto gameObject = GameObject::Create("Test Rb");
+            auto sphere = gameObject->addComponent<RigidBody>(.0f,
+                                                              gameObject->transform(),
+                                                              new btSphereShape(1));
+            sphere->setTrigger(true);
         }
     }
 

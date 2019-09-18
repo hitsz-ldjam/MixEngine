@@ -19,7 +19,6 @@ namespace Mix::Physics {
     }
 
     void DebugDraw::drawLine(const btVector3& from, const btVector3& to, const btVector3& color) {
-        using namespace Math;
         mHandler->pushLine(Vector3f(from.x(), from.y(), from.z()),
                            Vector3f(to.x(), to.y(), to.z()),
                            Vector3f(color.x(), color.y(), color.z()));

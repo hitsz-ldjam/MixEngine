@@ -1,5 +1,5 @@
 #include "ShipAdapter.h"
-#include "../Mx/BuildIn/Camera/MxCamera.h"
+#include "../Mx/Component/Camera/MxCamera.h"
 #include "../Mx/Log/MxLog.h"
 #include "../Mx/Window/MxWindow.h"
 #include "ShipWeapon.h"

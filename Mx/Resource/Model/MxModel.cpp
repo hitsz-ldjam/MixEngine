@@ -1,7 +1,7 @@
 #include "MxModel.h"
 #include "../../GameObject/MxGameObject.h"
 #include "../../Component/MeshFilter/MxMeshFilter.h"
-#include "../../Scene/MxSceneManager.hpp"
+#include "../../Scene/MxSceneManager.h"
 
 namespace Mix {
     void Model::Node::addChildNode(const Node& _node) {

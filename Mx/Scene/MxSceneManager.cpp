@@ -1,4 +1,4 @@
-#include "MxSceneManager.hpp"
+#include "MxSceneManager.h"
 #include "../../MixEngine.h"
 
 namespace Mix {

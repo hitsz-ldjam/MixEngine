@@ -9,7 +9,7 @@
 #include "../../Graphics/Texture/MxTexture.h"
 #include "../Pipeline/MxVkPipelineFactory.h"
 #include "../../GameObject/MxGameObject.h"
-#include "../../BuildIn/Camera/MxCamera.h"
+#include "../../Component/Camera/MxCamera.h"
 #include "../../Component/Renderer/MxRenderer.h"
 #include "../../Resource/MxResourceLoader.h"
 #include "../Pipeline/MxVkShaderModule.h"

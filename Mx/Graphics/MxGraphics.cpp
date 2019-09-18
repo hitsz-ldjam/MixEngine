@@ -4,11 +4,11 @@
 #include "../Vulkan/Shader/MxVkStandardShader.h"
 #include "../GameObject/MxGameObject.h"
 #include <queue>
-#include "../Scene/MxSceneManager.hpp"
+#include "../Scene/MxSceneManager.h"
 #include "MxRenderQueue.h"
 #include "../Component/Renderer/MxRenderer.h"
 #include "../Component/MeshFilter/MxMeshFilter.h"
-#include "../BuildIn/Camera/MxCamera.h"
+#include "../Component/Camera/MxCamera.h"
 
 
 namespace Mix {

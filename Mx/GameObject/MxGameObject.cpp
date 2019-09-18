@@ -1,6 +1,6 @@
 #include "MxGameObject.h"
 #include <algorithm>
-#include "../Scene/MxSceneManager.hpp"
+#include "../Scene/MxSceneManager.h"
 #include "../Component/MxComponent.h"
 #include "../Log/MxLog.h"
 
