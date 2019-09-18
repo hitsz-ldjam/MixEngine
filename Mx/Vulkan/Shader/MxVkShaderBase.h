@@ -7,36 +7,42 @@
 #include "../../Utils/MxArrayProxy.h"
 
 namespace Mix {
-	class Camera;
-	class Mesh;
+    class Camera;
+    class Mesh;
 
-	namespace Vulkan {
-		class CommandBufferHandle;
+    namespace Vulkan {
+        class CommandBufferHandle;
 
-		class ShaderBase : public GeneralBase::NoCopyBase {
-		public:
-			ShaderBase(VulkanAPI* _vulkan) :mVulkan(_vulkan) {}
+        class ShaderBase : public GeneralBase::NoCopyBase {
+        public:
+            ShaderBase(VulkanAPI* _vulkan) :mVulkan(_vulkan) {}
 
-			virtual ~ShaderBase() = default;
+            virtual ~ShaderBase() = default;
 
-			virtual void render(Shader& _shader, const SceneRenderInfo& _renderInfo) = 0;
+            virtual void beginRender(const Camera& _camera) = 0;
 
-			const MaterialPropertySet& getMaterialPropertySet() const { return mMaterialPropertySet; }
+            virtual void render(RenderElement& _element) = 0;
 
-			const MaterialPropertySet& getShaderPropertySet() const { return mShaderPropertySet; }
+            virtual void endRender() = 0;
 
-			virtual uint32_t newMaterial() = 0;
+            virtual void update(const Shader& _shader) = 0;
 
-			virtual void deleteMaterial(uint32_t _id) = 0;
+            const MaterialPropertySet& getMaterialPropertySet() const { return mMaterialPropertySet; }
 
-		protected:
-			VulkanAPI* mVulkan;
-			MaterialPropertySet mMaterialPropertySet;
-			MaterialPropertySet mShaderPropertySet;
+            const MaterialPropertySet& getShaderPropertySet() const { return mShaderPropertySet; }
 
-			static void DrawMesh(CommandBufferHandle& _cmd, const Mesh& _mesh, uint32_t _submesh);
-		};
-	}
+            virtual uint32_t newMaterial() = 0;
+
+            virtual void deleteMaterial(uint32_t _id) = 0;
+
+        protected:
+            VulkanAPI* mVulkan;
+            MaterialPropertySet mMaterialPropertySet;
+            MaterialPropertySet mShaderPropertySet;
+
+            static void DrawMesh(CommandBufferHandle& _cmd, const Mesh& _mesh, uint32_t _submesh);
+        };
+    }
 }
 
 #endif

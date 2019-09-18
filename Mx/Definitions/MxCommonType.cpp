@@ -99,3 +99,11 @@ const char* Mix::ToString(UVChannel e) {
     default: return "Unknown";
     }
 }
+
+const char* Mix::ToString(RenderType e) {
+    switch (e) {
+    case RenderType::Opaque: return "Opaque";
+    case RenderType::Transparent: return "Transparent";
+    default: return "Unknown";
+    }
+}

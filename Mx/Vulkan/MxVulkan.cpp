@@ -9,16 +9,17 @@
 #include "Descriptor/MxVkDescriptorSet.h"
 #include "Shader/MxVkShaderBase.h"
 #include "Memory/MxVkAllocator.h"
-#include "../Graphics/MxRenderElement.h"
 #include "Pipeline/MxVkVertexInput.h"
+#include "../Definitions/MxSystemInfo.h"
+#include "MxVkUtils.h"
 
 namespace Mix {
     namespace Vulkan {
         void VulkanAPI::init() {
             vk::ApplicationInfo appInfo;
             appInfo.apiVersion = VK_API_VERSION_1_1;
-            appInfo.pEngineName = EngineInfo::EngineName.c_str();
-            appInfo.engineVersion = EngineInfo::EngineVersion;
+            appInfo.pEngineName = SystemInfo::EngineName.c_str();
+            appInfo.engineVersion = VulkanUtils::CvtToVkVersion(SystemInfo::EngineVersion);
             appInfo.pApplicationName = "";
             appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 0);
             mInstance = std::make_shared<Instance>(appInfo);
@@ -26,7 +27,7 @@ namespace Mix {
             mPhysicalDeviceInfos = std::make_shared<std::vector<PhysicalDeviceInfo>>();
 
             auto physicalDevices = mInstance->get().enumeratePhysicalDevices();
-            for(auto& physicalDevice : physicalDevices) {
+            for (auto& physicalDevice : physicalDevices) {
                 mPhysicalDeviceInfos->emplace_back();
                 auto& info = mPhysicalDeviceInfos->back();
                 info.physicalDevice = physicalDevice;
@@ -66,7 +67,7 @@ namespace Mix {
             createAllocator();
 
             mGraphicsCommandBuffers.reserve(mSwapchain->imageCount());
-            for(size_t i = 0; i < mSwapchain->imageCount(); ++i) {
+            for (size_t i = 0; i < mSwapchain->imageCount(); ++i) {
                 mGraphicsCommandBuffers.emplace_back(std::make_shared<CommandBufferHandle>(mGraphicsCommandPool));
             }
 
@@ -83,9 +84,9 @@ namespace Mix {
 
         void VulkanAPI::endRender() {
             mCurrCmd->end();
-            mCurrCmd->submit({mSwapchain->presentFinishedSph()}, // wait for image
-                             {vk::PipelineStageFlagBits::eColorAttachmentOutput},
-                             {mSwapchain->renderFinishedSph()}); // notify swapchain
+            mCurrCmd->submit({ mSwapchain->presentFinishedSph() }, // wait for image
+                             { vk::PipelineStageFlagBits::eColorAttachmentOutput },
+                             { mSwapchain->renderFinishedSph() }); // notify swapchain
             mSwapchain->present();
         }
 
@@ -97,7 +98,7 @@ namespace Mix {
             try {
                 mDevice->get().waitIdle();
             }
-            catch(vk::Error& e) {
+            catch (vk::Error& e) {
                 std::cerr << e.what() << std::endl;
             }
 
@@ -109,7 +110,7 @@ namespace Mix {
             mDebugUtils.reset();
             mPhysicalDevice.reset();
             mDevice.reset();
-            if(mSurface)
+            if (mSurface)
                 mInstance->get().destroySurfaceKHR(mSurface);
             mInstance.reset();
         }
@@ -117,10 +118,10 @@ namespace Mix {
         void VulkanAPI::createInstance() {
             vk::ApplicationInfo appInfo;
             appInfo.apiVersion = VK_API_VERSION_1_1;
-            appInfo.pEngineName = EngineInfo::EngineName.c_str();
-            appInfo.engineVersion = EngineInfo::EngineVersion;
+            appInfo.pEngineName = SystemInfo::EngineName.c_str();
+            appInfo.engineVersion = VulkanUtils::CvtToVkVersion(SystemInfo::EngineVersion);
             appInfo.pApplicationName = mSettings->appInfo.appName.c_str();
-            appInfo.applicationVersion = mSettings->appInfo.appVersion;
+            appInfo.applicationVersion = VulkanUtils::CvtToVkVersion(mSettings->appInfo.appVersion);
 
             mInstance = std::make_shared<Instance>(appInfo,
                                                    mSettings->instanceExts,
@@ -167,7 +168,7 @@ namespace Mix {
             mSwapchain = std::make_shared<Swapchain>(mDevice);
             mSwapchain->setImageCount(2);
             mSwapchain->create(mSwapchain->supportedFormat(),
-                               {vk::PresentModeKHR::eFifo},
+                               { vk::PresentModeKHR::eFifo },
                                vk::Extent2D(640, 480));
         }
 

@@ -62,17 +62,18 @@ namespace Mix {
         return mPropertyMap.find(_name) != mPropertyMap.end();
     }
 
-    Material::Material(Shader& _shader) :
-        mMaterialId(_shader._newMaterial()),
+    Material::Material(const std::shared_ptr<Shader>& _shader)
+        :mMaterialId(_shader->_newMaterial()),
         mShader(_shader),
-        mMaterialProperties(_shader.getMaterialPropertySet()) {
-        for (auto& property : _shader.getMaterialPropertySet()) {
+        mMaterialProperties(_shader->getMaterialPropertySet()),
+        mRenderType(RenderType::Opaque) {
+        for (auto& property : mShader->getMaterialPropertySet()) {
             mChangedList.insert(property.name);
         }
     }
 
     Material::~Material() {
-        mShader._deleteMaterial(mMaterialId);
+        mShader->_deleteMaterial(mMaterialId);
     }
 
     void Material::setInt(const std::string& _name, int _value) {

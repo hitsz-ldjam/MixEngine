@@ -55,7 +55,7 @@ namespace Mix {
             gameObject->transform().setRotation(Quaternion::Identity);
 
             auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("Resource/Textures/player_ship_dif.png", &param);
-            auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
+            auto material = std::make_shared<Material>(Graphics::Get()->findShader("Standard"));
             material->setTexture("diffuseTex", diffuseTex);
 
             auto renderer = gameObject->addComponent<Renderer>();
@@ -104,7 +104,7 @@ namespace Mix {
             gameObject->transform().setRotation(Quaternion::Identity);
 
             auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("Resource/Textures/enemy_ship_diff.png", &param);
-            auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
+            auto material = std::make_shared<Material>(Graphics::Get()->findShader("Standard"));
             material->setTexture("diffuseTex", diffuseTex);
 
             auto renderer = gameObject->addComponent<Renderer>();
@@ -145,7 +145,7 @@ namespace Mix {
             meshFilter->setMesh(mesh);
 
             auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("Resource/Textures/background.png");
-            auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
+            auto material = std::make_shared<Material>(Graphics::Get()->findShader("Standard"));
             material->setTexture("diffuseTex", diffuseTex);
 
             auto renderer = gameObject->addComponent<Renderer>();

@@ -268,64 +268,9 @@ namespace Mix {
                 c->lateUpdate();
         }
 
-        // todo: further setups
-        // void addToScene(Scene* _scene);
-        // void removeFromScene(Scene* _scene);
-
-        // ----- static variables and functions -----
-
-    //public:
-    //    /**
-    //     *  @brief Find a GameObject named _name
-    //     *  @return A pointer to the GameObject, nullptr if not found
-    //     */
-    //    static GameObject* Find(const std::string& _name);
-
-    //    /**
-    //     *  @brief Find all GameObjects with Tag _tag
-    //     *  @return A vector containing pointers to those GameObjects
-    //     */
-    //    static std::vector<GameObject*> FindGameObjectsWithTag(const Tag& _tag);
-
-    //    /**
-    //     *  @brief Find a GameObject with Tag _tag
-    //     *  @return A pointer to the first GameObject been found, nullptr if not found
-    //     */
-    //    static GameObject* FindGameObjectWithTag(const Tag& _tag);
-
-    //private:
-    //    static std::vector<GameObject*> sGameObjList;
-
-    //    /** @brief Add GameObject _obj points to to global GameObject list */
-    //    static void AddGameObject(GameObject* _obj) {
-    //        if (_obj)
-    //            sGameObjList.push_back(_obj);
-    //    }
-
-    //    /** @brief Remove the GameObject _obj points to fom global GameObject list */
-    //    static void RemoveGameObject(GameObject* _obj) {
-    //        auto it = std::find(sGameObjList.cbegin(), sGameObjList.cend(), _obj);
-    //        if (it != sGameObjList.cend())
-    //            sGameObjList.erase(it);
-    //    }
-
     };
 
     // ----- template function implementations -----
-
-    //template<typename _Ty>
-    //inline _Ty* GameObject::addComponent() {
-    //    // if type _Ty isn't derived from Component
-    //    static_assert(std::is_base_of_v<Component, _Ty>, "A component must be derived from class Component");
-
-    //    _Ty* t = new _Ty();
-    //    t->setGameObject(this);
-    //    mComponents.insert(t);
-
-    //    addBehaviour(t);
-
-    //    return t;
-    //}
 
     template<typename _Ty, typename... _Args>
     SceneObjectHandle<_Ty> GameObject::addComponent(_Args&&... _args) {
@@ -373,19 +318,6 @@ namespace Mix {
         return false;
     }
 
-    /*template<typename _Ty>
-    _Ty* GameObject::getComponentInChildren() {
-        _Ty* ptr = getComponent<_Ty>();
-
-        if (!ptr) {
-            for (auto child : mChildren) {
-                if ((ptr = child->getComponentInChildren<_Ty>()))
-                    return ptr;
-            }
-        }
-
-        return nullptr;
-    }*/
 }
 
 #endif

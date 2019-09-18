@@ -7,94 +7,6 @@
 namespace Mix {
     MX_IMPLEMENT_RTTI(GameObject, Object);
 
-   /* GameObject::GameObject() : mParent(nullptr),
-        mTransform(nullptr),
-        mLayer(0),
-        mIsStatic(false),
-        mActiveSelf(true),
-        mActiveInHierarchy(true),
-        mScene(nullptr) {
-    }
-
-    GameObject::GameObject(std::string _name,
-                           Tag _tag,
-                           const LayerIndex _layerIndex,
-                           const bool _isStatic) : mParent(nullptr),
-        mTransform(addComponent<Transform>()),
-        mTag(std::move(_tag)),
-        mLayer(_layerIndex),
-        mIsStatic(_isStatic),
-        mActiveSelf(true),
-        mActiveInHierarchy(true),
-        mScene(nullptr) {
-        mName = std::move(_name);
-        setActive(mActiveSelf);
-        AddGameObject(this);
-    }*/
-
-    //GameObject::GameObject(GameObject&& _obj) noexcept : SceneObject(std::move(_obj)),
-    //    mParent(_obj.mParent),
-    //    mChildren(std::move(_obj.mChildren)),
-    //    mComponents(std::move(_obj.mComponents)),
-    //    mBehaviours(std::move(_obj.mBehaviours)),
-    //    mTransform(_obj.mTransform),
-    //    mTag(std::move(_obj.mTag)),
-    //    mLayer(_obj.mLayer),
-    //    mIsStatic(_obj.mIsStatic),
-    //    mActiveSelf(_obj.mActiveSelf),
-    //    mActiveInHierarchy(_obj.mActiveInHierarchy),
-    //    mScene(_obj.mScene) {
-    //    for (auto child : mChildren)
-    //        addChild(child);
-
-    //    for (auto component : mComponents)
-    //        component->setGameObject(this);
-
-    //    // todo: remove previous object from Scene and add the new one to Scene
-
-    //    AddGameObject(this);
-    //}
-
-    //GameObject& GameObject::operator=(GameObject&& _obj) noexcept {
-    //    Object::operator=(_obj);
-    //    mParent = _obj.mParent;
-    //    mChildren = std::move(_obj.mChildren);
-    //    mComponents = std::move(_obj.mComponents);
-    //    mBehaviours = std::move(_obj.mBehaviours);
-    //    mTransform = _obj.mTransform;
-    //    mTag = std::move(_obj.mTag);
-    //    mLayer = _obj.mLayer;
-    //    mIsStatic = _obj.mIsStatic;
-    //    mActiveSelf = _obj.mActiveSelf;
-    //    mActiveInHierarchy = _obj.mActiveInHierarchy;
-    //    mScene = _obj.mScene;
-
-    //    for (auto child : mChildren)
-    //        addChild(child);
-
-    //    for (auto component : mComponents)
-    //        component->setGameObject(this);
-
-    //    // todo: remove previous object from Scene and add the new one to Scene
-
-    //    return *this;
-    //}
-
-    //GameObject::~GameObject() {
-    //    if (mParent)
-    //        mParent->removeChild(this);
-
-    //    for (auto child : mChildren)
-    //        delete child;
-
-    //    for (auto component : mComponents)
-    //        delete component;
-
-    //    // todo: remove from Scene
-
-    //    RemoveGameObject(this);
-    //}
-
     GameObject::~GameObject() {
         if (!mThisHandle.isDestroyed()) {
             MX_LOG_WARNING("Object [%1%] is being deleted without being destroyed first?", mName);
@@ -103,7 +15,7 @@ namespace Mix {
     }
 
     HGameObject GameObject::Create(const std::string& _name, Tag _tag, const LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) {
-        return CreateInternal(std::move(_name), std::move(_tag), _layerIndex, _flags, SceneManager::Get()->getActiveScene());
+        return CreateInternal(_name, _tag, _layerIndex, _flags, SceneManager::Get()->getActiveScene());
     }
 
     void GameObject::destroy(bool _immediate) {

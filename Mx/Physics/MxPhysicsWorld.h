@@ -31,8 +31,8 @@ namespace Mix {
             World();
 
             ~World();
-
-            void awake() override;
+            
+            void load() override;
 
             void init() override {}
 

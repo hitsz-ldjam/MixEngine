@@ -26,14 +26,33 @@ namespace Mix {
             explicit StandardShader(VulkanAPI* _vulkan);
 
             ~StandardShader() override;
+            
+            void render(RenderElement& _element) override;
 
-            void render(Shader& _shader, const SceneRenderInfo& _renderInfo) override;
+            void update(const Shader& _shader) override;
+
+            void beginRender(const Camera& _camera) override;
+
+            void endRender() override;
 
             uint32_t newMaterial() override;
 
             void deleteMaterial(uint32_t _id) override;
 
         private:
+            void setCamera(const Camera& _camera);
+
+             void beginElement(const RenderElement& _element);
+
+            void endElement();
+
+            bool choosePipeline(const Mesh& _mesh, uint32_t _submesh);
+
+            void updateMaterial(Material& _material);
+
+            void setMaterail(Material& _material);
+
+
             std::shared_ptr<Device> mDevice;
             std::shared_ptr<Swapchain> mSwapchain;
 
@@ -52,7 +71,7 @@ namespace Mix {
             std::vector<Buffer> mCameraUniforms;
             std::vector<DynamicUniformBuffer> mDynamicUniform;
 
-            uint32_t mDefaultMaterialCount = 10;
+            uint32_t mDefaultMaterialCount = 30;
             std::unordered_map<std::string, uint32_t> mMaterialNameBindingMap;
             std::vector<std::vector<DescriptorSet>> mMaterialDescs;
             std::deque<uint32_t> mUnusedId;
@@ -69,16 +88,6 @@ namespace Mix {
             void buildPipeline();
             void buildDescriptorSet();
             void buildPropertyBlock();
-
-            void beginFrame(Shader& _shader, const SceneRenderInfo& _renderInfo);
-            void setCamera(const Camera& _camera);
-            void beginRenderer(const Renderer& _renderer);
-            void endRenderer(const Renderer& _renderer);
-            bool choosePipeline(const Mesh& _mesh, uint32_t _submesh);
-            void updateShaderParam(Shader& _shader);
-            void updateMaterialParams(ArrayProxy<Renderer* const> _renderers);
-            void setMaterailParam(Material& _material);
-            void endFrame();
 
             // Frame rendering info
             std::shared_ptr<VertexInput> mCurrVertexInput;

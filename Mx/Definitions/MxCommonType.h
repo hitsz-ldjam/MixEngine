@@ -106,6 +106,13 @@ namespace Mix {
     };
 
     const char* ToString(UVChannel e);
+
+    enum class RenderType {
+        Opaque,
+        Transparent
+    };
+
+    const char* ToString(RenderType e);
 }
 
 #endif

@@ -15,7 +15,7 @@
 #include "../Pipeline/MxVkShaderModule.h"
 #include "../MxVulkan.h"
 #include "../Pipeline/MxVkVertexInput.h"
-#include "../../Graphics/MxRenderSceneInfo.h"
+#include "../../Graphics/MxRenderInfo.h"
 
 namespace Mix {
     namespace Vulkan {
@@ -52,20 +52,16 @@ namespace Mix {
             mDevice->get().destroyImageView(mDepthStencilView);
         }
 
-        void StandardShader::beginFrame(Shader& _shader, const SceneRenderInfo& _renderInfo) {
+        void StandardShader::beginRender(const Camera& _camera) {
             mCurrFrame = mVulkan->getCurrFrame();
             mCurrCmd = &mVulkan->getCurrDrawCmd();
             mCurrVertexInput = nullptr;
             mCurrPipeline = nullptr;
 
-            updateShaderParam(_shader);
-            updateMaterialParams(_renderInfo.renderers);
-
-            auto camera = _renderInfo.camera;
             auto& cmd = mVulkan->getCurrDrawCmd();
 
             // update Camera
-            setCamera(*camera);
+            setCamera(_camera);
 
             std::vector<vk::ClearValue> clearValues(2);
             clearValues[0].color = std::array<float, 4>{0.0f, 0.75f, 1.0f, 1.0f};
@@ -77,7 +73,7 @@ namespace Mix {
                                          mSwapchain->extent());
         }
 
-        void StandardShader::endFrame() {
+        void StandardShader::endRender() {
             mDynamicUniform[mCurrFrame].reset();
             mRenderPass->endRenderPass(mCurrCmd->get());
         }
@@ -106,20 +102,20 @@ namespace Mix {
             mCurrCmd->get().setScissor(0, scissor);
         }
 
-        void StandardShader::beginRenderer(const Renderer& _renderer) {
-            Uniform::MeshUniform uniform;
-            uniform.modelMat = _renderer.transform()->localToWorldMatrix();
-            mDynamicUniform[mCurrFrame].pushBack(&uniform, sizeof uniform);
-
+        void StandardShader::beginElement(const RenderElement& _element) {
+            //Uniform::MeshUniform uniform;
+            //uniform.modelMat = _renderer.transform->localToWorldMatrix();
+            //mDynamicUniform[mCurrFrame].pushBack(&uniform, sizeof uniform);
+            mCurrCmd->get().pushConstants<Matrix4>(mGraphicsPipelineState->getPipelineLayout(), vk::ShaderStageFlagBits::eVertex, 0, _element.transform->localToWorldMatrix());
             mCurrCmd->get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                                                mGraphicsPipelineState->getPipelineLayout(),
                                                0,
                                                mStaticDescriptorSets[mCurrFrame].get(),
-                                               mDynamicUniform[mCurrFrame].getOffset());
+                                               nullptr);
         }
 
-        void StandardShader::endRenderer(const Renderer& _renderer) {
-            mDynamicUniform[mCurrFrame].next();
+        void StandardShader::endElement() {
+            // mDynamicUniform[mCurrFrame].next();
         }
 
         bool StandardShader::choosePipeline(const Mesh& _mesh, uint32_t _submesh) {
@@ -137,126 +133,111 @@ namespace Mix {
             return true;
         }
 
-        void StandardShader::updateShaderParam(Shader& _shader) {
-            _shader._updated();
-        }
-
-        void StandardShader::updateMaterialParams(ArrayProxy<Renderer* const> _renderers) {
-            for (auto renderer : _renderers) {
-                auto materials = renderer->getMaterials();
-                for (auto& material : materials) {
-                    if (!material->_getChangedList().empty()) {
-                        std::vector<WriteDescriptorSet> writes;
-                        for (auto& name : material->_getChangedList()) {
-                            if (material->getTexture(name))
-                                writes.push_back(material->getTexture(name)->getWriteDescriptor(mMaterialNameBindingMap[name], vk::DescriptorType::eCombinedImageSampler));;
-                        }
-                        mMaterialDescs[mCurrFrame][material->_getMaterialId()].updateDescriptor(writes);
-                    }
+        void StandardShader::updateMaterial(Material& _material) {
+            if (!_material._getChangedList().empty()) {
+                std::vector<WriteDescriptorSet> writes;
+                for (auto& name : _material._getChangedList()) {
+                    if (_material.getTexture(name))
+                        writes.push_back(_material.getTexture(name)->getWriteDescriptor(mMaterialNameBindingMap[name], vk::DescriptorType::eCombinedImageSampler));;
                 }
+                std::swap(mMaterialDescs[0][_material._getMaterialId()], mMaterialDescs[1][_material._getMaterialId()]);
+                mMaterialDescs[0][_material._getMaterialId()].updateDescriptor(writes);
             }
+            _material._updated();
         }
 
-        void StandardShader::setMaterailParam(Material& _material) {
+        void StandardShader::setMaterail(Material& _material) {
+            updateMaterial(_material);
             mCurrCmd->get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                                                mCurrPipeline->pipelineLayout(), 1,
-                                               mMaterialDescs[mCurrFrame][_material._getMaterialId()].get(),
+                                               mMaterialDescs[0][_material._getMaterialId()].get(),
                                                nullptr);
         }
 
-        void StandardShader::render(Shader& _shader, const SceneRenderInfo& _renderInfo) {
-            beginFrame(_shader, _renderInfo);
+        void StandardShader::render(RenderElement& _element) {
+            beginElement(_element);
 
-            for (auto& element : _renderInfo.renderers) {
-                beginRenderer(*element);
-                auto& mesh = *element->getGameObject()->getComponent<MeshFilter>()->getMesh();
-                auto& materials = element->getMaterials();
+            choosePipeline(*_element.mesh, _element.submesh);
+            setMaterail(*_element.material);
+            DrawMesh(*mCurrCmd, *_element.mesh, _element.submesh);
 
-                for (uint32_t i = 0; i < mesh.subMeshCount(); ++i) {
-                    if (i >= materials.size())
-                        break;
+            endElement();
+        // Test Gui
+        //if (ImGui::GetDrawData()->CmdListsCount > 0) {
+        //	_cmd.get().bindPipeline(vk::PipelineBindPoint::eGraphics, mGuiPipeline->get());
+        //	_cmd.get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+        //								  mGuiPipeline->pipelineLayout(),
+        //								  0,
+        //								  mGuiDescriptorSet,
+        //								  nullptr);
+        //	_cmd.get().bindVertexBuffers(0, mUi->getVertexBuffer().get(), { 0 });
+        //	_cmd.get().bindIndexBuffer(mUi->getIndexBuffer().get(), 0, mUi->getIndexType());
 
-                    choosePipeline(mesh, i);
-                    setMaterailParam(*materials[i]);
-                    DrawMesh(*mCurrCmd, mesh, i);
-                }
-                endRenderer(*element);
-            }
+        //	_cmd.get().pushConstants(mGuiPipeline->pipelineLayout(), vk::ShaderStageFlagBits::eVertex, 0,
+        //							 sizeof(Math::Vector2f), mUi->getScale().linear);
+        //	_cmd.get().pushConstants(mGuiPipeline->pipelineLayout(), vk::ShaderStageFlagBits::eVertex,
+        //							 sizeof(Math::Vector2f), sizeof(Math::Vector2f), mUi->getTranslate().linear);
 
-            endFrame();
-            // Test Gui
-            //if (ImGui::GetDrawData()->CmdListsCount > 0) {
-            //	_cmd.get().bindPipeline(vk::PipelineBindPoint::eGraphics, mGuiPipeline->get());
-            //	_cmd.get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-            //								  mGuiPipeline->pipelineLayout(),
-            //								  0,
-            //								  mGuiDescriptorSet,
-            //								  nullptr);
-            //	_cmd.get().bindVertexBuffers(0, mUi->getVertexBuffer().get(), { 0 });
-            //	_cmd.get().bindIndexBuffer(mUi->getIndexBuffer().get(), 0, mUi->getIndexType());
+        //	auto drawData = mUi->getDrawData();
 
-            //	_cmd.get().pushConstants(mGuiPipeline->pipelineLayout(), vk::ShaderStageFlagBits::eVertex, 0,
-            //							 sizeof(Math::Vector2f), mUi->getScale().linear);
-            //	_cmd.get().pushConstants(mGuiPipeline->pipelineLayout(), vk::ShaderStageFlagBits::eVertex,
-            //							 sizeof(Math::Vector2f), sizeof(Math::Vector2f), mUi->getTranslate().linear);
+        //	int fbWidth = static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x);
+        //	int fbHeight = static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y);
 
-            //	auto drawData = mUi->getDrawData();
+        //	vk::Viewport viewport;
+        //	viewport.x = 0;
+        //	viewport.y = 0;
+        //	viewport.width = static_cast<float>(fbWidth);
+        //	viewport.height = static_cast<float>(fbHeight);
+        //	viewport.minDepth = 0.0f;
+        //	viewport.maxDepth = 1.0f;
+        //	_cmd.get().setViewport(0, viewport);
 
-            //	int fbWidth = static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x);
-            //	int fbHeight = static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y);
+        //	Math::Vector2f clipOff{ drawData->DisplayPos.x, drawData->DisplayPos.y };
+        //	// (0,0) unless using multi-viewports
+        //	Math::Vector2f clipScale{ drawData->FramebufferScale.x, drawData->FramebufferScale.y };
+        //	// (1,1) unless using retina display which are often (2,2)
 
-            //	vk::Viewport viewport;
-            //	viewport.x = 0;
-            //	viewport.y = 0;
-            //	viewport.width = static_cast<float>(fbWidth);
-            //	viewport.height = static_cast<float>(fbHeight);
-            //	viewport.minDepth = 0.0f;
-            //	viewport.maxDepth = 1.0f;
-            //	_cmd.get().setViewport(0, viewport);
+        //	// Render command lists
+        //	// (Because we merged all buffers into a single one, we maintain our own offset into them)
+        //	int vtxOffset = 0;
+        //	int idxOffset = 0;
+        //	for (int n = 0; n < drawData->CmdListsCount; n++) {
+        //		const ImDrawList* cmdList = drawData->CmdLists[n];
+        //		for (int cmd_i = 0; cmd_i < cmdList->CmdBuffer.Size; cmd_i++) {
+        //			const ImDrawCmd* pcmd = &cmdList->CmdBuffer[cmd_i];
+        //			// Project scissor/clipping rectangles into framebuffer space
+        //			Math::Vector4f clipRect;
+        //			clipRect.x = (pcmd->ClipRect.x - clipOff.x) * clipScale.x;
+        //			clipRect.y = (pcmd->ClipRect.y - clipOff.y) * clipScale.y;
+        //			clipRect.z = (pcmd->ClipRect.z - clipOff.x) * clipScale.x;
+        //			clipRect.w = (pcmd->ClipRect.w - clipOff.y) * clipScale.y;
 
-            //	Math::Vector2f clipOff{ drawData->DisplayPos.x, drawData->DisplayPos.y };
-            //	// (0,0) unless using multi-viewports
-            //	Math::Vector2f clipScale{ drawData->FramebufferScale.x, drawData->FramebufferScale.y };
-            //	// (1,1) unless using retina display which are often (2,2)
+        //			if (clipRect.x < fbWidth && clipRect.y < fbHeight && clipRect.z >= 0.0f && clipRect.w >= 0.0f) {
+        //				// Negative offsets are illegal for vkCmdSetScissor
+        //				if (clipRect.x < 0.0f)
+        //					clipRect.x = 0.0f;
+        //				if (clipRect.y < 0.0f)
+        //					clipRect.y = 0.0f;
 
-            //	// Render command lists
-            //	// (Because we merged all buffers into a single one, we maintain our own offset into them)
-            //	int vtxOffset = 0;
-            //	int idxOffset = 0;
-            //	for (int n = 0; n < drawData->CmdListsCount; n++) {
-            //		const ImDrawList* cmdList = drawData->CmdLists[n];
-            //		for (int cmd_i = 0; cmd_i < cmdList->CmdBuffer.Size; cmd_i++) {
-            //			const ImDrawCmd* pcmd = &cmdList->CmdBuffer[cmd_i];
-            //			// Project scissor/clipping rectangles into framebuffer space
-            //			Math::Vector4f clipRect;
-            //			clipRect.x = (pcmd->ClipRect.x - clipOff.x) * clipScale.x;
-            //			clipRect.y = (pcmd->ClipRect.y - clipOff.y) * clipScale.y;
-            //			clipRect.z = (pcmd->ClipRect.z - clipOff.x) * clipScale.x;
-            //			clipRect.w = (pcmd->ClipRect.w - clipOff.y) * clipScale.y;
+        //				// Apply scissor/clipping rectangle
+        //				vk::Rect2D scissor;
+        //				scissor.offset.x = static_cast<int32_t>(clipRect.x);
+        //				scissor.offset.y = static_cast<int32_t>(clipRect.y);
+        //				scissor.extent.width = static_cast<uint32_t>(clipRect.z - clipRect.x);
+        //				scissor.extent.height = static_cast<uint32_t>(clipRect.w - clipRect.y);
+        //				_cmd.get().setScissor(0, 1, &scissor);
+        //				// Draw
+        //				_cmd.get().drawIndexed(pcmd->ElemCount, 1, pcmd->IdxOffset + idxOffset,
+        //									   pcmd->VtxOffset + vtxOffset, 0);
+        //			}
+        //		}
+        //		idxOffset += cmdList->IdxBuffer.Size;
+        //		vtxOffset += cmdList->VtxBuffer.Size;
+        //	}
+        //}
+        }
 
-            //			if (clipRect.x < fbWidth && clipRect.y < fbHeight && clipRect.z >= 0.0f && clipRect.w >= 0.0f) {
-            //				// Negative offsets are illegal for vkCmdSetScissor
-            //				if (clipRect.x < 0.0f)
-            //					clipRect.x = 0.0f;
-            //				if (clipRect.y < 0.0f)
-            //					clipRect.y = 0.0f;
-
-            //				// Apply scissor/clipping rectangle
-            //				vk::Rect2D scissor;
-            //				scissor.offset.x = static_cast<int32_t>(clipRect.x);
-            //				scissor.offset.y = static_cast<int32_t>(clipRect.y);
-            //				scissor.extent.width = static_cast<uint32_t>(clipRect.z - clipRect.x);
-            //				scissor.extent.height = static_cast<uint32_t>(clipRect.w - clipRect.y);
-            //				_cmd.get().setScissor(0, 1, &scissor);
-            //				// Draw
-            //				_cmd.get().drawIndexed(pcmd->ElemCount, 1, pcmd->IdxOffset + idxOffset,
-            //									   pcmd->VtxOffset + vtxOffset, 0);
-            //			}
-            //		}
-            //		idxOffset += cmdList->IdxBuffer.Size;
-            //		vtxOffset += cmdList->VtxBuffer.Size;
-            //	}
-            //}
+        void StandardShader::update(const Shader& _shader) {
         }
 
         uint32_t StandardShader::newMaterial() {
@@ -274,7 +255,7 @@ namespace Mix {
 
             mDescriptorPool = std::make_shared<DescriptorPool>(mDevice);
             mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBuffer, imageCount);
-            mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBufferDynamic, imageCount);
+            // mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBufferDynamic, imageCount);
             mDescriptorPool->addPoolSize(vk::DescriptorType::eCombinedImageSampler, 1 * mDefaultMaterialCount * imageCount);
             mDescriptorPool->create((mDefaultMaterialCount + 1)*imageCount);
 
@@ -283,9 +264,9 @@ namespace Mix {
 
             // Create descriptor sets
             for (uint32_t i = 0; i < imageCount; ++i) {
-                std::array<WriteDescriptorSet, 2> descriptorWrites = {
+                std::array<WriteDescriptorSet, 1> descriptorWrites = {
                     mCameraUniforms[i].getWriteDescriptor(0, vk::DescriptorType::eUniformBuffer),
-                    mDynamicUniform[i].getWriteDescriptor(1)
+                    // mDynamicUniform[i].getWriteDescriptor(1)
                 };
 
                 mStaticDescriptorSets[i].updateDescriptor(descriptorWrites);
@@ -366,8 +347,7 @@ namespace Mix {
             mStaticParamDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(mDevice);
             mStaticParamDescriptorSetLayout->setBindings(
                 {
-                    {0,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eVertex},
-                    {1,vk::DescriptorType::eUniformBufferDynamic,1,vk::ShaderStageFlagBits::eVertex }
+                    {0,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eVertex}
                 }
             );
             mStaticParamDescriptorSetLayout->create();
@@ -404,6 +384,8 @@ namespace Mix {
 
             desc.descriptorSetLayouts = { mStaticParamDescriptorSetLayout,mDynamicPamramDescriptorSetLayout };
             desc.blendStates = { GraphicsPipelineState::DefaultBlendAttachment };
+
+            desc.pushConstant.push_back(vk::PushConstantRange(vk::ShaderStageFlagBits::eVertex, 0, sizeof(Matrix4)));
 
             mGraphicsPipelineState = std::make_shared<GraphicsPipelineState>(mDevice, desc);
             /*std::ifstream inFile;

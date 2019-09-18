@@ -24,7 +24,7 @@ namespace Scripts {
     void ShipWeapon::setAttackSpeed(float _speed) {
         if (_speed >= 0.0f) {
             mAttackSpeed = _speed;
-            mAttackGap = 1.0 / mAttackSpeed;
+            mAttackGap = 1.0f / mAttackSpeed;
         }
     }
 
@@ -46,8 +46,9 @@ namespace Scripts {
         mesh->uploadMeshData(false);
 
         auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("Resource/Textures/fx_lazer_blue_dff.png");
-        auto material = std::make_shared<Material>(*Graphics::Get()->findShader("Standard"));
+        auto material = std::make_shared<Material>(Graphics::Get()->findShader("Standard"));
         material->setTexture("diffuseTex", diffuseTex);
+        material->setRenderType(RenderType::Transparent);
 
         mBulletMat = std::move(material);
         mBulletMesh = std::move(mesh);

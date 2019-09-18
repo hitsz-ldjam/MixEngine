@@ -150,7 +150,7 @@ namespace Mix {
     }
 
     void MixEngine::loadModule() {
-        mModuleHolder.add<Window>("Mix Engine Demo", Vector2i{ 1024, 760 }, WindowFlag::VULKAN | WindowFlag::SHOWN);
+        mModuleHolder.add<Window>("Mix Engine Demo", Vector2i{ 1024, 760 }, WindowFlag::VULKAN | WindowFlag::SHOWN)->load();
         mModuleHolder.add<Input>()->load();
         mModuleHolder.add<Audio::Core>()->load();
         mModuleHolder.add<Physics::World>()->load();

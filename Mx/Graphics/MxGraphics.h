@@ -7,40 +7,41 @@
 #include "../Vulkan/MxVulkan.h"
 
 namespace Mix {
-	class Window;
+    class Window;
     struct SceneRenderInfo;
 
-	namespace Vulkan {
-		class VulkanAPI;
-	}
+    namespace Vulkan {
+        class VulkanAPI;
+    }
 
-	class Graphics :public ModuleBase {
-	public:
-		static Graphics* Get();
+    class Graphics :public ModuleBase {
+    public:
+        static Graphics* Get();
 
-		~Graphics();
+        ~Graphics();
 
-		void load() override;
+        void load() override;
 
-		void init() override;
+        void init() override;
 
-		Vulkan::VulkanAPI& getRenderApi() const { return *mVulkan; }
+        Vulkan::VulkanAPI& getRenderApi() const { return *mVulkan; }
 
-		void update();
+        void update();
 
-		void render();
+        void render();
 
-		Shader* findShader(const std::string& _name);
+        std::shared_ptr<Shader> findShader(const std::string& _name);
 
-	private:
-		void initRenderAPI(Window* _window);
-		void loadShader();
+    private:
+        void initRenderAPI(Window* _window);
 
-		std::unique_ptr<Vulkan::VulkanAPI> mVulkan;
+        void loadShader();
 
-		std::unordered_map<uint32_t, std::unique_ptr<Shader>> mShaders;
-		std::unordered_map<std::string, uint32_t> mShaderNameMap;
-	};
+        std::unique_ptr<Vulkan::VulkanAPI> mVulkan;
+
+        std::unordered_map<uint32_t, std::shared_ptr<Shader>> mShaders;
+        std::unordered_map<std::string, uint32_t> mShaderNameMap;
+    };
 }
 
 #endif

@@ -16,8 +16,8 @@ namespace Mix {
         return scene;
     }
 
-    HGameObject Scene::find(const std::string& _name, bool _wholeScene) {
-        for (auto& obj : mRootObjects) {
+    HGameObject Scene::findGameObject(const std::string& _name, bool _wholeScene) {
+        /*for (auto& obj : mRootObjects) {
             if (obj.second->getName() == _name)
                 return obj.second;
             if (_wholeScene) {
@@ -26,7 +26,8 @@ namespace Mix {
                     return child;
             }
         }
-        return nullptr;
+        return nullptr;*/
+        return findGameObjectIf([&](const HGameObject& _gameObject)->bool {return _name == _gameObject->getName(); });
     }
 
     void Scene::setFiller(const std::shared_ptr<SceneFiller>& _filler) {
@@ -198,23 +199,23 @@ namespace Mix {
 
         // Get all enabled Renderer
         for (auto& gameObject : mRootObjects) {
-            findRendererRecur(info, gameObject.second);
+            FindRendererRecur(info, gameObject.second);
         }
 
         return info;
     }
 
-    void Scene::findRendererRecur(SceneRenderInfo& _info, const HGameObject& _object) {
+    void Scene::FindRendererRecur(SceneRenderInfo& _info, const HGameObject& _object) {
         auto renderer = _object->getComponent<Renderer>();
         if (renderer != nullptr && renderer->getGameObject()->activeInHierarchy())
             _info.renderers.push_back(renderer.get().get());
 
         for (auto& child : _object->getAllChildren()) {
-            findRendererRecur(_info, child);
+            FindRendererRecur(_info, child);
         }
     }
 
-    HGameObject SceneFiller::createGameObject(const std::string& _name, Tag _tag, const LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) const {
+    HGameObject SceneFiller::createGameObject(const std::string& _name, const Tag& _tag, const LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) const {
         auto gameObject = GameObject::CreateInternal(_name, _tag, _layerIndex, _flags, mTemp);
         return gameObject;
     }
