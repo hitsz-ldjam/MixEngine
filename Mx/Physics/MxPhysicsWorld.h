@@ -4,12 +4,9 @@
 #define MX_PHYSICS_WORLD_H_
 
 #include "../Engine/MxModuleBase.h"
+#include "../Math/MxVector3.h"
 #include <bullet3/btBulletDynamicsCommon.h>
 #include <set>
-
-// todo: delete namespace Math
-#include "../Math/MxVector3.h"
-using namespace Mix::Math;
 
 namespace Mix {
     class RigidBody;

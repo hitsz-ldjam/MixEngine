@@ -77,7 +77,14 @@ namespace Mix::Physics {
     }
 
 #ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
-    void World::pushDrawData() const { if(mWorld->getDebugDrawer()) mWorld->debugDrawWorld(); }
+    void World::pushDrawData() const {
+        if(mWorld->getDebugDrawer()) {
+            mWorld->debugDrawWorld();
+            mDebugDraw->drawLine({0, 0, 0}, {1, 0, 0}, {1, 0, 0});
+            mDebugDraw->drawLine({0, 0, 0}, {0, 1, 0}, {0, 1, 0});
+            mDebugDraw->drawLine({0, 0, 0}, {0, 0, 1}, {0, 0, 1});
+        }
+    }
 
     void World::render() const { mDebugDraw->render(); }
 #endif

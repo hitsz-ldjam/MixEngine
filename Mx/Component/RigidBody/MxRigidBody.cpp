@@ -3,7 +3,6 @@
 #include "../../Physics/MxRigidBodyUtils.hpp"
 #include "../../Physics/MxPhysicsUtils.hpp"
 #include "../../GameObject/MxGameObject.h"
-#include "../../../MixEngine.h"
 
 namespace Mix {
     MX_IMPLEMENT_RTTI(RigidBody, Behaviour)
@@ -49,7 +48,7 @@ namespace Mix {
     }
 
     RigidBody::RigidBody(const btScalar _mass, const Transform& _startTrans, btCollisionShape* _shape)
-        : RigidBody(_mass, Physics::mixTransToBtTrans(_startTrans), _shape) {}
+        : RigidBody(_mass, Physics::mx_bt_cast(_startTrans), _shape) {}
 
     RigidBody::RigidBody(const Physics::RigidBodyConstructionInfo& _info) : mMass(_info.mass),
                                                                             mShape(_info.shape),
@@ -93,7 +92,7 @@ namespace Mix {
             removeCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
             mRigidBody->forceActivationState(ACTIVE_TAG);
         }
-        forceReload();
+        _forceReload();
     }
 
     void RigidBody::setStatic(const bool _flag) const {
@@ -107,7 +106,7 @@ namespace Mix {
         }
         mRigidBody->setMassProps(mass, inertia);
         mRigidBody->updateInertiaTensor();
-        forceReload();
+        _forceReload();
     }
 
     void RigidBody::setTrigger(const bool _flag) const {
@@ -115,6 +114,46 @@ namespace Mix {
             addCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
         else
             removeCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+    }
+
+    Vector3<float> RigidBody::getPosition() const {
+        return Physics::bt_mx_cast(mRigidBody->getWorldTransform().getOrigin());
+    }
+
+    void RigidBody::setPosition(const Vector3<float>& _pos) const {
+        mRigidBody->getWorldTransform().setOrigin(Physics::mx_bt_cast(_pos));
+    }
+
+    void RigidBody::translate(const Vector3<float>& _delta) const {
+        mRigidBody->translate(Physics::mx_bt_cast(_delta));
+    }
+
+    Quaternion RigidBody::getRotation() const {
+        return Physics::bt_mx_cast(mRigidBody->getWorldTransform().getRotation());
+    }
+
+    void RigidBody::setRotation(const Quaternion& _rot) const {
+        mRigidBody->getWorldTransform().setRotation(Physics::mx_bt_cast(_rot));
+    }
+
+    void RigidBody::rotate(const Quaternion& _delta) const {
+        setRotation(getRotation() * _delta);
+    }
+
+    Vector3<float> RigidBody::getLinearVelocity() const {
+        return Physics::bt_mx_cast(mRigidBody->getLinearVelocity());
+    }
+
+    void RigidBody::setLinearVelocity(const Vector3<float>& _vel) const {
+        mRigidBody->setLinearVelocity(Physics::mx_bt_cast(_vel));
+    }
+
+    Vector3<float> RigidBody::getAngularVelocity() const {
+        return Physics::bt_mx_cast(mRigidBody->getAngularVelocity());
+    }
+
+    void RigidBody::setAngularVelocity(const Vector3<float>& _vel) const {
+        mRigidBody->setAngularVelocity(Physics::mx_bt_cast(_vel));
     }
 
     btRigidBody* RigidBody::CreateBtRb(const Physics::RigidBodyConstructionInfo& _info) {
@@ -130,14 +169,14 @@ namespace Mix {
                                                       motionstate,
                                                       _info.shape,
                                                       inertia);
-        //info.m_linearSleepingThreshold = .005;
-        //info.m_angularSleepingThreshold = .01;
+        info.m_linearSleepingThreshold = .02;  // default to .8
+        info.m_angularSleepingThreshold = .02; // default to 1
         _info.furtherSetup(info);
         return new btRigidBody(info);
     }
 
     void RigidBody::awake() {
-        mWorld = MixEngine::Instance().getModule<Physics::World>()->getWorld();
+        mWorld = Physics::World::Get()->getWorld();
         const auto& [customFilter, group, mask] = mFilter;
         if(customFilter)
             mWorld->addRigidBody(mRigidBody, group, mask);
@@ -146,14 +185,14 @@ namespace Mix {
     }
 
     void RigidBody::update() {
-        //                                 Should be Physics::MotionState
-        Physics::btTransToMixTrans(static_cast<Physics::MotionState*>(mRigidBody->getMotionState())
-                                   ->interpolatedTransform(), mGameObject->transform());
+        //                         Should be Physics::MotionState
+        Physics::bt_mx_cast(static_cast<Physics::MotionState*>(mRigidBody->getMotionState())
+                            ->interpolatedTransform(), mGameObject->transform());
     }
 
     void RigidBody::fixedUpdate() {
-        btTransform trans;
-        mRigidBody->getMotionState()->getWorldTransform(trans);
-        Physics::btTransToMixTrans(trans, mGameObject->transform());
+        //                         Should be Physics::MotionState
+        Physics::bt_mx_cast(static_cast<Physics::MotionState*>(mRigidBody->getMotionState())
+                            ->getWorldTransform(), mGameObject->transform());
     }
 }

@@ -10,6 +10,9 @@
 
 namespace Mix {
     class Transform;
+    class Quaternion;
+    template<typename _Ty>
+    class Vector3;
 
     namespace Physics {
         class World;
@@ -18,7 +21,7 @@ namespace Mix {
 
     /** Bug: RigidBody on a child GameObject whose parent has one might not be altered correctly. */
     class RigidBody final : public Behaviour {
-        MX_DECLARE_RTTI;
+    MX_DECLARE_RTTI;
 
         friend Physics::World;
 
@@ -79,6 +82,22 @@ namespace Mix {
         bool isTrigger() const { return !mRigidBody->hasContactResponse(); }
         void setTrigger(const bool _flag) const;
 
+        void disableDeactivation() const { mRigidBody->setActivationState(DISABLE_DEACTIVATION); }
+        void enableDeactivation() const { mRigidBody->forceActivationState(ACTIVE_TAG); }
+
+        Vector3<float> getPosition() const;
+        void setPosition(const Vector3<float>& _pos) const;
+        void translate(const Vector3<float>& _delta) const;
+
+        Quaternion getRotation() const;
+        void setRotation(const Quaternion& _rot) const;
+        void rotate(const Quaternion& _delta) const;
+
+        Vector3<float> getLinearVelocity() const;
+        void setLinearVelocity(const Vector3<float>& _vel) const;
+        Vector3<float> getAngularVelocity() const;
+        void setAngularVelocity(const Vector3<float>& _vel) const;
+
         // todo: other interfaces
 
     private:
@@ -98,8 +117,8 @@ namespace Mix {
         /** @brief A utility function to create btRigidBody from RigidBodyConstructionInfo */
         static btRigidBody* CreateBtRb(const Physics::RigidBodyConstructionInfo& _info);
 
-        void forceReload() const {
-            if (!mRigidBody->isInWorld())
+        void _forceReload() const {
+            if(!mRigidBody->isInWorld())
                 return;
             mWorld->removeRigidBody(mRigidBody);
             mWorld->addRigidBody(mRigidBody);

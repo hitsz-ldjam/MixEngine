@@ -62,8 +62,12 @@ namespace Mix::Physics {
               mComOffset(_centerOfMassOffset),
               mInterpolation(_interpolation) {}
 
+        btTransform getWorldTransform() const {
+            return mCurrTrans * mComOffset.inverse();
+        }
+
         void getWorldTransform(btTransform& _centerOfMassWorldTrans) const override {
-            _centerOfMassWorldTrans = mCurrTrans * mComOffset.inverse();
+            _centerOfMassWorldTrans = getWorldTransform();
         }
 
         void setWorldTransform(const btTransform& _centerOfMassWorldTrans) override {
