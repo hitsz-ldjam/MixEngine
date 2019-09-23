@@ -72,47 +72,52 @@ namespace Mix {
             unload();
     }
 
-    void Scene::sceneAwake() {
-        for (auto& gameObject : mNewRootObjects)
-            mRootObjects[gameObject.getInstanceId()] = gameObject;
-        mNewRootObjects.clear();
-
-        for (auto& needAwakeObj : mNeedAwakeAndInit) {
-            needAwakeObj->awake();
-        }
-    }
-
-    void Scene::sceneInit() {
-        for (auto& needAwakeObj : mNeedAwakeAndInit) {
-            needAwakeObj->init();
-        }
-
-        for (auto& needAwakeObj : mNeedAwakeAndInit) {
-            needAwakeObj->setActive(true);
-        }
-
-        mNeedAwakeAndInit.clear();
-    }
-
     void Scene::sceneUpdate() {
-        for (auto& rootObject : mRootObjects) {
+        /*for (auto& rootObject : mRootObjects) {
             if (rootObject.second->activeSelf())
                 rootObject.second->update();
+        }*/
+        flushNewAddedBehaviour();
+        for (auto& behaviour : mBehaviours) {
+            if (behaviour.second->isEnabled() && behaviour.second->getGameObject()->activeInHierarchy())
+                behaviour.second->updateInternal();
         }
     }
 
     void Scene::sceneFixedUpate() {
-        for (auto rootObject : mRootObjects)
-            rootObject.second->fixedUpdate();
+        /*for (auto rootObject : mRootObjects)
+            if (rootObject.second->activeSelf())
+                rootObject.second->fixedUpdate();*/
+        flushNewAddedBehaviour();
+        for (auto& behaviour : mBehaviours) {
+            if (behaviour.second->isEnabled() && behaviour.second->getGameObject()->activeInHierarchy())
+                behaviour.second->fixedUpdateInternal();
+        }
     }
 
     void Scene::sceneLateUpate() {
-        for (auto& rootObject : mRootObjects)
-            rootObject.second->lateUpdate();
+        /*for (auto& rootObject : mRootObjects)
+            if (rootObject.second->activeSelf())
+                rootObject.second->lateUpdate();*/
+        flushNewAddedBehaviour();
+        for (auto& behaviour : mBehaviours) {
+            if (behaviour.second->isEnabled() && behaviour.second->getGameObject()->activeInHierarchy())
+                behaviour.second->lateUpdateInternal();
+        }
     }
 
     void Scene::scenePostRender() {
-        flushNewAddedObject();
+        // flushNewAddedBehaviour();
+    }
+
+    void Scene::activate() {
+        mIsActive = true;
+
+        for (auto& behaviour : mNewBehaviours) {
+            mBehaviours[behaviour.getInstanceId()] = behaviour;
+            behaviour->awakeInternal();
+        }
+        mNewBehaviours.clear();
     }
 
     std::vector<HGameObject> Scene::getRootGameObjects() const {
@@ -127,13 +132,12 @@ namespace Mix {
         if (_object.isDestroyed())
             return;
         if (_object->getParent() == nullptr) {
-            mNewRootObjects.push_back(_object);
+            mRootObjects[_object.getInstanceId()] = _object;
         }
-        if (_object->activeInHierarchy()) {
-            _object->setActive(false);
-            mNeedAwakeAndInit.push_back(_object);
-        }
-        _object->setScene(mThisPtr.lock());
+
+        auto behaviours = _object->getComponents<Behaviour>();
+        for (auto behaviour : behaviours)
+            registerBehaviour(behaviour);
     }
 
     void Scene::unregisterGameObject(const HGameObject& _object) {
@@ -145,26 +149,57 @@ namespace Mix {
         if (_object->getParent() == nullptr) {
             mRootObjects.erase(mRootObjects.find(_object.get()->getInstanceId()));
         }
+
+        auto behaviours = _object->getComponents<Behaviour>();
+        for (auto behaviour : behaviours)
+            unregisterBehaviour(behaviour);
     }
 
-    void Scene::flushNewAddedObject() {
-        for (auto& gameObject : mNewRootObjects)
-            mRootObjects[gameObject.getInstanceId()] = gameObject;
-        mNewRootObjects.clear();
+    void Scene::registerBehaviour(const HBehaviour& _behaviour) {
+        if (mIsActive)
+            _behaviour->awakeInternal();
+        mNewBehaviours.push_back(_behaviour);
+    }
 
-        for (auto& needAwakeObj : mNeedAwakeAndInit) {
+    void Scene::unregisterBehaviour(const HBehaviour& _behaviour) {
+        if (mIsActive) {
+            mBehaviours.erase(_behaviour.getInstanceId());
+        }
+        else {
+            auto it = std::find(mNewBehaviours.begin(), mNewBehaviours.end(), _behaviour);
+            if (it != mNewBehaviours.end())
+                mNewBehaviours.erase(it);
+        }
+    }
+
+    void Scene::rootGameObjectChanged(const HGameObject& _object) {
+        if (_object->getParent() == nullptr)
+            mRootObjects[_object.getInstanceId()] = _object;
+        else
+            mRootObjects.erase(_object.getInstanceId());
+    }
+
+    void Scene::flushNewAddedBehaviour() {
+        if (!mNewBehaviours.empty()) {
+            for (auto& behaviour : mNewBehaviours) {
+                mBehaviours[behaviour.getInstanceId()] = behaviour;
+            }
+            mNewBehaviours.clear();
+        }
+
+        /*for (auto& needAwakeObj : mNeedAwakeAndInit) {
             needAwakeObj->awake();
         }
 
         for (auto& needAwakeObj : mNeedAwakeAndInit) {
             needAwakeObj->init();
-        }
+        }*/
 
-        for (auto& needAwakeObj : mNeedAwakeAndInit) {
+        /*for (auto& needAwakeObj : mNeedAwakeAndInit) {
             needAwakeObj->setActive(true);
         }
 
-        mNeedAwakeAndInit.clear();
+        mNeedAwakeAndInit.clear();*/
     }
 
     void Scene::load() {
@@ -216,7 +251,7 @@ namespace Mix {
     }
 
     HGameObject SceneFiller::createGameObject(const std::string& _name, const Tag& _tag, const LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) const {
-        auto gameObject = GameObject::CreateInternal(_name, _tag, _layerIndex, _flags, mTemp);
+        auto gameObject = GameObject::CreateInternal(mTemp, _name, _tag, _layerIndex, _flags);
         return gameObject;
     }
 

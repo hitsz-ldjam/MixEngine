@@ -31,7 +31,6 @@ namespace Mix {
         float mFov;
 
         mutable Matrix4 mProjMat;
-        mutable Matrix4 mViewMat;
         void updateMatrix() const;
 
     };

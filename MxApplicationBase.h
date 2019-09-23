@@ -17,11 +17,9 @@ namespace Mix {
         friend MixEngine;
     public:
         ApplicationBase(const ApplicationSetting& _setting);
-        
-        virtual ~ApplicationBase() = default;
 
         /**
-         * \brief Set the maximum frames per second, zero means no limits.
+         * \brief Set the maximum frames per second, zeri means no limits.
          */
         void setFPSLimit(uint32_t _limit);
 
@@ -46,20 +44,14 @@ namespace Mix {
          */
         virtual void startUp(std::vector<std::string> _args);
 
-        /** \brief Called after modules are loaded */
+        /** \brief Called after moudles are loaded */
         virtual void onModuleLoaded();
 
-        /** \brief Called after modules are initialized */
+        /** \brief Called after moudles are initialized */
         virtual void onMoudleInitialized();
 
         /** \brief Called right after the main scene is created*/
         virtual void onMainSceneCreated();
-
-        /** \brief Called before any SceneObjects are awake. */
-        virtual void onAwake();
-
-        /** \brief Called before any SceneObjects are initialized. */
-        virtual void onInit();
 
         /** \brief Called in each main loop before any SceneObjects are updated. */
         virtual void onUpdate();
@@ -79,7 +71,7 @@ namespace Mix {
         /**
          * \brief Called when a quit event is issued.
          * \return True if application wants to quit.
-         * \note  It DOES NOT mean that application will quit when this is called. Instead,\n
+         * \note  It DOESNT mean that application will quit when this is called. Instead,\n
          *        it's just a request, it's up to application to decide whether to quit or not.
          */
         virtual bool onQuitRequested();

@@ -8,7 +8,7 @@
 namespace Scripts {
     MX_IMPLEMENT_RTTI(PlayerShipScript, Script);
 
-    void PlayerShipScript::init() {
+    void PlayerShipScript::start() {
         mAdapter = mGameObject->getComponent<ShipAdapter>();
     }
 

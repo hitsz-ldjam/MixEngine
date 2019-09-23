@@ -14,8 +14,12 @@ namespace Mix {
         }
     }
 
-    HGameObject GameObject::Create(const std::string& _name, Tag _tag, const LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) {
-        return CreateInternal(_name, _tag, _layerIndex, _flags, SceneManager::Get()->getActiveScene());
+    HGameObject GameObject::Instantiate(const std::string& _name, const Tag& _tag, LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) {
+        return CreateInternal(SceneManager::Get()->getActiveScene(), _name, _tag, _layerIndex, _flags);
+    }
+
+    HGameObject GameObject::Instantiate(const HGameObject& _parent, const std::string& _name, const Tag& _tag, LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) {
+        return CreateInternal(_parent, _name, _tag, _layerIndex, _flags);
     }
 
     void GameObject::destroy(bool _immediate) {
@@ -25,6 +29,8 @@ namespace Mix {
 
             mParent = nullptr;
         }
+
+        setActive(false);
 
         destroyInternal(mThisHandle, _immediate);
     }
@@ -37,6 +43,9 @@ namespace Mix {
 
             mChildren.clear();
 
+            if (mScene)
+                mScene->unregisterGameObject(mThisHandle);
+
             // Remove component
             while (!mComponents.empty()) {
                 auto& component = mComponents.back();
@@ -44,9 +53,6 @@ namespace Mix {
                 mComponents.erase(mComponents.end() - 1);
             }
 
-
-            if (mScene)
-                mScene->unregisterGameObject(mThisHandle);
             SceneObjectManager::Get()->unregisterObject(_handle);
         }
         else {
@@ -70,26 +76,42 @@ namespace Mix {
 
     GameObject::GameObject(const std::string& _name, const Tag& _tag, LayerIndex _layerIndex, Flags<GameObjectFlags> _flags)
         :mFlags(_flags), mTag(_tag), mLayer(_layerIndex) {
-        addComponent<Transform>();
-        mTransform = static_scene_object_cast<Transform>(mComponents[0]);
         setName(_name);
     }
 
     HGameObject GameObject::CreateInternal(const std::shared_ptr<GameObject>& _gameObject) {
-        HGameObject handle = static_scene_object_cast<GameObject>(SceneObjectManager::Get()->registerObject(_gameObject));
-        handle->mThisHandle = handle;
-        return handle;
+        HGameObject gameObject = static_scene_object_cast<GameObject>(SceneObjectManager::Get()->registerObject(_gameObject));
+        gameObject->mThisHandle = gameObject;
+        return gameObject;
     }
 
-    HGameObject GameObject::CreateInternal(const std::string& _name, const Tag& _tag, LayerIndex _layerIndex, Flags<GameObjectFlags> _flags, const std::shared_ptr<Scene>& _scene) {
+    HGameObject GameObject::CreateInternal(const std::shared_ptr<Scene>& _scene, const std::string& _name, const Tag& _tag, LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) {
         auto ptr = std::shared_ptr<GameObject>(new GameObject(_name, _tag, _layerIndex, _flags));
         ptr->mUUID = UUID::RandomUUID();
 
         HGameObject gameObject = static_scene_object_cast<GameObject>(SceneObjectManager::Get()->registerObject(ptr));
         gameObject->mThisHandle = gameObject;
+        gameObject->addComponent<Transform>();
+        gameObject->mTransform = static_scene_object_cast<Transform>(gameObject->mComponents[0]);
 
         if (_scene)
-            _scene->registerGameObject(gameObject);
+            gameObject->setScene(_scene);
+
+        return gameObject;
+    }
+
+    HGameObject GameObject::CreateInternal(const HGameObject& _parent, const std::string& _name, const Tag& _tag, LayerIndex _layerIndex, Flags<GameObjectFlags> _flags) {
+        auto ptr = std::shared_ptr<GameObject>(new GameObject(_name, _tag, _layerIndex, _flags));
+        ptr->mUUID = UUID::RandomUUID();
+
+        HGameObject gameObject = static_scene_object_cast<GameObject>(SceneObjectManager::Get()->registerObject(ptr));
+        gameObject->mThisHandle = gameObject;
+        gameObject->addComponent<Transform>();
+        gameObject->mTransform = static_scene_object_cast<Transform>(gameObject->mComponents[0]);
+
+        if (_parent) {
+            gameObject->setParent(_parent);
+        }
 
         return gameObject;
     }
@@ -100,10 +122,12 @@ namespace Mix {
         if (it != mComponents.end()) {
             (*it)->_setIsDestroyed();
 
-            (*it)->destroyInternal(*it, _immediate);
+            if (_component->isDerived(Behaviour::GetType())) {
+                // mBehaviours.erase(std::find(mBehaviours.begin(), mBehaviours.end(), static_scene_object_cast<Behaviour>(_component)));
+                mScene->unregisterBehaviour(static_scene_object_cast<Behaviour>(_component));
+            }
 
-            if (_component->isDerived(Behaviour::GetType()))
-                mBehaviours.erase(std::find(mBehaviours.begin(), mBehaviours.end(), static_scene_object_cast<Behaviour>(_component)));
+            (*it)->destroyInternal(*it, _immediate);
 
             mComponents.erase(it);
         }
@@ -121,8 +145,10 @@ namespace Mix {
 
         mComponents.push_back(_component);
 
-        if (_component->isDerived(Behaviour::GetType()))
-            mBehaviours.push_back(static_scene_object_cast<Behaviour>(_component));
+        if (_component->isDerived(Behaviour::GetType())) {
+            // mBehaviours.push_back(static_scene_object_cast<Behaviour>(_component));
+            mScene->registerBehaviour(static_scene_object_cast<Behaviour>(_component));
+        }
     }
 
     HComponent GameObject::getComponent(const Rtti& _type) const {
@@ -137,18 +163,33 @@ namespace Mix {
     }
 
     void GameObject::setParent(const HGameObject& _parent, bool _keepWorldTransform) {
-        if (_parent == nullptr || _parent.isDestroyed()) {
-            MX_LOG_WARNING("GameObject handle is null or GameObject has been destroyed.");
+        if (getParent() == _parent) {
+            return;
+        }
+
+        if (_parent == nullptr) {
+            Vector3f position;
+            Quaternion rotation;
+            if (_keepWorldTransform) {
+                position = transform().getPosition();
+                rotation = transform().getRotation();
+            }
+
+            mParent->removeChild(mThisHandle);
+            mParent = nullptr;
+            transform().setPosition(position);
+            transform().setRotation(rotation);
+
+            mScene->rootGameObjectChanged(mThisHandle);
+        }
+
+        if (_parent.isDestroyed()) {
+            MX_LOG_WARNING("GameObject has been destroyed.");
             return;
         }
 
         if (mThisHandle == _parent) {
             Log::Warning("Attempting to make a GameObject a child of itself.");
-            return;
-        }
-
-        if (getParent() == _parent) {
-            Log::Warning("Attempting to add a GameObject that is already a child object as a child object.");
             return;
         }
 
@@ -164,23 +205,30 @@ namespace Mix {
             rotation = transform().getRotation();
         }
 
-        _parent->addChild(mThisHandle);
-        setScene(_parent->mScene);
-
-        if (mParent != nullptr)
+        bool parentIsNull = true;
+        if (mParent != nullptr) {
             mParent->removeChild(mThisHandle);
+            parentIsNull = false;
+        }
 
-        if (_keepWorldTransform && mParent != nullptr) {
+        mParent = _parent;
+        mParent->addChild(mThisHandle);
+        setScene(mParent->mScene);
+
+        if (parentIsNull)
+            mScene->rootGameObjectChanged(mThisHandle);
+
+        if (_keepWorldTransform) {
             transform().setPosition(position);
             transform().setRotation(rotation);
         }
-
-
     }
 
     void GameObject::setScene(const std::shared_ptr<Scene>& _scene) {
         if (mScene == _scene)
             return;
+        if (mScene)
+            mScene->unregisterGameObject(mThisHandle);
         mScene = _scene;
         mScene->registerGameObject(mThisHandle);
         for (auto& child : mChildren)
@@ -257,6 +305,9 @@ namespace Mix {
     }
 
     void GameObject::setActive(const bool _active) {
+        if (mActiveSelf == _active)
+            return;
+
         mActiveSelf = _active;
         const bool activedInHierarchy = mActiveInHierarchy;
 
@@ -271,12 +322,14 @@ namespace Mix {
         for (auto child : mChildren)
             child->setActive(child->mActiveSelf);
 
+        auto behaviours = getComponents<Behaviour>();
         if (mActiveSelf) {
-            // todo: call OnEnable() of Scripts
+            for (auto& behaviour : behaviours)
+                behaviour->onEnabledInternal();
         }
         else {
-            // todo: call OnDisable() of Scripts
-            // todo: disable Update() of Scripts
+            for (auto& behaviour : behaviours)
+                behaviour->onDisabledInternal();
         }
     }
 

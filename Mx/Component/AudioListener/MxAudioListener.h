@@ -29,7 +29,7 @@ namespace Mix {
         Vector3f mLastPos;
         bool mUseFixedUpdate;
 
-        void init() override;
+        void start() override;
         void fixedUpdate() override;
         void lateUpdate() override;
 

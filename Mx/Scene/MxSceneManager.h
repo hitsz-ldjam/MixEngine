@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef MX_SCENE_MANAGER_H_
-#define MX_SCENE_MANAGER_H_
+#ifndef MX_SCENE_MANAGER_HPP_
+#define MX_SCENE_MANAGER_HPP_
 
 #include "MxScene.h"
 #include "../Engine/MxModuleBase.h"
@@ -68,9 +68,9 @@ namespace Mix {
 
         void init() override;
 
-        void sceneAwake();
+        /*void sceneAwake();
 
-        void sceneInit();
+        void sceneInit();*/
 
         void sceneUpdate();
 

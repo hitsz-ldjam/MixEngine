@@ -12,8 +12,7 @@ namespace Mix {
     }
 
     Matrix4 Camera::getViewMat() const {
-        updateMatrix();
-        return mViewMat;
+        return Matrix4::ViewMatrix(mGameObject->transform().getPosition(), mGameObject->transform().forward() + mGameObject->transform().getPosition(), mGameObject->transform().up());
     }
 
     Matrix4 Camera::getProjMat() const {
@@ -37,7 +36,7 @@ namespace Mix {
 
     Vector3f Camera::worldToScreenPoint(const Vector3f& _point) const {
         updateMatrix();
-        auto clipSpacePos = mProjMat * mViewMat * Vector4f(_point, 1.0f);
+        auto clipSpacePos = mProjMat * getViewMat() * Vector4f(_point, 1.0f);
         if (clipSpacePos.w == 0.0f)
             return Vector3f(_point.x, _point.y, 0.0f);
         auto ndcSpacePos = Vector3f(clipSpacePos) / clipSpacePos.w;
@@ -48,8 +47,6 @@ namespace Mix {
     void Camera::updateMatrix() const {
         if (mDirty) {
             mProjMat = Matrix4::Perspective(Math::Radians(mFov), float(mExtent.x) / mExtent.y, 0.1f, 1000.0f);
-            mViewMat = Matrix4::ViewMatrix(mGameObject->transform().getPosition(), mGameObject->transform().forward() + mGameObject->transform().getPosition(), mGameObject->transform().up());
-
             mDirty = false;
         }
     }

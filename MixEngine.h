@@ -54,8 +54,8 @@ namespace Mix {
         //                          Main loop                           //
         //////////////////////////////////////////////////////////////////
     private:
-        void awake();
-        void init();
+        /*void awake();
+        void init();*/
         void update();
         void fixedUpdate();
         void lateUpdate();

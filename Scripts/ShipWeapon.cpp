@@ -32,7 +32,7 @@ namespace Scripts {
         setAttackSpeed(mAttackSpeed);
     }
 
-    void ShipWeapon::init() {
+    void ShipWeapon::start() {
         auto[vertices, indices] = MeshUtils::Quad(Vector2f(1.5f, 1.5f));
         std::vector<Mesh::UV2DType> uvs = {
            {1.0f,1.0f},{0.0f,1.0f},{0.0f,0.0f},{1.0f,0.0f}
@@ -59,7 +59,7 @@ namespace Scripts {
     }
 
     void ShipWeapon::fire() {
-        auto newBullet = GameObject::Create("Bullet_" + std::to_string(++mFireCount), "Bullet");
+        auto newBullet = GameObject::Instantiate("Bullet_" + std::to_string(++mFireCount), "Bullet");
         newBullet->addComponent<Bullet>();
 
         auto meshFilter = newBullet->addComponent<MeshFilter>();

@@ -15,7 +15,7 @@
 #include "Scripts/ShipAdapter.h"
 #include "Mx/Component/Camera/MxCamera.h"
 #include "Scripts/ShipWeapon.h"
-#include "Mx/Component/RigidBody/MxRigidBody.h"
+#include "Scripts/Loading.h"
 
 namespace Mix {
 
@@ -43,7 +43,7 @@ namespace Mix {
         using namespace Mix;
 
         auto param = GetAdditionalParam<Texture2D>();
-        param.mipLevel = 0;
+        param.mipLevel = 4;
         param.samplerInfo.minFilter = TextureFilterMode::Linear;
         param.samplerInfo.magFilter = TextureFilterMode::Linear;
         param.samplerInfo.mipFilter = TextureMipSampleMode::Linear;
@@ -105,11 +105,13 @@ namespace Mix {
             gameObject->transform().setRotation(Quaternion::Identity);
 
             auto diffuseTex = ResourceLoader::Get()->load<Texture2D>("Resource/Textures/enemy_ship_diff.png", &param);
-            auto material = std::make_shared<Material>(Graphics::Get()->findShader("Standard"));
-            material->setTexture("diffuseTex", diffuseTex);
+            auto body = std::make_shared<Material>(Graphics::Get()->findShader("Standard"));
+            body->setTexture("diffuseTex", diffuseTex);
+
+            auto glass = std::make_shared<Material>(Graphics::Get()->findShader("Standard"));
 
             auto renderer = gameObject->addComponent<Renderer>();
-            renderer->setMaterial(material);
+            renderer->setMaterials({ body,glass });
 
             gameObject->addComponent<Scripts::EnemyShipScript>();
             gameObject->addComponent<Scripts::ShipAdapter>();
@@ -126,7 +128,7 @@ namespace Mix {
         }
 
         {
-            auto gameObject = GameObject::Create("Background");
+            auto gameObject = GameObject::Instantiate("Background");
             gameObject->transform().rotate(Vector3f::Right, Math::Radians(-90.0f), Space::World);
             gameObject->transform().translate(0.0f, -8.0f, 0.0f);
 
@@ -154,18 +156,33 @@ namespace Mix {
         }
 
         {
-            auto gameObject = GameObject::Create("Test Rb");
-            auto sphere = gameObject->addComponent<RigidBody>(.0f,
-                                                              gameObject->transform(),
-                                                              new btSphereShape(1));
-            sphere->setTrigger(true);
+            auto gameObject = GameObject::Instantiate("Loading");
+            gameObject->transform().rotate(Vector3f::Right, Math::Radians(-90.0f), Space::World);
+            gameObject->transform().translate(5.0f, 0.0f, 0.0f);
+
+            auto[vertices, indices] = MeshUtils::Quad(Vector2f(3.0f, 3.0f));
+            std::vector<Mesh::UV2DType> uvs = {
+               {1.0f,1.0f},{0.0f,1.0f},{0.0f,0.0f},{1.0f,0.0f}
+            };
+
+            auto mesh = std::make_shared<Mesh>();
+            mesh->setPositions(std::move(vertices));
+            mesh->setIndices(std::move(indices), MeshTopology::Triangles_List, 0);
+            mesh->setUVs(UVChannel::UV0, std::move(uvs));
+            mesh->recalculateNormals();
+            mesh->uploadMeshData(false);
+
+            auto meshFilter = gameObject->addComponent<MeshFilter>();
+            meshFilter->setMesh(mesh);
+
+            auto material = std::make_shared<Material>(Graphics::Get()->findShader("Standard"));
+
+            auto renderer = gameObject->addComponent<Renderer>();
+            renderer->setMaterial(material);
+
+            gameObject->addComponent<Scripts::Loading>();
         }
-    }
 
-    void ApplicationBase::onAwake() {
-    }
-
-    void ApplicationBase::onInit() {
         auto mainCamaera = SceneManager::Get()->getActiveScene()->getMainCamera();
         mainCamaera->transform()->translate(Vector3f(0.0f, 0.0f, -40.0f));
         mainCamaera->transform()->lookAt(Vector3f::Zero);

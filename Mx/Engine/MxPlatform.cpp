@@ -1,7 +1,7 @@
 #include "MxPlatform.h"
 #include "../Log/MxLog.h"
-#include "../Window/MxWindow.h"
 #include <SDL2/SDL.h>
+#include "../Window/MxWindow.h"
 
 namespace Mix {
     uint16_t SDLKeyModeMap(SDL_Keymod _mod) {
@@ -291,119 +291,116 @@ namespace Mix {
 
     void Platform::PollEvent() {
         SDL_Event e;
-        while(SDL_PollEvent(&e)) {
-            switch(e.type) {
+        while (SDL_PollEvent(&e)) {
+            switch (e.type) {
                 // Window events
-                case SDL_WINDOWEVENT:
+            case SDL_WINDOWEVENT:
+            {
+                switch (e.window.event) {
+                case SDL_WINDOWEVENT_CLOSE:
                 {
-                    switch(e.window.event) {
-                        case SDL_WINDOWEVENT_CLOSE:
-                        {
-                            auto id = SDL_GetWindowID(Window::Get()->rawPtr());
-                            if(id == e.window.windowID)
-                                PushQuitEvent();
-                            break;
-                        }
-                        default:
-                            break;
-                    }
+                    auto id = SDL_GetWindowID(Window::Get()->rawPtr());
+                    if (id == e.window.windowID)
+                        PushQuitEvent();
                     break;
                 }
-
-                // An SDL_QUIT is generated when the close button of the LAST existing window is clicked on.
-                // It adds to SDL_WINDOWEVENT/SDL_WINDOWEVENT_CLOSE.
-                case SDL_QUIT:
-                {
-                    if(!QuitEvent.empty())
-                        QuitEvent.trigger();
-                    break;
-                }
-
-                // Keyboard events
-                case SDL_KEYDOWN:
-                case SDL_KEYUP:
-                {
-                    PFKeyboardEventData data;
-                    data.state = e.type == SDL_KEYDOWN ? PFButtonState_Pressed : PFButtonState_Released;
-                    data.key = SDLKeyboardMap(e.key.keysym.scancode);
-                    data.mode = SDLKeyModeMap(static_cast<SDL_Keymod>(e.key.keysym.mod));
-                    if(!KeyboardEvent.empty())
-                        KeyboardEvent.trigger(data);
-                    break;
-                }
-
-                // Mouse events
-                case SDL_MOUSEBUTTONDOWN:
-                case SDL_MOUSEBUTTONUP:
-                {
-                    PFMouseButtonEventData data;
-                    data.state = e.type == SDL_MOUSEBUTTONDOWN ? PFButtonState_Pressed : PFButtonState_Released;
-                    data.clicks = e.button.clicks;
-                    data.button = SDLMouseButtonMap(e.button.button);
-                    data.pos = {e.button.x, e.button.y};
-                    if(!MouseButtonEvent.empty())
-                        MouseButtonEvent.trigger(data);
-                    break;
-                }
-
-                case SDL_MOUSEMOTION:
-                {
-                    PFMouseMoveEventData data;
-                    data.state = SDLMouseStateMap(e.motion.state);
-                    data.pos = {e.motion.x, e.motion.y};
-                    data.relativePos = {e.motion.xrel, e.motion.yrel};
-                    if(!MouseMoveEvent.empty())
-                        MouseMoveEvent.trigger(data);
-                    break;
-                }
-
-                case SDL_MOUSEWHEEL:
-                {
-                    PFMouseWheelEventData data;
-                    data.xy = {e.wheel.x, e.wheel.y};
-                    if(!MouseWheelEvent.empty())
-                        MouseWheelEvent.trigger(data);
-                    break;
-                }
-
-                // Game controller events
-                case SDL_CONTROLLERAXISMOTION:
-                {
-                    PFGamepadAxisEventData data;
-                    data.id = e.cbutton.which;
-                    data.axis = SDLControllerAxisMap(static_cast<SDL_GameControllerAxis>(e.caxis.axis));
-                    data.value = data.axis == AxisCode::Gamepad_LeftY || data.axis == AxisCode::Gamepad_RightY ? -Math::Normalize(e.caxis.value) : Math::Normalize(e.caxis.value);
-                    if(!GamepadAxisEvent.empty())
-                        GamepadAxisEvent.trigger(data);
-                    break;
-                }
-
-                case SDL_CONTROLLERBUTTONDOWN:
-                case SDL_CONTROLLERBUTTONUP:
-                {
-                    PFGamepadButtonEventData data;
-                    data.id = e.cbutton.which;
-                    data.state = e.type == SDL_CONTROLLERBUTTONDOWN ? PFButtonState_Pressed : PFButtonState_Released;
-                    data.button = SDLControllerButtonMap(static_cast<SDL_GameControllerButton>(e.cbutton.button));
-                    if(!GamepadButtonEvent.empty())
-                        GamepadButtonEvent.trigger(data);
-                    break;
-                }
-
-                case SDL_JOYDEVICEADDED:
-                case SDL_JOYDEVICEREMOVED:
-                {
-                    PFGamepadDeviceEventData data;
-                    data.deviceState = e.type == SDL_JOYDEVICEADDED ? PFDeviceState_Added : PFDeviceState_Removed;
-                    data.which = e.cdevice.which;
-                    if(!GamepadDeviceEvent.empty())
-                        GamepadDeviceEvent.trigger(data);
-                    break;
-                }
-
                 default:
                     break;
+                }
+            }
+            break;
+
+            // Keyboard events
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+            {
+                PFKeyboardEventData data;
+                data.state = e.type == SDL_KEYDOWN ? PFButtonState_Pressed : PFButtonState_Released;
+                data.key = SDLKeyboardMap(e.key.keysym.scancode);
+                data.mode = SDLKeyModeMap(static_cast<SDL_Keymod>(e.key.keysym.mod));
+                if (!KeyboardEvent.empty())
+                    KeyboardEvent.trigger(data);
+            }
+            break;
+
+                // Mouse events
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+            {
+                PFMouseButtonEventData data;
+                data.state = e.type == SDL_MOUSEBUTTONDOWN ? PFButtonState_Pressed : PFButtonState_Released;
+                data.clicks = e.button.clicks;
+                data.button = SDLMouseButtonMap(e.button.button);
+                data.pos = { e.button.x, e.button.y };
+                if (!MouseButtonEvent.empty())
+                    MouseButtonEvent.trigger(data);
+            }
+            break;
+
+            case SDL_MOUSEMOTION:
+            {
+                PFMouseMoveEventData data;
+                data.state = SDLMouseStateMap(e.motion.state);
+                data.pos = { e.motion.x, e.motion.y };
+                data.relativePos = { e.motion.xrel, e.motion.yrel };
+                if (!MouseMoveEvent.empty())
+                    MouseMoveEvent.trigger(data);
+            }
+            break;
+
+            case SDL_MOUSEWHEEL:
+            {
+                PFMouseWheelEventData data;
+                data.xy = { e.wheel.x, e.wheel.y };
+                if (!MouseWheelEvent.empty())
+                    MouseWheelEvent.trigger(data);
+            }
+            break;
+
+            // Game controller events
+            case SDL_CONTROLLERAXISMOTION:
+            {
+                PFGamepadAxisEventData data;
+                data.id = e.cbutton.which;
+                data.axis = SDLControllerAxisMap(static_cast<SDL_GameControllerAxis>(e.caxis.axis));
+                data.value = data.axis == AxisCode::Gamepad_LeftY || data.axis == AxisCode::Gamepad_RightY ?
+                    -Math::Normalize(e.caxis.value) : Math::Normalize(e.caxis.value);
+                if (!GamepadAxisEvent.empty())
+                    GamepadAxisEvent.trigger(data);
+            }
+            break;
+
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP:
+            {
+                PFGamepadButtonEventData data;
+                data.id = e.cbutton.which;
+                data.state = e.type == SDL_CONTROLLERBUTTONDOWN ? PFButtonState_Pressed : PFButtonState_Released;
+                data.button = SDLControllerButtonMap(static_cast<SDL_GameControllerButton>(e.cbutton.button));
+                if (!GamepadButtonEvent.empty())
+                    GamepadButtonEvent.trigger(data);
+            }
+            break;
+
+            case SDL_JOYDEVICEADDED:
+            case SDL_JOYDEVICEREMOVED:
+            {
+                PFGamepadDeviceEventData data;
+                data.deviceState = e.type == SDL_JOYDEVICEADDED ? PFDeviceState_Added : PFDeviceState_Removed;
+                data.which = e.cdevice.which;
+                if (!GamepadDeviceEvent.empty())
+                    GamepadDeviceEvent.trigger(data);
+            }
+            break;
+
+            case SDL_QUIT:
+                if (!QuitEvent.empty())
+                    QuitEvent.trigger();
+                break;
+            default:
+                break;
             }
         }
+
     }
 }

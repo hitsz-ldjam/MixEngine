@@ -25,7 +25,7 @@ namespace Mix {
     void MixEngine::setFPSLimit(uint32_t _limit) {
         mFPSLimit = _limit;
         if (mFPSLimit > 0)
-            mFrameStep = 1. / mFPSLimit;
+            mFrameStep = 1 / mFPSLimit;
     }
 
     MixEngine::~MixEngine() {
@@ -53,8 +53,8 @@ namespace Mix {
             loadMainScene();
 
             while (!mQuit) {
-                awake();
-                init();
+                /*awake();
+                init();*/
 
                 while (mRunning) {
                     Platform::Update();
@@ -112,7 +112,7 @@ namespace Mix {
         mApp->onMainSceneCreated();
     }
 
-    void MixEngine::awake() {
+   /*void MixEngine::awake() {
         mApp->onAwake();
         mModuleHolder.get<SceneManager>()->sceneAwake();
     }
@@ -120,7 +120,7 @@ namespace Mix {
     void MixEngine::init() {
         mApp->onInit();
         mModuleHolder.get<SceneManager>()->sceneInit();
-    }
+    }*/
 
     void MixEngine::update() {
         mApp->onUpdate();
@@ -128,6 +128,7 @@ namespace Mix {
         mModuleHolder.get<SceneManager>()->sceneUpdate();
 
         for (auto i = 0u; i < Time::sFixedClampedSteps; ++i) {
+            mApp->onFixedUpdate();
             fixedUpdate();
         }
     }

@@ -36,7 +36,9 @@ namespace Mix {
     public:
         ~GameObject();
 
-        static HGameObject Create(const std::string& _name, Tag _tag = "", LayerIndex _layerIndex = 0, Flags<GameObjectFlags> _flags = {});
+        static HGameObject Instantiate(const std::string& _name, const Tag& _tag = "", LayerIndex _layerIndex = 0, Flags<GameObjectFlags> _flags = {});
+
+        static HGameObject Instantiate(const HGameObject& _parent, const std::string& _name, const Tag& _tag = "", LayerIndex _layerIndex = 0, Flags<GameObjectFlags> _flags = {});
 
         void destroy(bool _immediate = false);
 
@@ -58,7 +60,9 @@ namespace Mix {
 
         static HGameObject CreateInternal(const std::shared_ptr<GameObject>& _gameObject);
 
-        static HGameObject CreateInternal(const std::string& _name, const Tag& _tag = "", LayerIndex _layerIndex = 0, Flags<GameObjectFlags> _flags = {}, const std::shared_ptr<Scene>& _scene = nullptr);
+        static HGameObject CreateInternal(const std::shared_ptr<Scene>& _scene, const std::string& _name, const Tag& _tag = "", LayerIndex _layerIndex = 0, Flags<GameObjectFlags> _flags = {});
+
+        static HGameObject CreateInternal(const HGameObject& _parent, const std::string& _name, const Tag& _tag = "", LayerIndex _layerIndex = 0, Flags<GameObjectFlags> _flags = {});
 
         void destroyInternal(SceneObjectHandleBase& _handle, bool _immediate = false) override;
 
@@ -120,7 +124,7 @@ namespace Mix {
         HComponent getComponent(const Rtti& _type) const;
 
         std::vector<HComponent> mComponents;
-        std::vector<HBehaviour> mBehaviours;
+        // std::vector<HBehaviour> mBehaviours;
 
         //////////////////////////////////////////////////////////////////
         //                          Hierarchy                           //
@@ -217,6 +221,7 @@ namespace Mix {
         std::shared_ptr<Scene> mScene;
         HGameObject mParent;
         std::vector<HGameObject> mChildren;
+
         bool mActiveSelf = true;
         bool mActiveInHierarchy = true;
 
@@ -226,47 +231,47 @@ namespace Mix {
         LayerIndex mLayer;
 
         /** @brief Insert _ptr into a shortlisted set of Behaviour if it points to what derived from Behaviour. */
-        template<typename _Ty>
-        std::enable_if_t<std::is_base_of_v<Behaviour, _Ty>> addBehaviour(_Ty* _ptr) { mBehaviours.insert(_ptr); }
+        // template<typename _Ty>
+        // std::enable_if_t<std::is_base_of_v<Behaviour, _Ty>> addBehaviour(_Ty* _ptr) { mBehaviours.insert(_ptr); }
 
         /** @brief This function is called when _Ty is not derived from Behaviour. */
-        template<typename _Ty>
-        std::enable_if_t<!std::is_base_of_v<Behaviour, _Ty>> addBehaviour(_Ty*) {}
+        // template<typename _Ty>
+        // std::enable_if_t<!std::is_base_of_v<Behaviour, _Ty>> addBehaviour(_Ty*) {}
 
-        void awake() {
+        /*void awake() {
             for (auto& behaviour : mBehaviours)
                 behaviour->awake();
             for (auto& c : mChildren)
                 c->awake();
-        }
+        }*/
 
-        void init() {
+        /*void init() {
             for (auto& behaviour : mBehaviours)
-                behaviour->init();
+                behaviour->start();
             for (auto& c : mChildren)
                 c->init();
-        }
+        }*/
 
-        void update() {
+        /*void update() {
             for (auto& behaviour : mBehaviours)
-                behaviour->update();
+                behaviour->updateInternal();
             for (auto& c : mChildren)
                 c->update();
         }
 
         void fixedUpdate() {
             for (auto& behaviour : mBehaviours)
-                behaviour->fixedUpdate();
+                behaviour->fixedUpdateInternal();
             for (auto& c : mChildren)
                 c->fixedUpdate();
         }
 
         void lateUpdate() {
             for (auto& behaviour : mBehaviours)
-                behaviour->lateUpdate();
+                behaviour->lateUpdateInternal();
             for (auto& c : mChildren)
                 c->lateUpdate();
-        }
+        }*/
 
     };
 
@@ -294,13 +299,13 @@ namespace Mix {
 
     template<typename _Ty>
     std::vector<SceneObjectHandle<_Ty>> GameObject::getComponents() {
-        static_assert(std::is_base_of_v<Component, _Ty>(), "Specified type is not a Component");
+        static_assert(std::is_base_of_v<Component, _Ty>, "Specified type is not a Component");
 
         std::vector<SceneObjectHandle<_Ty>> results;
 
         for (auto comp : mComponents) {
             if (comp->getType().isSameType(_Ty::GetType()) || comp->getType().isDerivedFrom(_Ty::GetType()))
-                results.push_back(comp);
+                results.push_back(static_scene_object_cast<_Ty>(comp));
         }
 
         return results;

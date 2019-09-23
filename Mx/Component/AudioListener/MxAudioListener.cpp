@@ -8,7 +8,7 @@
 namespace Mix {
     MX_IMPLEMENT_RTTI(AudioListener, Component);
 
-    void AudioListener::init() {
+    void AudioListener::start() {
         if (mCore) return;
         if (!mGameObject) throw IndependentComponentError(getTypeName());
         mCore = MixEngine::Instance().getModule<Audio::Core>()->getCore();

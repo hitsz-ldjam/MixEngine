@@ -23,14 +23,14 @@ namespace Mix {
             mDevice = mVulkan->getLogicalDevice();
 
             auto imageCount = mVulkan->getSwapchain()->imageCount();
-            mDynamicUniform.reserve(imageCount);
+            //mDynamicUniform.reserve(imageCount);
             // mTestDynamic.reserve(imageCount);
             mCameraUniforms.reserve(imageCount);
 
             for (size_t i = 0; i < imageCount; ++i) {
-                mDynamicUniform.emplace_back(mVulkan->getAllocator(),
+                /*mDynamicUniform.emplace_back(mVulkan->getAllocator(),
                                              sizeof(Uniform::MeshUniform),
-                                             120);
+                                             120);*/
 
                 mCameraUniforms.emplace_back(mVulkan->getAllocator(),
                                              vk::BufferUsageFlagBits::eUniformBuffer,

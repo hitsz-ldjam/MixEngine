@@ -9,7 +9,7 @@ namespace Scripts {
     void Bullet::awake() {
     }
 
-    void Bullet::init() {
+    void Bullet::start() {
     }
 
     void Bullet::update() {

@@ -192,7 +192,7 @@ namespace Mix {
         int mPriority;
         float mVolume;
 
-        void init() override;
+        void start() override;
         void fixedUpdate() override;
         void lateUpdate() override;
 

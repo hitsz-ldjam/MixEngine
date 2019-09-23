@@ -32,7 +32,7 @@ namespace Scripts {
     void ShipAdapter::awake() {
     }
 
-    void ShipAdapter::init() {
+    void ShipAdapter::start() {
     }
 
     void ShipAdapter::update() {

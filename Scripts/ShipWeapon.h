@@ -16,7 +16,7 @@ namespace Scripts {
     private:
         void awake() override;
 
-        void init() override;
+        void start() override;
 
         void update() override;
 

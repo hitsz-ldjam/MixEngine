@@ -11,7 +11,7 @@ namespace Scripts {
         ~EnemyShipScript() = default;
 
     private:
-        void init() override;
+        void start() override;
 
         void update() override;
 

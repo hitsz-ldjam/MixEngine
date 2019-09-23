@@ -36,7 +36,7 @@ namespace Mix {
                                          Flags<GameObjectFlags> _flags) const {
         if (!mRootNode.hasChildNode())
             return nullptr;
-        auto obj = GameObject::CreateInternal(_name, _tag, _layerIndex, _flags, _scene);
+        auto obj = GameObject::CreateInternal(_scene, _name, _tag, _layerIndex, _flags);
         recurBuildGameObj(_scene, obj, mRootNode.getChildNodes()[0]);
         return obj;
     }
@@ -55,7 +55,7 @@ namespace Mix {
                                              Flags<GameObjectFlags> _flags) const {
         if (!mRootNode.hasChildNode())
             return nullptr;
-        auto obj = GameObject::CreateInternal(_name, _tag, _layerIndex, _flags, _scene);
+        auto obj = GameObject::CreateInternal(_scene, _name, _tag, _layerIndex, _flags);
         recurBuildGameObj(_scene, obj, mRootNode.getChildNodes()[0]);
         return obj;
     }
@@ -74,7 +74,7 @@ namespace Mix {
         // if node has children
         if (_node.hasChildNode()) {
             for (auto& child : _node.getChildNodes()) {
-                auto p = GameObject::Create(child.getName(), _obj->getTag(), _obj->getLayer(), _obj->getFlags());
+                auto p = GameObject::Instantiate(child.getName(), _obj->getTag(), _obj->getLayer(), _obj->getFlags());
                 recurBuildGameObj(_scene, p, child);
                 p->setParent(_obj);
             }

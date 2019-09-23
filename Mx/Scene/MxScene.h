@@ -76,10 +76,10 @@ namespace Mix {
         static std::shared_ptr<Scene> Create(const std::string& _name, uint32_t _index);
 
         /** \brief Call awake() of Objects in whole scene. */
-        void sceneAwake();
+        // void sceneAwake();
 
         /** \brief Call init() of Objects in whole scene. */
-        void sceneInit();
+        // void sceneInit();
 
         /** \brief Call update() of Objects in whole scene. */
         void sceneUpdate();
@@ -94,7 +94,7 @@ namespace Mix {
         void scenePostRender();
 
         /** \brief Nake this scene active . */
-        void activate() { mIsActive = true; }
+        void activate();
 
         /** \brief Nake this scene inactive . */
         void inactivate() { mIsActive = false; }
@@ -108,8 +108,14 @@ namespace Mix {
         /** \brief Unregister a GameObject from the scene. */
         void unregisterGameObject(const HGameObject& _object);
 
+        void registerBehaviour(const HBehaviour& _behaviour);
+
+        void unregisterBehaviour(const HBehaviour& _behaviour);
+
+        void rootGameObjectChanged(const HGameObject& _object);
+
         /** \brief Flush all GameObjects registered in the scene but not yet added to the scene */
-        void flushNewAddedObject();
+        void flushNewAddedBehaviour();
 
         /** \brief Set the index of the scene */
         void setIndex(uint32_t _index) { mIndex = _index; }
@@ -128,8 +134,8 @@ namespace Mix {
         std::weak_ptr<Scene> mThisPtr;
         std::string mName;
         std::unordered_map<uint64_t, HGameObject> mRootObjects;
-        std::vector<HGameObject> mNewRootObjects;
-        std::vector<HGameObject> mNeedAwakeAndInit;
+        std::map<uint64_t, HBehaviour> mBehaviours;
+        std::vector<HBehaviour> mNewBehaviours;
 
         std::vector<HCamera> mRegisteredCamera;
         HCamera mMainCamera;

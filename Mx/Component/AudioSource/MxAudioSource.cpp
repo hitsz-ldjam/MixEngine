@@ -102,7 +102,7 @@ namespace Mix {
         initChannelParameters();
     }
 
-    void AudioSource::init() {
+    void AudioSource::start() {
         if (!mGameObject)
             throw IndependentComponentError(getTypeName());
 

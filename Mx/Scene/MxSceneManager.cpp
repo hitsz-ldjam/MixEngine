@@ -85,13 +85,13 @@ namespace Mix {
     void SceneManager::init() {
     }
 
-    void SceneManager::sceneAwake() {
+   /* void SceneManager::sceneAwake() {
         mActiveScene->sceneAwake();
     }
 
     void SceneManager::sceneInit() {
         mActiveScene->sceneInit();
-    }
+    }*/
 
     void SceneManager::sceneUpdate() {
         mActiveScene->sceneUpdate();
