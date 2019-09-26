@@ -19,7 +19,7 @@
 
 namespace Mix {
 
-    ApplicationBase::ApplicationBase(const ApplicationSetting& _setting) :mSetting(_setting) {
+    ApplicationBase::ApplicationBase(ApplicationSetting _setting) :mSetting(std::move(_setting)) {
     }
 
     void ApplicationBase::setFPSLimit(uint32_t _limit) {
@@ -30,7 +30,7 @@ namespace Mix {
         MixEngine::Instance().requestQuit();
     }
 
-    void ApplicationBase::startUp(std::vector<std::string> _args) {
+    void ApplicationBase::startUp(const std::vector<std::string>& _args) {
     }
 
     void ApplicationBase::onModuleLoaded() {

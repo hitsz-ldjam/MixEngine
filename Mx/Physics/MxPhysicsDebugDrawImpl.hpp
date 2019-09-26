@@ -16,8 +16,6 @@
 #include <glad/glad.h>
 
 #include <memory>
-//#include <fstream>
-//#include <sstream>
 #include <vector>
 #include <cstdio>
 
@@ -36,13 +34,6 @@ namespace Mix::Physics::DebugDrawImpl {
 
         namespace Shader {
             const GLsizei errMsgLen = 128;
-
-            //inline std::string loadFile(const char* _path) {
-            //    std::ifstream ifs(_path);
-            //    std::stringstream ss;
-            //    ss << ifs.rdbuf();
-            //    return ss.str();
-            //}
 
             const char* const vertShader =
                 "#version 330 core\n"
@@ -276,7 +267,12 @@ namespace Mix::Physics::DebugDrawImpl {
             static auto camera = SceneManager::Get()->getActiveScene()->getMainCamera();
             {
                 mProgram->setUniform("model", Matrix4::Identity);
-                mProgram->setUniform("view", camera->getViewMat());
+                auto view = camera->getViewMat();
+                // todo: ???????
+                //view[0][0] *= -1.0f;
+                //view[1][1] *= -1.0f;
+                //view[2][2] *= -1.0f;
+                mProgram->setUniform("view", view);
                 auto proj = camera->getProjMat();
                 //proj[0][0] *= -1.0f;
                 //proj[1][1] *= -1.0f;

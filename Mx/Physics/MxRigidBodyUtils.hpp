@@ -17,7 +17,7 @@ namespace Mix::Physics {
         /** Zero mass creates a static rigid body (@code btCollisionObject::CF_STATIC_OBJECT @endcode) */
         btScalar mass;
 
-        /** Can be cast from Transform by calling @code Physics::mixTransToBtTrans @endcode */
+        /** Can be cast from Transform by calling @code Physics::mx_bt_cast @endcode */
         btTransform startTrans;
 
         /**
@@ -61,6 +61,8 @@ namespace Mix::Physics {
               mInterpolatedTrans(_startTrans),
               mComOffset(_centerOfMassOffset),
               mInterpolation(_interpolation) {}
+
+        const auto& interpolation() const noexcept { return mInterpolation; }
 
         btTransform getWorldTransform() const {
             return mCurrTrans * mComOffset.inverse();

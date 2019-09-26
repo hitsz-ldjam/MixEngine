@@ -9,10 +9,10 @@
 #include <tuple>
 
 namespace Mix {
-    class Transform;
-    class Quaternion;
     template<typename _Ty>
     class Vector3;
+    class Quaternion;
+    class Transform;
 
     namespace Physics {
         class World;
@@ -31,8 +31,8 @@ namespace Mix {
 
         /** @note Default ctor is for RTTI. DO NOT use this ctor. */
         RigidBody();
+        //RigidBody(const btScalar _mass, const btTransform& _startTrans, btCollisionShape* _shape);
         /** @note Refer to Physics::RigidBodyConstructionInfo for param info. */
-        RigidBody(const btScalar _mass, const btTransform& _startTrans, btCollisionShape* _shape);
         RigidBody(const btScalar _mass, const Transform& _startTrans, btCollisionShape* _shape);
         RigidBody(const Physics::RigidBodyConstructionInfo& _info);
         /**

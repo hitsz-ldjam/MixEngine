@@ -4,11 +4,12 @@
 #define MX_PHYSICS_WORLD_H_
 
 #include "../Engine/MxModuleBase.h"
-#include "../Math/MxVector3.h"
 #include <bullet3/btBulletDynamicsCommon.h>
 #include <set>
 
 namespace Mix {
+    template<typename _Ty>
+    class Vector3;
     class RigidBody;
 
     namespace Physics {
@@ -17,18 +18,14 @@ namespace Mix {
         class DebugDraw;
 #endif
 
-        struct RaycastHit final {
-            RigidBody* rigidbody;
-            Vector3f point;
-            explicit operator bool() const { return rigidbody; }
-        };
+        struct RaycastHit;
 
         class World final : public ModuleBase {
         public:
             World();
 
             ~World();
-            
+
             void load() override;
 
             void init() override {}
@@ -61,22 +58,22 @@ namespace Mix {
 
             void theWorld() noexcept { mIsPaused = !mIsPaused; }
 
-            RaycastHit raycast(const Vector3f& _origin,
-                               const Vector3f& _direction,
+            RaycastHit raycast(const Vector3<float>& _origin,
+                               const Vector3<float>& _direction,
                                const float _maxDistance) const;
 
-            RaycastHit raycast(const Vector3f& _origin,
-                               const Vector3f& _direction,
+            RaycastHit raycast(const Vector3<float>& _origin,
+                               const Vector3<float>& _direction,
                                const float _maxDistance,
                                const int _group,
                                const int _mask) const;
 
-            std::vector<RaycastHit> raycastAll(const Vector3f& _origin,
-                                               const Vector3f& _direction,
+            std::vector<RaycastHit> raycastAll(const Vector3<float>& _origin,
+                                               const Vector3<float>& _direction,
                                                const float _maxDistance) const;
 
-            std::vector<RaycastHit> raycastAll(const Vector3f& _origin,
-                                               const Vector3f& _direction,
+            std::vector<RaycastHit> raycastAll(const Vector3<float>& _origin,
+                                               const Vector3<float>& _direction,
                                                const float _maxDistance,
                                                const int _group,
                                                const int _mask) const;

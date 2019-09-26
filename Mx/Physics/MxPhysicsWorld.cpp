@@ -1,6 +1,8 @@
 #include "MxPhysicsWorld.h"
+#include "MxPhysicsUtils.hpp"
 #include "MxRigidBodyUtils.hpp"
 #include "../Component/RigidBody/MxRigidBody.h"
+#include "../Math/MxVector3.h"
 #include "../../MixEngine.h"
 
 #ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
@@ -79,58 +81,56 @@ namespace Mix::Physics {
 #ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
     void World::pushDrawData() const {
         if(mWorld->getDebugDrawer()) {
-            mWorld->debugDrawWorld();
             mDebugDraw->drawLine({0, 0, 0}, {1, 0, 0}, {1, 0, 0});
             mDebugDraw->drawLine({0, 0, 0}, {0, 1, 0}, {0, 1, 0});
             mDebugDraw->drawLine({0, 0, 0}, {0, 0, 1}, {0, 0, 1});
+            mWorld->debugDrawWorld();
         }
     }
 
     void World::render() const { mDebugDraw->render(); }
 #endif
 
-    RaycastHit World::raycast(const Vector3f& _origin,
-                              const Vector3f& _direction,
+    RaycastHit World::raycast(const Vector3<float>& _origin,
+                              const Vector3<float>& _direction,
                               const float _maxDistance) const {
         btCollisionWorld::ClosestRayResultCallback callback({}, {});
         return raycast(_origin, _direction, _maxDistance, callback.m_collisionFilterGroup, callback.m_collisionFilterMask);
     }
 
-    RaycastHit World::raycast(const Vector3f& _origin,
-                              const Vector3f& _direction,
+    RaycastHit World::raycast(const Vector3<float>& _origin,
+                              const Vector3<float>& _direction,
                               const float _maxDistance,
                               const int _group,
                               const int _mask) const {
         auto termin = _origin + _direction.normalize() * _maxDistance;
-        btCollisionWorld::ClosestRayResultCallback callback({_origin.x, _origin.y, _origin.z},
-                                                            {termin.x, termin.y, termin.z});
+        btCollisionWorld::ClosestRayResultCallback callback(mx_bt_cast(_origin), mx_bt_cast(termin));
         callback.m_collisionFilterGroup = _group;
         callback.m_collisionFilterMask = _mask;
         mWorld->rayTest(callback.m_rayFromWorld, callback.m_rayToWorld, callback);
         if(callback.hasHit())
             if(auto btrb = btRigidBody::upcast(callback.m_collisionObject)) {
-                auto rb = static_cast<RigidBody*>(btrb->getUserPointer());
+                auto rb = static_scene_object_cast<RigidBody>(static_cast<RigidBody*>(btrb->getUserPointer())->getHandle());
                 auto& point = callback.m_hitPointWorld;
-                return {rb, Vector3f(point.x(), point.y(), point.z())};
+                return RaycastHit(rb, bt_mx_cast(point));
             }
-        return {nullptr, Vector3f(0, 0, 0)};
+        return RaycastHit(nullptr, Vector3<float>(0, 0, 0));
     }
 
-    std::vector<RaycastHit> World::raycastAll(const Vector3f& _origin,
-                                              const Vector3f& _direction,
+    std::vector<RaycastHit> World::raycastAll(const Vector3<float>& _origin,
+                                              const Vector3<float>& _direction,
                                               const float _maxDistance) const {
         btCollisionWorld::AllHitsRayResultCallback callback({}, {});
         return raycastAll(_origin, _direction, _maxDistance, callback.m_collisionFilterGroup, callback.m_collisionFilterMask);
     }
 
-    std::vector<RaycastHit> World::raycastAll(const Vector3f& _origin,
-                                              const Vector3f& _direction,
+    std::vector<RaycastHit> World::raycastAll(const Vector3<float>& _origin,
+                                              const Vector3<float>& _direction,
                                               const float _maxDistance,
                                               const int _group,
                                               const int _mask) const {
         auto termin = _origin + _direction.normalize() * _maxDistance;
-        btCollisionWorld::AllHitsRayResultCallback callback({_origin.x, _origin.y, _origin.z},
-                                                            {termin.x, termin.y, termin.z});
+        btCollisionWorld::AllHitsRayResultCallback callback(mx_bt_cast(_origin), mx_bt_cast(termin));
         callback.m_collisionFilterGroup = _group;
         callback.m_collisionFilterMask = _mask;
         mWorld->rayTest(callback.m_rayFromWorld, callback.m_rayToWorld, callback);
@@ -138,9 +138,9 @@ namespace Mix::Physics {
         std::vector<RaycastHit> results;
         for(auto i = 0; i < size; ++i)
             if(auto btrb = btRigidBody::upcast(callback.m_collisionObjects[i])) {
-                auto rb = static_cast<RigidBody*>(btrb->getUserPointer());
+                auto rb = static_scene_object_cast<RigidBody>(static_cast<RigidBody*>(btrb->getUserPointer())->getHandle());
                 auto& point = callback.m_hitPointWorld[i];
-                results.push_back({rb, Vector3f(point.x(), point.y(), point.z())});
+                results.emplace_back(rb, bt_mx_cast(point));
             }
         return results;
     }

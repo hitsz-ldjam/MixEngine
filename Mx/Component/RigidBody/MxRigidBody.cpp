@@ -1,7 +1,7 @@
 #include "MxRigidBody.h"
 #include "../../Physics/MxPhysicsWorld.h"
-#include "../../Physics/MxRigidBodyUtils.hpp"
 #include "../../Physics/MxPhysicsUtils.hpp"
+#include "../../Physics/MxRigidBodyUtils.hpp"
 #include "../../GameObject/MxGameObject.h"
 
 namespace Mix {
@@ -35,20 +35,20 @@ namespace Mix {
                              mFilter(false, 0, 0),
                              mWorld(nullptr) {}
 
-    RigidBody::RigidBody(const btScalar _mass,
-                         const btTransform& _startTrans,
-                         btCollisionShape* _shape) : mMass(_mass),
-                                                     mShape(_shape),
-                                                     mRigidBody(nullptr),
-                                                     mFilter(false, 0, 0),
-                                                     mWorld(nullptr) {
-        ltm.addShape(mShape);
-        mRigidBody = CreateBtRb(Physics::RigidBodyConstructionInfo(_mass, _startTrans, _shape));
-        mRigidBody->setUserPointer(this);
-    }
+    //RigidBody::RigidBody(const btScalar _mass,
+    //                     const btTransform& _startTrans,
+    //                     btCollisionShape* _shape) : mMass(_mass),
+    //                                                 mShape(_shape),
+    //                                                 mRigidBody(nullptr),
+    //                                                 mFilter(false, 0, 0),
+    //                                                 mWorld(nullptr) {
+    //    ltm.addShape(mShape);
+    //    mRigidBody = CreateBtRb(Physics::RigidBodyConstructionInfo(_mass, _startTrans, _shape));
+    //    mRigidBody->setUserPointer(this);
+    //}
 
     RigidBody::RigidBody(const btScalar _mass, const Transform& _startTrans, btCollisionShape* _shape)
-        : RigidBody(_mass, Physics::mx_bt_cast(_startTrans), _shape) {}
+        : RigidBody(Physics::RigidBodyConstructionInfo(_mass, Physics::mx_bt_cast(_startTrans), _shape)) {}
 
     RigidBody::RigidBody(const Physics::RigidBodyConstructionInfo& _info) : mMass(_info.mass),
                                                                             mShape(_info.shape),
@@ -185,9 +185,11 @@ namespace Mix {
     }
 
     void RigidBody::update() {
-        //                         Should be Physics::MotionState
-        Physics::bt_mx_cast(static_cast<Physics::MotionState*>(mRigidBody->getMotionState())
-                            ->interpolatedTransform(), mGameObject->transform());
+        auto ms = static_cast<Physics::MotionState*>(mRigidBody->getMotionState());
+        if(ms->interpolation() == Physics::RigidbodyInterpolation::NONE)
+            return;
+        // todo: sync by Transform
+        Physics::bt_mx_cast(ms->interpolatedTransform(), mGameObject->transform());
     }
 
     void RigidBody::fixedUpdate() {

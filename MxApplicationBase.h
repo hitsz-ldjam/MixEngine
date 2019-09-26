@@ -15,11 +15,14 @@ namespace Mix {
 
     class ApplicationBase {
         friend MixEngine;
+
     public:
-        ApplicationBase(const ApplicationSetting& _setting);
+        ApplicationBase(ApplicationSetting _setting);
+
+        virtual ~ApplicationBase() = default;
 
         /**
-         * \brief Set the maximum frames per second, zeri means no limits.
+         * \brief Set the maximum frames per second, zero means no limits.
          */
         void setFPSLimit(uint32_t _limit);
 
@@ -37,17 +40,17 @@ namespace Mix {
         const Version& getAppVersion() const { return mSetting.appVersion; }
 
     protected:
-         /**
-         * \brief Called before engine starts up.
-         * \param _args Arguments from command line.
-         * \note Engine has not been initialized when this function is called.
-         */
-        virtual void startUp(std::vector<std::string> _args);
+        /**
+        * \brief Called before engine starts up.
+        * \param _args Arguments from command line.
+        * \note Engine has not been initialized when this function is called.
+        */
+        virtual void startUp(const std::vector<std::string>& _args);
 
-        /** \brief Called after moudles are loaded */
+        /** \brief Called after modules are loaded */
         virtual void onModuleLoaded();
 
-        /** \brief Called after moudles are initialized */
+        /** \brief Called after modules are initialized */
         virtual void onMoudleInitialized();
 
         /** \brief Called right after the main scene is created*/
@@ -71,7 +74,7 @@ namespace Mix {
         /**
          * \brief Called when a quit event is issued.
          * \return True if application wants to quit.
-         * \note  It DOESNT mean that application will quit when this is called. Instead,\n
+         * \note  It DOES NOT mean that application will quit when this is called. Instead,\n
          *        it's just a request, it's up to application to decide whether to quit or not.
          */
         virtual bool onQuitRequested();
