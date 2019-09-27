@@ -149,11 +149,11 @@ namespace Mix {
     }
 
     Vector3<float> RigidBody::getAngularVelocity() const {
-        return Physics::bt_mx_cast(mRigidBody->getAngularVelocity());
+        return -Physics::bt_mx_cast(mRigidBody->getAngularVelocity());
     }
 
     void RigidBody::setAngularVelocity(const Vector3<float>& _vel) const {
-        mRigidBody->setAngularVelocity(Physics::mx_bt_cast(_vel));
+        mRigidBody->setAngularVelocity(-Physics::mx_bt_cast(_vel));
     }
 
     btRigidBody* RigidBody::CreateBtRb(const Physics::RigidBodyConstructionInfo& _info) {

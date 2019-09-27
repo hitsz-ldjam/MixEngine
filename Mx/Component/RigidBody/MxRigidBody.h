@@ -87,10 +87,12 @@ namespace Mix {
 
         Vector3<float> getPosition() const;
         void setPosition(const Vector3<float>& _pos) const;
+        /** @note Translates relative to world. */
         void translate(const Vector3<float>& _delta) const;
 
         Quaternion getRotation() const;
         void setRotation(const Quaternion& _rot) const;
+        /** @note Rotates relative to self. */
         void rotate(const Quaternion& _delta) const;
 
         Vector3<float> getLinearVelocity() const;
