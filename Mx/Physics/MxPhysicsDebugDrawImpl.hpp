@@ -266,17 +266,11 @@ namespace Mix::Physics::DebugDrawImpl {
             // todo: pass from Camera
             static auto camera = SceneManager::Get()->getActiveScene()->getMainCamera();
             {
-                mProgram->setUniform("model", Matrix4::Identity);
-                auto view = camera->getViewMat();
-                // todo: ???????
-                //view[0][0] *= -1.0f;
-                //view[1][1] *= -1.0f;
-                //view[2][2] *= -1.0f;
-                mProgram->setUniform("view", view);
-                auto proj = camera->getProjMat();
-                //proj[0][0] *= -1.0f;
-                //proj[1][1] *= -1.0f;
-                mProgram->setUniform("projection", proj);
+                auto model = Matrix4(1);
+                model[2][2] = -1;
+                mProgram->setUniform("model", model);
+                mProgram->setUniform("view", camera->getViewMat());
+                mProgram->setUniform("projection", camera->getProjMat());
             }
 
             mVAO->bind();

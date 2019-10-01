@@ -35,18 +35,6 @@ namespace Mix {
                              mFilter(false, 0, 0),
                              mWorld(nullptr) {}
 
-    //RigidBody::RigidBody(const btScalar _mass,
-    //                     const btTransform& _startTrans,
-    //                     btCollisionShape* _shape) : mMass(_mass),
-    //                                                 mShape(_shape),
-    //                                                 mRigidBody(nullptr),
-    //                                                 mFilter(false, 0, 0),
-    //                                                 mWorld(nullptr) {
-    //    ltm.addShape(mShape);
-    //    mRigidBody = CreateBtRb(Physics::RigidBodyConstructionInfo(_mass, _startTrans, _shape));
-    //    mRigidBody->setUserPointer(this);
-    //}
-
     RigidBody::RigidBody(const btScalar _mass, const Transform& _startTrans, btCollisionShape* _shape)
         : RigidBody(Physics::RigidBodyConstructionInfo(_mass, Physics::mx_bt_cast(_startTrans), _shape)) {}
 
@@ -137,7 +125,8 @@ namespace Mix {
     }
 
     void RigidBody::rotate(const Quaternion& _delta) const {
-        setRotation(getRotation() * _delta);
+        //setRotation(getRotation() * _delta);
+        setRotation(_delta * getRotation());
     }
 
     Vector3<float> RigidBody::getLinearVelocity() const {
@@ -154,6 +143,18 @@ namespace Mix {
 
     void RigidBody::setAngularVelocity(const Vector3<float>& _vel) const {
         mRigidBody->setAngularVelocity(-Physics::mx_bt_cast(_vel));
+    }
+
+    Vector3<float> RigidBody::getForce() const {
+        return Physics::bt_mx_cast(mRigidBody->getTotalForce());
+    }
+
+    void RigidBody::addForce(const Vector3<float>& _force) const {
+        mRigidBody->applyCentralForce(Physics::mx_bt_cast(_force));
+    }
+
+    void RigidBody::addForceAtPosition(const Vector3<float>& _force, const Vector3<float>& _pos) const {
+        mRigidBody->applyForce(Physics::mx_bt_cast(_force), Physics::mx_bt_cast(_pos));
     }
 
     btRigidBody* RigidBody::CreateBtRb(const Physics::RigidBodyConstructionInfo& _info) {

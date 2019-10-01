@@ -31,7 +31,6 @@ namespace Mix {
 
         /** @note Default ctor is for RTTI. DO NOT use this ctor. */
         RigidBody();
-        //RigidBody(const btScalar _mass, const btTransform& _startTrans, btCollisionShape* _shape);
         /** @note Refer to Physics::RigidBodyConstructionInfo for param info. */
         RigidBody(const btScalar _mass, const Transform& _startTrans, btCollisionShape* _shape);
         RigidBody(const Physics::RigidBodyConstructionInfo& _info);
@@ -87,18 +86,33 @@ namespace Mix {
 
         Vector3<float> getPosition() const;
         void setPosition(const Vector3<float>& _pos) const;
-        /** @note Translates relative to world. */
+        /** @brief Translate relative to world. */
         void translate(const Vector3<float>& _delta) const;
 
         Quaternion getRotation() const;
         void setRotation(const Quaternion& _rot) const;
-        /** @note Rotates relative to self. */
+        /** @brief Rotate relative to world. */
         void rotate(const Quaternion& _delta) const;
 
         Vector3<float> getLinearVelocity() const;
         void setLinearVelocity(const Vector3<float>& _vel) const;
         Vector3<float> getAngularVelocity() const;
         void setAngularVelocity(const Vector3<float>& _vel) const;
+
+        Vector3<float> getForce() const;
+
+        /** 
+         *  @param _force Force in world coordinates.
+         *  @note The force is only applied in one single fixed frame.
+         */
+        void addForce(const Vector3<float>& _force) const;
+
+        /**
+         *  @param _force Force in world coordinates.
+         *  @param _pos Position in world coordinates.
+         *  @note The force is only applied in one single fixed frame.
+         */
+        void addForceAtPosition(const Vector3<float>& _force, const Vector3<float>& _pos) const;
 
         // todo: other interfaces
 
