@@ -107,3 +107,13 @@ const char* Mix::ToString(RenderType e) {
     default: return "Unknown";
     }
 }
+
+const char* Mix::ToString(GPUBufferUsage e) {
+    switch (e) {
+    case GPUBufferUsage::Static: return "Static";
+    case GPUBufferUsage::Dynamic: return "Dynamic";
+    case GPUBufferUsage::Stream: return "Stream";
+    case GPUBufferUsage::Transfer: return "Transfer";
+    default: return "Unknown";
+    }
+}

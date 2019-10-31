@@ -117,7 +117,11 @@ namespace Mix {
 		setRotation(Quaternion::LookRotation(dir, _worldUp));
 	}
 
-	void Transform::updateLocalToWorldMatrix() const {
+    void Transform::forceUpdate() {
+        updateLocalToWorldMatrix();
+    }
+
+    void Transform::updateLocalToWorldMatrix() const {
 		if (mChanged) {
 			mLocalToWorld = Matrix4::TRS(mPosition, mQuat, mScale);
 			if (mGameObject && mGameObject->getParent())

@@ -91,18 +91,18 @@ namespace Mix {
 
         _Ty& operator*() const { return *getRawPtr(); }
 
-        operator bool() const {
+        explicit operator bool() const {
             return mData->mPtr != nullptr && mData->mPtr->object != nullptr;
         }
 
         template<typename _T>
-        bool operator==(const SceneObjectHandle<_T>& _other) {
+        bool operator==(const SceneObjectHandle<_T>& _other) const {
             return (mData == nullptr && _other.mData == nullptr) ||
                 (mData != nullptr && _other.mData != nullptr && getInstanceId() == _other.getInstanceId());
         }
 
         template<typename _T>
-        bool operator!=(const SceneObjectHandle<_T>& _other) {
+        bool operator!=(const SceneObjectHandle<_T>& _other) const {
             return !(*this == _other);
         }
 

@@ -22,11 +22,11 @@ namespace Mix {
     }
 
     enum class MaterialPropertyType {
-        INT = 0x0000,
-        FLOAT = 0x0001,
-        MATRIX = 0x002,
-        VECTOR = 0x0004,
-        TEX_2D = 0x008,
+        INT,
+        FLOAT,
+        MATRIX,
+        VECTOR,
+        TEX_2D,
     };
 
     struct MaterialPropertyInfo {

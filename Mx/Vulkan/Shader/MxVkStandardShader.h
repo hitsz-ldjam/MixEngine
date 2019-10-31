@@ -5,11 +5,12 @@
 #include "MxVkShaderBase.h"
 #include "../Buffers/MxVkUniformBuffer.h"
 #include "../FrameBuffer/MxVkFramebuffer.h"
+#include "../Descriptor/MxVkDescriptorSet.h"
 #include <deque>
 #include "../Pipeline/MxVkGraphicsPipelineState.h"
 
 namespace Mix {
-    class Ui;
+    class GUI;
     class Renderer;
 
 
@@ -20,6 +21,7 @@ namespace Mix {
         class Swapchain;
         class DescriptorSetLayout;
         class DescriptorPool;
+        class DescriptorSet;
 
         class StandardShader final : public ShaderBase {
         public:
@@ -57,9 +59,6 @@ namespace Mix {
 
             std::shared_ptr<GraphicsPipelineState> mGraphicsPipelineState;
 
-            std::shared_ptr<Image> mDepthStencil;
-            vk::ImageView mDepthStencilView;
-
             std::shared_ptr<DescriptorSetLayout> mStaticParamDescriptorSetLayout;
             std::shared_ptr<DescriptorSetLayout> mDynamicPamramDescriptorSetLayout;
             std::shared_ptr<DescriptorPool> mDescriptorPool;
@@ -67,7 +66,7 @@ namespace Mix {
             std::vector<Buffer> mCameraUniforms;
             std::vector<DynamicUniformBuffer> mDynamicUniform;
 
-            uint32_t mDefaultMaterialCount = 30;
+            uint32_t mDefaultMaterialCount = 100;
             std::unordered_map<std::string, uint32_t> mMaterialNameBindingMap;
             std::vector<std::vector<DescriptorSet>> mMaterialDescs;
             std::deque<uint32_t> mUnusedId;

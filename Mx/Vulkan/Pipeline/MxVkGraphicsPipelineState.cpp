@@ -145,6 +145,8 @@ namespace Mix {
                 mPipelineStateData.pipelineLayout = mDevice->get().createPipelineLayout(createInfo);
             }
 
+            mPipelineStateData.descriptorSetLayouts = _desc.descriptorSetLayouts;
+
             mPipelineStateData.pipelineCreateInfo.stageCount = usedStageCount;
             mPipelineStateData.pipelineCreateInfo.pStages = mPipelineStateData.shaderStageInfo;
             mPipelineStateData.pipelineCreateInfo.pVertexInputState = nullptr; // Set at runtime

@@ -79,14 +79,14 @@ namespace Mix {
         }
 
         void VulkanAPI::beginRender() {
-            mCurrFrame = mSwapchain->currFrame();
+            mCurrFrame = mSwapchain->getCurrFrame();
             mCurrCmd = mGraphicsCommandBuffers[mCurrFrame].get();
             mCurrCmd->wait();
             mSwapchain->acquireNextImage();
             mCurrCmd->begin();
 
             std::vector<vk::ClearValue> clearValues(2);
-            clearValues[0].color = std::array<float, 4>{0.0f, 0.75f, 1.0f, 1.0f};
+            clearValues[0].color = std::array<float, 4>{0.2f, 0.2f, 0.2f, 1.0f};
             clearValues[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
 
             mRenderPass->beginRenderPass(mCurrCmd->get(),
@@ -116,6 +116,9 @@ namespace Mix {
             catch (vk::Error& e) {
                 std::cerr << e.what() << std::endl;
             }
+
+            if(mDevice && mDepthStencilView)
+                mDevice->get().destroy(mDepthStencilView);
 
             mGraphicsCommandBuffers.clear();
             mGraphicsCommandPool.reset();

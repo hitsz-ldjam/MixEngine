@@ -19,22 +19,15 @@ namespace Mix {
 			};
 
 			struct AbstractCameraUniform :public AbstractUniform {
-				union {
-					Vector4f _vec4_1_;
-					Vector3f position;
-				};
-
-				union {
-					Vector4f _vec4_2_;
-					Vector3f forward;
-				};
-
+                union {
+                    Vector3f cameraPos;
+                    Vector4f _vec4_1_;
+                };
 				Matrix4 viewMat;
 				Matrix4 projMat;
 			protected:
 				AbstractCameraUniform() :
-					position(0),
-					forward(Vector3f::Forward),
+                    cameraPos(Vector3f::Zero),
 					viewMat(Matrix4::Identity),
 					projMat(Matrix4::Identity) {
 				}

@@ -5,7 +5,7 @@
 #include "Mx/Audio/MxAudio.hpp"
 #include "Mx/Physics/MxPhysicsWorld.h"
 #include "Mx/Vulkan/Shader/MxVkStandardShader.h"
-#include "Mx/GUI/MxUi.h"
+#include "Mx/GUI/MxGUi.h"
 #include "Mx/Resource/MxResourceLoader.h"
 #include "Mx/Graphics/MxGraphics.h"
 #include "Mx/Scene/MxSceneManager.h"
@@ -55,11 +55,9 @@ namespace Mix {
             while (!mQuit) {
                 /*awake();
                 init();*/
-
-                while (mRunning) {
-                    Platform::Update();
-                    Time::Tick();
-
+                Platform::Update();
+                Time::Tick();
+                if (mRunning) {
                     // Limit FPS if limit was set.
                     if (mFPSLimit > 0) {
                         float currentTime = Time::TotalTime();
@@ -84,12 +82,24 @@ namespace Mix {
                         startTp = Time::RealTime();
                         mFrameCount = 0u;
                     }
-                    Window::Get()->setTitle(std::to_string(mFramePerSecond));
+                    //Window::Get()->setTitle(std::to_string(mFramePerSecond));
 
+                    //auto start = Time::RealTime();
                     update();
+                    //Log::Info("Update %1%", Time::RealTime() - start);
+
+                    //start = Time::RealTime();
                     lateUpdate();
+                    //Log::Info("lateUpdate %1%", Time::RealTime() - start);
+
+                    //start = Time::RealTime();
                     render();
+                    //Log::Info("render %1%", Time::RealTime() - start);
+
+                    //start = Time::RealTime();
                     postRender();
+                    //Log::Info("postRender %1%", Time::RealTime() - start);
+                    //Log::Info("");
                 }
             }
         }
@@ -111,16 +121,6 @@ namespace Mix {
 
         mApp->onMainSceneCreated();
     }
-
-   /*void MixEngine::awake() {
-        mApp->onAwake();
-        mModuleHolder.get<SceneManager>()->sceneAwake();
-    }
-
-    void MixEngine::init() {
-        mApp->onInit();
-        mModuleHolder.get<SceneManager>()->sceneInit();
-    }*/
 
     void MixEngine::update() {
         mApp->onUpdate();
@@ -151,14 +151,25 @@ namespace Mix {
     }
 
     void MixEngine::loadModule() {
-        mModuleHolder.add<Window>("Mix Engine Demo", Vector2i{ 1024, 760 }, WindowFlag::VULKAN | WindowFlag::SHOWN)->load();
+        SDL_Rect rect;
+        SDL_GetDisplayBounds(0, &rect);
+
+        mModuleHolder.add<Window>("Mix Engine Demo", Vector2i{ rect.w * 0.4f, rect.h * 0.8f }, WindowFlag::Vulkan | WindowFlag::Shown)->load();
         mModuleHolder.add<Input>()->load();
         mModuleHolder.add<Audio::Core>()->load();
         mModuleHolder.add<Physics::World>()->load();
         mModuleHolder.add<Graphics>()->load();
+        mModuleHolder.add<GUI>()->load();
         mModuleHolder.add<ResourceLoader>()->load();
         mModuleHolder.add<SceneObjectManager>()->load();
         mModuleHolder.add<SceneManager>()->load();
+
+        std::string n = mApp->getAppName();
+        Version v = mApp->getAppVersion();
+        std::string title = Utils::StringFormat("%1% V %2%.%3%.%4%",
+                                                mApp->getAppName(),
+                                                v.getMajor(), v.getMinor(), v.getPatch());
+        Window::Get()->setTitle(title);
 
         mApp->onModuleLoaded();
     }
@@ -168,7 +179,7 @@ namespace Mix {
         for (auto m : modules)
             m->init();
 
-        mApp->onMoudleInitialized();
+        mApp->onModuleInitialized();
     }
 
     void MixEngine::onQuitRequested() {
@@ -182,10 +193,13 @@ namespace Mix {
 #ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
         mModuleHolder.get<Physics::World>()->render();
 #endif
-
+        mModuleHolder.get<GUI>()->beginGUI();
+        mApp->onGUI();
+        mModuleHolder.get<GUI>()->endGUI();
+        mModuleHolder.get<GUI>()->update();
         mModuleHolder.get<Graphics>()->update();
         mModuleHolder.get<Graphics>()->render();
-    }
+}
 
     void MixEngine::postRender() {
         mApp->onPostRender();

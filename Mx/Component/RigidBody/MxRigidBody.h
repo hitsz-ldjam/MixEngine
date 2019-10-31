@@ -4,6 +4,7 @@
 #define MX_RIGID_BODY_H_
 
 #include "../Behaviour/MxBehaviour.h"
+#include "../../Definitions/MxDefinitions.h"
 #include <bullet3/btBulletDynamicsCommon.h>
 #include <boost/signals2.hpp>
 #include <tuple>
@@ -26,7 +27,7 @@ namespace Mix {
         friend Physics::World;
 
     public:
-        using Signal = boost::signals2::signal<void(RigidBody*)>;
+        using Signal = boost::signals2::signal<void(HRigidBody)>;
         using Slot = Signal::slot_type;
 
         /** @note Default ctor is for RTTI. DO NOT use this ctor. */
@@ -127,8 +128,8 @@ namespace Mix {
         btDiscreteDynamicsWorld* mWorld;
 
         Signal mEnterSignal, mExitSignal;
-        void onTriggerEnter(RigidBody* _other) { mEnterSignal(_other); }
-        void onTriggerExit(RigidBody* _other) { mExitSignal(_other); }
+        void onTriggerEnter(HRigidBody _other) { mEnterSignal(_other); }
+        void onTriggerExit(HRigidBody _other) { mExitSignal(_other); }
 
         /** @brief A utility function to create btRigidBody from RigidBodyConstructionInfo */
         static btRigidBody* CreateBtRb(const Physics::RigidBodyConstructionInfo& _info);

@@ -45,7 +45,7 @@ namespace Mix {
                                                                             mWorld(nullptr) {
         ltm.addShape(mShape);
         mRigidBody = CreateBtRb(_info);
-        mRigidBody->setUserPointer(this);
+        mRigidBody->setUserPointer(&mThisHandle);
     }
 
     RigidBody::RigidBody(const Physics::RigidBodyConstructionInfo& _info,
@@ -57,7 +57,7 @@ namespace Mix {
                                             mWorld(nullptr) {
         ltm.addShape(mShape);
         mRigidBody = CreateBtRb(_info);
-        mRigidBody->setUserPointer(this);
+        mRigidBody->setUserPointer(&mThisHandle);
     }
 
     RigidBody::~RigidBody() {
@@ -170,8 +170,8 @@ namespace Mix {
                                                       motionstate,
                                                       _info.shape,
                                                       inertia);
-        info.m_linearSleepingThreshold = .02;  // default to .8
-        info.m_angularSleepingThreshold = .02; // default to 1
+        info.m_linearSleepingThreshold = .01;  // default to .8
+        info.m_angularSleepingThreshold = .01; // default to 1
         _info.furtherSetup(info);
         return new btRigidBody(info);
     }

@@ -28,7 +28,6 @@ namespace Mix {
 	}
 
 	std::shared_ptr<ResourceBase> GliParser::GliToTexture(const gli::texture& _texture) {
-		std::shared_ptr<ResourceBase> result;
 		switch (_texture.target()) {
 		case gli::TARGET_2D: return ToTexture2D(_texture);
 		case gli::TARGET_CUBE: return ToCubeMap(_texture);
@@ -53,7 +52,7 @@ namespace Mix {
 	}
 
 	std::shared_ptr<ResourceBase> GliParser::ToCubeMap(const gli::texture& _texture) {
-		const auto& cubeMap = dynamic_cast<const gli::texture_cube&>(_texture);
+		const auto& cubeMap = static_cast<const gli::texture_cube&>(_texture);
 		auto result = std::make_shared<CubeMap>(cubeMap.extent().x, GliFormatToTextureFormat(cubeMap.format()), cubeMap.levels());
 
 		const char* data = reinterpret_cast<const char*>(cubeMap.data());

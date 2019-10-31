@@ -17,6 +17,11 @@ namespace Mix {
 
         int execute(std::shared_ptr<ApplicationBase> _app);
 
+        /**
+         * \brief Call to issue a request for the application to close. \n
+         *        This will eventually trigger an quit event and onQuitRequested() will be called.
+         * \note  ONLY call this after startUp() has been called
+         */
         void requestQuit();
 
     private:

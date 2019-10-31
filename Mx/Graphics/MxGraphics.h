@@ -12,6 +12,7 @@ namespace Mix {
 
     namespace Vulkan {
         class VulkanAPI;
+        class UIRenderer;
     }
 
     class Graphics :public ModuleBase {
@@ -37,10 +38,14 @@ namespace Mix {
 
         void loadShader();
 
+        void addShader(const std::string _name, const std::shared_ptr<Vulkan::ShaderBase>& _shader);
+
         std::unique_ptr<Vulkan::VulkanAPI> mVulkan;
 
         std::unordered_map<uint32_t, std::shared_ptr<Shader>> mShaders;
         std::unordered_map<std::string, uint32_t> mShaderNameMap;
+
+        std::shared_ptr<Vulkan::UIRenderer> mUiRenderer;
     };
 }
 

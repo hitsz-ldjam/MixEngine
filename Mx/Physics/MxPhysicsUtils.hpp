@@ -14,7 +14,7 @@ namespace Mix::Physics {
         explicit RaycastHit(HRigidBody _rb, const Vector3f& _p) : rigidbody(std::move(_rb)),
                                                                   hitpoint(_p) {}
 
-        explicit operator bool() const { return rigidbody; }
+        explicit operator bool() const { return bool(rigidbody); }
     };
 
     inline Vector3f bt_mx_cast(const btVector3& _btVec, const bool _switchHandness = true) noexcept {

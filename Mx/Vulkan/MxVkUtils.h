@@ -18,6 +18,8 @@ namespace Mix {
 			static vk::PrimitiveTopology GetTopology(MeshTopology _drawMode);
 
             static uint32_t CvtToVkVersion(const Version& _version);
+
+            static vk::IndexType GetIndexType(IndexFormat _format);
 		};
 	}
 }

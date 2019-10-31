@@ -163,35 +163,47 @@ namespace Mix::Physics {
 
             // make colObj0 < colObj1
             // swap manually in case std::swap be specialized
-            if(colObj0 > colObj1) {
-                auto temp = colObj0;
-                colObj0 = colObj1;
-                colObj1 = temp;
+            //if(colObj0 > colObj1) {
+            //    auto temp = colObj0;
+            //    colObj0 = colObj1;
+            //    colObj1 = temp;
+            //}
+
+            auto rb0 = static_scene_object_cast<RigidBody>(*static_cast<HComponent*>(colObj0->getUserPointer()));
+            auto rb1 = static_scene_object_cast<RigidBody>(*static_cast<HComponent*>(colObj1->getUserPointer()));
+
+            if(rb0->getInstanceId() > rb1->getInstanceId()) {
+                auto temp = rb0;
+                rb0 = rb1;
+                rb1 = temp;
             }
 
-            auto colPair = std::make_pair(colObj0, colObj1);
+            auto colPair = std::make_pair(rb0, rb1);
             currSet.insert(colPair);
-            if(prevSet.find(colPair) == prevSet.end()) {
-                auto rb0 = static_cast<RigidBody*>(colObj0->getUserPointer());
-                auto rb1 = static_cast<RigidBody*>(colObj1->getUserPointer());
-                rb0->onTriggerEnter(rb1);
-                rb1->onTriggerEnter(rb0);
+            if(mPrevSet.find(colPair) == mPrevSet.end()) {
+                if(rb0)
+                    rb0->onTriggerEnter(rb1);
+                if(rb1)
+                    rb1->onTriggerEnter(rb0);
             }
         }
 
         CollisionSet diffSet;
-        std::set_difference(prevSet.begin(),
-                            prevSet.end(),
+        std::set_difference(mPrevSet.begin(),
+                            mPrevSet.end(),
                             currSet.begin(),
                             currSet.end(),
-                            std::inserter(diffSet, diffSet.begin()));
+                            std::inserter(diffSet, diffSet.begin()),
+                            CompFunc());
         for(const auto& colPair : diffSet) {
-            auto rb0 = static_cast<RigidBody*>(colPair.first->getUserPointer());
-            auto rb1 = static_cast<RigidBody*>(colPair.second->getUserPointer());
-            rb0->onTriggerExit(rb1);
-            rb1->onTriggerExit(rb0);
+            auto rb0 = colPair.first;
+            auto rb1 = colPair.second;
+            if(rb0)
+                rb0->onTriggerExit(rb1);
+            if(rb1)
+                rb1->onTriggerExit(rb0);
         }
 
-        prevSet = std::move(currSet);
+        mPrevSet = std::move(currSet);
     }
 }

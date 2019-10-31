@@ -6,6 +6,7 @@
 // todo: delete debug code
 #include "../Scene/MxSceneManager.h"
 #include "../Component/Camera/MxCamera.h"
+#include "../Window/MxWindow.h"
 // -----
 
 #ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
@@ -208,8 +209,8 @@ namespace Mix::Physics::DebugDrawImpl {
             mWindow.reset(SDL_CreateWindow("Physics Debug",
                                            SDL_WINDOWPOS_CENTERED,
                                            SDL_WINDOWPOS_CENTERED,
-                                           1024,
-                                           768,
+                                           Window::Get()->getExtent().x,
+                                           Window::Get()->getExtent().y,
                                            SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL));
 
             SDL_GL_CreateContext(mWindow.get());

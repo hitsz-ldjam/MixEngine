@@ -92,6 +92,8 @@ namespace Mix {
             lookAt(_target.getPosition(), _worldUp);
         }
 
+        void forceUpdate();
+
     private:
         Vector3f mPosition;
         Quaternion mQuat;

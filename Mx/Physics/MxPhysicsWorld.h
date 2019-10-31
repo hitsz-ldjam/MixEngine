@@ -4,6 +4,8 @@
 #define MX_PHYSICS_WORLD_H_
 
 #include "../Engine/MxModuleBase.h"
+#include "../Definitions/MxDefinitions.h"
+#include "../Component/RigidBody/MxRigidBody.h"
 #include <bullet3/btBulletDynamicsCommon.h>
 #include <set>
 
@@ -83,8 +85,15 @@ namespace Mix {
             static World* Get();
 
         private:
-            using CollisionPair = std::pair<const btCollisionObject*, const btCollisionObject*>;
-            using CollisionSet = std::set<CollisionPair>;
+            using CollisionPair = std::pair<HRigidBody, HRigidBody>;
+
+            struct CompFunc {
+                bool operator()(const CollisionPair& _a, const CollisionPair& _b) const {
+                    return _a.first.getInstanceId() < _b.first.getInstanceId() || (_a.first.getInstanceId() == _b.first.getInstanceId() && _a.second.getInstanceId() < _b.second.getInstanceId());
+                }
+            };
+
+            using CollisionSet = std::set<CollisionPair, CompFunc>;
 
 #ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
             DebugDraw* mDebugDraw;
@@ -98,7 +107,7 @@ namespace Mix {
 
             bool mIsPaused;
 
-            CollisionSet prevSet;
+            CollisionSet mPrevSet;
 
             void processCollisions();
         };

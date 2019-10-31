@@ -9,6 +9,8 @@
 #include "../Component/Renderer/MxRenderer.h"
 #include "../Component/MeshFilter/MxMeshFilter.h"
 #include "../Component/Camera/MxCamera.h"
+#include "../Vulkan/Shader/MxVkPBRShader.h"
+#include "../Vulkan/Shader/MxVkUIRenderer.h"
 
 
 namespace Mix {
@@ -21,6 +23,7 @@ namespace Mix {
         mVulkan->waitDeviceIdle();
         mShaderNameMap.clear();
         mShaders.clear();
+        mUiRenderer.reset();
         mVulkan.reset();
     }
 
@@ -51,17 +54,19 @@ namespace Mix {
 
         for (auto& renderer : renderInfo.renderers) {
             auto mesh = renderer->getGameObject()->getComponent<MeshFilter>()->getMesh();
-            auto& materials = renderer->getMaterials();
+            if (mesh) {
+                auto& materials = renderer->getMaterials();
 
-            uint32_t count = std::min(mesh->subMeshCount(), static_cast<uint32_t>(materials.size()));
-            for (uint32_t i = 0; i < count; ++i) {
-                RenderElement re;
-                re.transform = renderer->transform();
-                re.material = materials[i];
-                re.mesh = mesh;
-                re.submesh = i;
+                uint32_t count = std::min(mesh->subMeshCount(), static_cast<uint32_t>(materials.size()));
+                for (uint32_t i = 0; i < count; ++i) {
+                    RenderElement re;
+                    re.transform = renderer->transform();
+                    re.material = materials[i];
+                    re.mesh = mesh;
+                    re.submesh = i;
 
-                renderElements.push_back(re);
+                    renderElements.push_back(re);
+                }
             }
         }
 
@@ -115,6 +120,13 @@ namespace Mix {
             mShaders[lastId]->endRender();
         }
 
+
+        // UI
+        GUI::UIRenderData renderData;
+        bool renderUi = GUI::Get()->getRenderData(renderData);
+        if (renderUi)
+            mUiRenderer->render(renderData);
+
         mVulkan->endRender();
     }
 
@@ -151,8 +163,20 @@ namespace Mix {
     }
 
     void Graphics::loadShader() {
-        auto shader = std::make_shared<Vulkan::StandardShader>(mVulkan.get());
-        mShaderNameMap["Standard"] = 1;
-        mShaders[1].reset(new Shader(shader, 1, "Standard", shader->getShaderPropertySet(), shader->getMaterialPropertySet()));
+        auto standard = std::make_shared<Vulkan::StandardShader>(mVulkan.get());
+        addShader("Standard", standard);
+
+        auto pbr = std::make_shared<Vulkan::PBRShader>(mVulkan.get());
+        addShader("PBR", pbr);
+
+        mUiRenderer = std::make_shared<Vulkan::UIRenderer>(mVulkan.get());
+    }
+
+    void Graphics::addShader(const std::string _name, const std::shared_ptr<Vulkan::ShaderBase>& _shader) {
+        if (mShaderNameMap.count(_name))
+            return;
+
+        mShaderNameMap[_name] = mShaders.size() + 1;
+        mShaders[mShaderNameMap[_name]] = std::shared_ptr<Shader>(new Shader(_shader, mShaderNameMap[_name], _name, _shader->getShaderPropertySet(), _shader->getMaterialPropertySet()));
     }
 }

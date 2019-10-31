@@ -113,6 +113,21 @@ namespace Mix {
     };
 
     const char* ToString(RenderType e);
+
+
+    /**
+     * \brief Enumeration that represents the usage of a gpu buffer and usually makes the storage location of GPU buffer different.
+     */
+    enum class GPUBufferUsage {
+        Static = 0x0001,
+        Dynamic = 0x0002,
+        Stream = 0x0004,
+        Transfer = 0x0008
+    };
+
+    const char* ToString(GPUBufferUsage e);
+
+
 }
 
 #endif

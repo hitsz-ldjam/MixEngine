@@ -27,12 +27,20 @@ namespace Mix {
             case MeshTopology::Points_List:		return vk::PrimitiveTopology::ePointList;
             case MeshTopology::Lines_List:		return vk::PrimitiveTopology::eLineList;
             case MeshTopology::Triangles_List:	return vk::PrimitiveTopology::eTriangleList;
-            default: return vk::PrimitiveTopology::eTriangleList;
+            default: MX_ASSERT(false && "Unknown MeshTopology");
             }
         }
 
         uint32_t VulkanUtils::CvtToVkVersion(const Version& _version) {
             return VK_MAKE_VERSION(_version.getMajor(), _version.getMinor(), _version.getPatch());
+        }
+
+        vk::IndexType VulkanUtils::GetIndexType(IndexFormat _format) {
+            switch (_format) { 
+            case IndexFormat::UInt16: return vk::IndexType::eUint16; break;
+            case IndexFormat::UInt32: return vk::IndexType::eUint32; break;
+            default: MX_ASSERT(false && "Unknown IndexFormat");
+            }
         }
     }
 }

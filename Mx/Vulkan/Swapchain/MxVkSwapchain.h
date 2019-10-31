@@ -67,7 +67,7 @@ namespace Mix {
 
 			uint32_t imageCount() const { return mImageCount; }
 
-			uint32_t currFrame() const { return mCurrFrame; }
+			uint32_t getCurrFrame() const { return mCurrFrame; }
 
 			vk::Result acquireNextImage();
 

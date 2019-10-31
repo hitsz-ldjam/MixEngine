@@ -6,52 +6,34 @@
 #include <vector>
 
 namespace Mix {
-    struct ApplicationSetting {
-        std::string appName;
-        Version appVersion;
-    };
-
     class MixEngine;
 
     class ApplicationBase {
         friend MixEngine;
-
     public:
-        ApplicationBase(ApplicationSetting _setting);
+        ApplicationBase() = default;
 
         virtual ~ApplicationBase() = default;
 
-        /**
-         * \brief Set the maximum frames per second, zero means no limits.
-         */
-        void setFPSLimit(uint32_t _limit);
-
-        /**
-         * \brief Call to issue a request for the application to close. \n
-         *        This will eventually trigger an quit event and onQuitRequested() will be called.
-         * \note  ONLY call this after startUp() has been called
-         */
-        void requestQuit();
-
         /** \brief Get the name of the application */
-        const std::string& getAppName() const { return mSetting.appName; }
+        virtual std::string getAppName() const = 0;
 
         /** \brief Get the version of the application */
-        const Version& getAppVersion() const { return mSetting.appVersion; }
+        virtual Version getAppVersion() const = 0;
 
     protected:
-        /**
-        * \brief Called before engine starts up.
-        * \param _args Arguments from command line.
-        * \note Engine has not been initialized when this function is called.
-        */
-        virtual void startUp(const std::vector<std::string>& _args);
+         /**
+         * \brief Called before engine starts up.
+         * \param _args Arguments from command line.
+         * \note Engine has not been initialized when this function is called.
+         */
+        virtual void startUp(std::vector<std::string> _args);
 
         /** \brief Called after modules are loaded */
         virtual void onModuleLoaded();
 
         /** \brief Called after modules are initialized */
-        virtual void onMoudleInitialized();
+        virtual void onModuleInitialized();
 
         /** \brief Called right after the main scene is created*/
         virtual void onMainSceneCreated();
@@ -68,6 +50,9 @@ namespace Mix {
         /** \brief Called before any render operations begin */
         virtual void onRender();
 
+        /** \brief Called when drawing GUI, add code here to show ui on screen */
+        virtual void onGUI();
+
         /** \brief Called after all render operations are done */
         virtual void onPostRender();
 
@@ -82,8 +67,6 @@ namespace Mix {
         /** \brief Called when main loop ends and the application is going to exit.*/
         virtual void onQuit();
 
-    protected:
-        ApplicationSetting mSetting;
     };
 }
 

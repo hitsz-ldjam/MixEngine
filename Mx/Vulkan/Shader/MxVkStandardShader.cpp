@@ -39,8 +39,6 @@ namespace Mix {
                                              sizeof(Uniform::CameraUniform));
             }
 
-            // buildRenderPass();
-            // buildFrameBuffer();
             buildDescriptorSetLayout();
             buildPipeline();
             buildDescriptorSet();
@@ -48,7 +46,6 @@ namespace Mix {
         }
 
         StandardShader::~StandardShader() {
-            mDevice->get().destroyImageView(mDepthStencilView);
         }
 
         void StandardShader::beginRender(const Camera& _camera) {
@@ -70,7 +67,7 @@ namespace Mix {
         void StandardShader::setCamera(const Camera& _camera) {
             // update Camera
             Uniform::CameraUniform ubo;
-            ubo.position = _camera.transform()->getPosition();
+            ubo.cameraPos = _camera.transform()->getPosition();
             ubo.viewMat = _camera.getViewMat();
             ubo.projMat = _camera.getProjMat();
             ubo.projMat[1][1] *= -1.0f;

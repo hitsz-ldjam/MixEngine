@@ -13,14 +13,15 @@
 
 namespace Mix {
 	enum class WindowFlag {
-		FULLSCREEN = 0x0001,	/**< Fullscreen window */
-		SHOWN = 0x0002,			/**< Window is visible */
-		HIDDEN = 0x0004,		/**< Window is not visible */
-		BORDERLESS = 0x0008,	/**< Window without border*/
-		RESIZABLE = 0x0010,		/**< Window can be resized */
-		MINIMIZED = 0x0020,		/**< Window is minimized */
-		MAXIMIZED = 0x0040,		/**< Window is maximized */
-		VULKAN = 0x0080			/**< Window for Vulkan */
+		Fullscreen = 0x0001,	/**< Fullscreen window */
+		Shown = 0x0002,			/**< Window is visible */
+		Hidden = 0x0004,		/**< Window is not visible */
+		Borderless = 0x0008,	/**< Window without border*/
+		Resizable = 0x0010,		/**< Window can be resized */
+		Minimized = 0x0020,		/**< Window is minimized */
+		Maximized = 0x0040,		/**< Window is maximized */
+		Vulkan = 0x0080,	    /**< Window for Vulkan */
+        FullScreen_Desktop = 0x0100 /**< Fullscreen window at the current desktop resolution */
 	};
 
 	MX_ALLOW_FLAGS_FOR_ENUM(WindowFlag);

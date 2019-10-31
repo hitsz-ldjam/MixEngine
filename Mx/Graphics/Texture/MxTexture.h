@@ -27,6 +27,8 @@ namespace Mix {
 
 	class Texture :public ResourceBase, public Vulkan::Descriptor, public GeneralBase::NoCopyBase {
 	public:
+        virtual ~Texture();
+
 		const Vulkan::Image& getImage() const { return *mImage; }
 
 		const vk::ImageView& getImageView() const { return mImageView; }

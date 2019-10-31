@@ -56,13 +56,13 @@ namespace Mix {
 	struct PFMouseMoveEventData {
 		Vector2i pos;
 		Vector2i relativePos;
-		uint8_t state = 0; /**< Test with PFMpuseButton */
+		uint8_t state = 0; /**< Test with PFMouseButton */
 	};
 
 	struct PFMouseButtonEventData {
 		uint8_t state = 0; /**< Test with PFButtonState */
 		uint8_t clicks = 0;
-		ButtonCode button; /**< Test with PFMouseButton, only one bit will be set */
+		ButtonCode button;
 		Vector2i pos;
 	};
 

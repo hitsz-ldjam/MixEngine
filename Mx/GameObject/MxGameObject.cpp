@@ -262,6 +262,7 @@ namespace Mix {
             if (mChildren[i] == _child)
                 return i;
         }
+       
         return -1;
     }
 
