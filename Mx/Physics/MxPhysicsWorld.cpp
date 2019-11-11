@@ -71,7 +71,7 @@ namespace Mix::Physics {
                 auto colObj = mWorld->getCollisionObjectArray()[i];
                 auto rb = btRigidBody::upcast(colObj);
                 if(rb) {
-                    // PLEASE use Physics::MotionState PLEASE
+                    // Should be Physics::MotionState
                     auto motionState = static_cast<MotionState*>(rb->getMotionState());
                     motionState->calculateInterpolatedTransform(_fixedDeltaTime, _smoothing);
                 }
@@ -161,17 +161,10 @@ namespace Mix::Physics {
             auto colObj0 = manifold->getBody0();
             auto colObj1 = manifold->getBody1();
 
-            // make colObj0 < colObj1
-            // swap manually in case std::swap be specialized
-            //if(colObj0 > colObj1) {
-            //    auto temp = colObj0;
-            //    colObj0 = colObj1;
-            //    colObj1 = temp;
-            //}
-
             auto rb0 = static_scene_object_cast<RigidBody>(*static_cast<HComponent*>(colObj0->getUserPointer()));
             auto rb1 = static_scene_object_cast<RigidBody>(*static_cast<HComponent*>(colObj1->getUserPointer()));
 
+            // make rb0 < rb1
             if(rb0->getInstanceId() > rb1->getInstanceId()) {
                 auto temp = rb0;
                 rb0 = rb1;

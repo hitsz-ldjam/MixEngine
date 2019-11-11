@@ -8,38 +8,33 @@
 
 namespace Mix::Physics {
     enum class RigidbodyInterpolation {
-        NONE,
-        INTERPOLATE,
-        EXTRAPOLATE,
+        None,
+        Interpolate,
+        Extrapolate,
     };
 
     struct RigidBodyConstructionInfo {
-        /** Zero mass creates a static rigid body (@code btCollisionObject::CF_STATIC_OBJECT @endcode) */
+        /** Zero mass creates a static rigid body i.e. btCollisionObject::CF_STATIC_OBJECT */
         btScalar mass;
 
-        /** Can be cast from Transform by calling @code Physics::mx_bt_cast @endcode */
+        /** Can be cast from Transform by using @code Physics::mx_bt_cast @endcode */
         btTransform startTrans;
 
-        /**
-         *  1) Should NOT be nullptr. Local inertia tensor is calculated via this shape.\n
-         *  2) Reusing collision shapes is highly recommended.\n
-         *  3) The life times of collision shapes (and their children shapes) are automatically managed by
-         *  RigidBody. DO NOT (and there is no need to) delete shapes manually.
-         */
+        /** The lifetime is NOT managed internally. */
         btCollisionShape* shape;
 
-        /** Used in MotionState construction. */
-        RigidbodyInterpolation interpolation = RigidbodyInterpolation::NONE;
+        /** Used in the construction of MotionState. */
+        RigidbodyInterpolation interpolation = RigidbodyInterpolation::None;
 
-        /** Used in MotionState construction. */
+        /** Used in the construction of MotionState. */
         btTransform centerOfMassOffset = btTransform::getIdentity();
 
         /** 
          *  This function is called after btRigidBody::btRigidBodyConstructionInfo is constructed in RigidBody
          *  construction.\n
-         *  DO NOT overwrite m_mass, m_motionState, m_collisionShape, m_localInertia in this function.
-         *  
-         *  @b See: btRigidBody::btRigidBodyConstructionInfo
+         *  DO NOT overwrite m_mass, m_motionState, m_collisionShape, m_localInertia in this function unless
+         *  you know what you are doing.
+         *  @see btRigidBody::btRigidBodyConstructionInfo
          */
         std::function<void(btRigidBody::btRigidBodyConstructionInfo&)> furtherSetup = [](auto&) {};
 
@@ -54,7 +49,7 @@ namespace Mix::Physics {
         BT_DECLARE_ALIGNED_ALLOCATOR();
 
         explicit MotionState(const btTransform& _startTrans,
-                             const RigidbodyInterpolation _interpolation = RigidbodyInterpolation::NONE,
+                             const RigidbodyInterpolation _interpolation = RigidbodyInterpolation::None,
                              const btTransform& _centerOfMassOffset = btTransform::getIdentity())
             : mPrevTrans(_startTrans),
               mCurrTrans(_startTrans),
@@ -87,17 +82,17 @@ namespace Mix::Physics {
          *  @param _fixedDeltaTime Should be Time::FixedDeltaTime()
          *  @param _smoothing Should be Time::SmoothingFactor()
          *
-         *  @b todo: debug
+         *  @todo debug
          */
         void calculateInterpolatedTransform(const btScalar _fixedDeltaTime, const btScalar _smoothing) {
             switch(mInterpolation) {
-                case RigidbodyInterpolation::NONE:
+                case RigidbodyInterpolation::None:
                 {
                     mInterpolatedTrans = mCurrTrans;
                     break;
                 }
 
-                case RigidbodyInterpolation::INTERPOLATE:
+                case RigidbodyInterpolation::Interpolate:
                 {
                     auto pos = mCurrTrans.getOrigin() * _smoothing
                                + mPrevTrans.getOrigin() * (1 - _smoothing);
@@ -108,7 +103,7 @@ namespace Mix::Physics {
                     break;
                 }
 
-                case RigidbodyInterpolation::EXTRAPOLATE:
+                case RigidbodyInterpolation::Extrapolate:
                 {
                     //auto linearVel = (mCurrTrans.getOrigin() - mPrevTrans.getOrigin()) / _fixedDeltaTime;
                     //auto angularVel = (mCurrTrans.getRotation() - mPrevTrans.getRotation()) / _fixedDeltaTime;

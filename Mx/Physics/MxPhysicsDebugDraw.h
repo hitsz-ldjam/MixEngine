@@ -30,10 +30,10 @@ namespace Mix::Physics {
         void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) override;
 
         /** @note Not implemented yet */
-        void reportErrorWarning(const char* warningString) override { puts(warningString); }
+        void reportErrorWarning(const char* warningString) override {}
 
         /** @note Not implemented yet */
-        void draw3dText(const btVector3& location, const char* textString) override { puts(textString); }
+        void draw3dText(const btVector3& location, const char* textString) override {}
 
         /** @note See btIDebugDraw::DebugDrawModes */
         void setDebugMode(int debugMode) override { mDebugMode = debugMode; }

@@ -3,15 +3,12 @@
 #ifndef MX_PHYSICS_DEBUG_DRAW_IMPL_H_
 #define MX_PHYSICS_DEBUG_DRAW_IMPL_H_
 
-// todo: delete debug code
-#include "../Scene/MxSceneManager.h"
-#include "../Component/Camera/MxCamera.h"
-#include "../Window/MxWindow.h"
-// -----
-
 #ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
 
 #include "../Math/MxMatrix4.h"
+#include "../Window/MxWindow.h"
+#include "../Component/Camera/MxCamera.h"
+#include "../Scene/MxSceneManager.h"
 
 #include <SDL2/SDL_video.h>
 #include <glad/glad.h>
@@ -264,15 +261,13 @@ namespace Mix::Physics::DebugDrawImpl {
 
             mProgram->useSelf();
 
-            // todo: pass from Camera
+            // todo: set camera according to PhysicsScene
             static auto camera = SceneManager::Get()->getActiveScene()->getMainCamera();
-            {
-                auto model = Matrix4(1);
-                model[2][2] = -1;
-                mProgram->setUniform("model", model);
-                mProgram->setUniform("view", camera->getViewMat());
-                mProgram->setUniform("projection", camera->getProjMat());
-            }
+            auto model = Matrix4(1);
+            model[2][2] = -1;
+            mProgram->setUniform("model", model);
+            mProgram->setUniform("view", camera->getViewMat());
+            mProgram->setUniform("projection", camera->getProjMat());
 
             mVAO->bind();
             mVBO->fillData(mNewData, GL_DYNAMIC_DRAW);
@@ -294,6 +289,9 @@ namespace Mix::Physics::DebugDrawImpl {
         std::unique_ptr<glUtils::VertexBuffer> mVBO;
 
         std::vector<float> mNewData;
+
+        // todo
+        //HCamera mActiveCamera;
     };
 }
 

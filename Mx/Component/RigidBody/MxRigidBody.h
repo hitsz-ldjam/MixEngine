@@ -20,7 +20,7 @@ namespace Mix {
         struct RigidBodyConstructionInfo;
     }
 
-    /** Bug: RigidBody on a child GameObject whose parent has one might not be altered correctly. */
+    /** Bug: RigidBody on a child GameObject might not behave correctly. */
     class RigidBody final : public Behaviour {
     MX_DECLARE_RTTI;
 
@@ -32,8 +32,12 @@ namespace Mix {
 
         /** @note Default ctor is for RTTI. DO NOT use this ctor. */
         RigidBody();
-        /** @note Refer to Physics::RigidBodyConstructionInfo for param info. */
-        RigidBody(const btScalar _mass, const Transform& _startTrans, btCollisionShape* _shape);
+        /**
+         *  @param _mass Mass. 0 creates a static rigid body i.e. btCollisionObject::CF_STATIC_OBJECT
+         *  @param _startTrans Start transform.
+         *  @param _shape Collision shape / Collider. DO NOT use std::make_shared on btCollisionShape in case of which align problems may occur.
+         */
+        RigidBody(const btScalar _mass, const Transform& _startTrans, const std::shared_ptr<btCollisionShape>& _shape);
         RigidBody(const Physics::RigidBodyConstructionInfo& _info);
         /**
          *  @param _group Filter group.
@@ -48,7 +52,7 @@ namespace Mix {
         const auto& get() const noexcept { return *mRigidBody; }
 
         // ----- dirty codes -----
-        // todo: move to an utility class
+        // todo: use Event system
 
         /**
          *  @brief Register call back functions of onTriggerEnter()
@@ -82,6 +86,7 @@ namespace Mix {
         bool isTrigger() const { return !mRigidBody->hasContactResponse(); }
         void setTrigger(const bool _flag) const;
 
+        /** @brief Disable deactivation of the rigid body thus it can be controlled by user input. */
         void disableDeactivation() const { mRigidBody->setActivationState(DISABLE_DEACTIVATION); }
         void enableDeactivation() const { mRigidBody->forceActivationState(ACTIVE_TAG); }
 
@@ -118,20 +123,17 @@ namespace Mix {
         // todo: other interfaces
 
     private:
-        struct LifeTimeManager;
-        static LifeTimeManager ltm;
-
         btScalar mMass;
-        btCollisionShape* mShape;
+        std::shared_ptr<btCollisionShape> mShape;
         btRigidBody* mRigidBody;
         std::tuple<bool, int, int> mFilter;
         btDiscreteDynamicsWorld* mWorld;
 
         Signal mEnterSignal, mExitSignal;
-        void onTriggerEnter(HRigidBody _other) { mEnterSignal(_other); }
-        void onTriggerExit(HRigidBody _other) { mExitSignal(_other); }
+        void onTriggerEnter(HRigidBody _other) { mEnterSignal(std::move(_other)); }
+        void onTriggerExit(HRigidBody _other) { mExitSignal(std::move(_other)); }
 
-        /** @brief A utility function to create btRigidBody from RigidBodyConstructionInfo */
+        /** @brief A utility function that creates btRigidBody from RigidBodyConstructionInfo */
         static btRigidBody* CreateBtRb(const Physics::RigidBodyConstructionInfo& _info);
 
         void _forceReload() const {

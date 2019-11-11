@@ -32,7 +32,7 @@ namespace Mix::Physics {
     inline Transform& bt_mx_cast(const btTransform& _btTrans, Transform& _mxTrans, const bool _switchHandness = true) noexcept {
         _mxTrans.setPosition(bt_mx_cast(_btTrans.getOrigin(), _switchHandness));
         _mxTrans.setRotation(bt_mx_cast(_btTrans.getRotation(), _switchHandness));
-        return _mxTrans; // code symmetric
+        return _mxTrans; // for code symmetry
     }
 
     inline btVector3 mx_bt_cast(const Vector3f& _mxVec, const bool _switchHandness = true) noexcept {
@@ -51,35 +51,6 @@ namespace Mix::Physics {
         return btTransform(mx_bt_cast(_mxTrans.getRotation(), _switchHandness),
                            mx_bt_cast(_mxTrans.getPosition(), _switchHandness));
     }
-
-    //inline Transform& bt_mx_cast(const btTransform& _btTrans, Transform& _mxTrans) noexcept {
-    //    _mxTrans.setPosition({
-    //        -_btTrans.getOrigin().x(),
-    //        _btTrans.getOrigin().y(),
-    //        _btTrans.getOrigin().z()
-    //    });
-    //    _mxTrans.setRotation({
-    //        -_btTrans.getRotation().w(),
-    //        -_btTrans.getRotation().x(),
-    //        _btTrans.getRotation().y(),
-    //        _btTrans.getRotation().z()
-    //    });
-    //    return _mxTrans; // code symmetric
-    //}
-
-    //inline btTransform mx_bt_cast(const Transform& _mxTrans) noexcept {
-    //    return btTransform({
-    //                           -_mxTrans.getRotation().x,
-    //                           _mxTrans.getRotation().y,
-    //                           _mxTrans.getRotation().z,
-    //                           -_mxTrans.getRotation().w
-    //                       },
-    //                       {
-    //                           -_mxTrans.getPosition().x,
-    //                           _mxTrans.getPosition().y,
-    //                           _mxTrans.getPosition().z
-    //                       });
-    //}
 }
 
 #endif

@@ -33,14 +33,6 @@ namespace Mix {
         std::string mWhat;
     };
 
-    MX_DECLARE_RUNTIME_ERROR(ComponentCastingError, [ERROR] Cannot cast type to Component)
-
-        class IndependentComponentError final : public std::runtime_error {
-        public:
-            explicit IndependentComponentError(const std::string& _name)
-                : std::runtime_error("[ERROR] Component [" + _name + "] is not attached to a GameObject") {}
-    };
-
     class ThirdPartyLibInitError final : public std::runtime_error {
     public:
         explicit ThirdPartyLibInitError(const std::string& _libName)
@@ -48,8 +40,6 @@ namespace Mix {
     };
 
     MX_DECLARE_RUNTIME_ERROR(WindowCreationError, [ERROR] Failed to create window)
-
-        MX_DECLARE_RUNTIME_ERROR(WindowIconLoadingError, [ERROR] Failed to load icon image)
 
 #ifndef MX_EXCEPT
 #define MX_EXCEPT(desc) \

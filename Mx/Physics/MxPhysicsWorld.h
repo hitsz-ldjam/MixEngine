@@ -58,6 +58,10 @@ namespace Mix {
             void render() const;
 #endif
 
+            /**
+             *  @brief 「ザ・ワールド」
+             *  @note Easter egg interface. NOT suggested to use in release.
+             */
             void theWorld() noexcept { mIsPaused = !mIsPaused; }
 
             RaycastHit raycast(const Vector3<float>& _origin,

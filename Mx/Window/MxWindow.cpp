@@ -40,7 +40,7 @@ namespace Mix {
                                                 &channels,
                                                 format));
         if (!data)
-            throw WindowIconLoadingError();
+            return;
 
         SDL_Surface* icon = SDL_CreateRGBSurfaceWithFormatFrom(data,
                                                                size.x,
@@ -50,7 +50,7 @@ namespace Mix {
                                                                SDL_PIXELFORMAT_RGBA32);
         if (!icon) {
             stbi_image_free(data);
-            throw WindowIconLoadingError();
+            return;
         }
 
         SDL_SetWindowIcon(mWindow, icon);
