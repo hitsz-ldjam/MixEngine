@@ -55,7 +55,7 @@ namespace Mix {
         // todo: use Event system
 
         /**
-         *  @brief Register call back functions of onTriggerEnter()
+         *  @brief Register call back functions of onCollisionEnter()
          *  @param _slot The call back function.
          *  @note Lambdas are preferred. To register a member function outside class scope,
          *  see the example below.\n
@@ -67,14 +67,6 @@ namespace Mix {
         auto registerEnterSlot(const Slot& _slot) { return mEnterSignal.connect(_slot); }
         auto registerExitSlot(const Slot& _slot) { return mExitSignal.connect(_slot); }
         // ----- dirty codes -----
-
-        void addCollisionFlags(const int _flag) const {
-            mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | _flag);
-        }
-
-        void removeCollisionFlags(const int _flag) const {
-            mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() & (~_flag));
-        }
 
         bool isKinematic() const { return mRigidBody->isKinematicObject(); }
         void setKinematic(const bool _flag) const;
@@ -120,6 +112,12 @@ namespace Mix {
          */
         void addForceAtPosition(const Vector3<float>& _force, const Vector3<float>& _pos) const;
 
+        /** @return @code true @endcode indicates the motion along the corresponding axis is frozen. */
+        Vector3<bool> getLinearRestrictions() const;
+        void setLinearRestrictions(const Vector3<bool>& _freeze) const;
+        Vector3<bool> getAngularRestrictions() const;
+        void setAngularRestrictions(const Vector3<bool>& _freeze) const;
+
         // todo: other interfaces
 
     private:
@@ -130,22 +128,23 @@ namespace Mix {
         btDiscreteDynamicsWorld* mWorld;
 
         Signal mEnterSignal, mExitSignal;
-        void onTriggerEnter(HRigidBody _other) { mEnterSignal(std::move(_other)); }
-        void onTriggerExit(HRigidBody _other) { mExitSignal(std::move(_other)); }
+        void onCollisionEnter(HRigidBody _other) { mEnterSignal(std::move(_other)); }
+        void onCollisionExit(HRigidBody _other) { mExitSignal(std::move(_other)); }
 
         /** @brief A utility function that creates btRigidBody from RigidBodyConstructionInfo */
         static btRigidBody* CreateBtRb(const Physics::RigidBodyConstructionInfo& _info);
 
-        void _forceReload() const {
-            if(!mRigidBody->isInWorld())
-                return;
-            mWorld->removeRigidBody(mRigidBody);
-            mWorld->addRigidBody(mRigidBody);
-        }
+
+        void addCollisionFlags(const int _flag) const;
+        void removeCollisionFlags(const int _flag) const;
+        void addRbToWorld() const;
+        void forceReload() const;
 
         void awake() override;
         void update() override;
         void fixedUpdate() override;
+        void onEnabled() override;
+        void onDisabled() override;
     };
 }
 

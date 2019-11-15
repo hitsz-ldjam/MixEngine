@@ -1,40 +1,38 @@
-﻿#pragma once
+#pragma once
 
 #ifndef MX_AUDIO_LISTENER_H_
 #define MX_AUDIO_LISTENER_H_
 
 #include "../Behaviour/MxBehaviour.h"
-#include "../../Audio/MxAudio.hpp"
-#include "../../Math/MxVector3.h"
+
+namespace FMOD {
+    class System;
+}
 
 namespace Mix {
-    /** @note Each @code Scene @endcode should only have 1 @code AudioListener @endcode. */
+    /**
+     *  @brief This class acts as a proxy for 3d sound listener since there is only 1 single listener.
+     *  @ref If the number of listeners is set to more than 1, then panning and doppler are turned off.
+     *  All sound effects will be mono.
+     *  FMOD uses a 'closest sound to the listener' method to determine what should be heard in this case.
+     */
     class AudioListener final : public Behaviour {
-        MX_DECLARE_RTTI;
-    public:
-        AudioListener(const Audio::VelocityUpdateMode _mode = Audio::VelocityUpdateMode::AUTO)
-            : mVelocityUpdateMode(_mode),
-            mCore(nullptr),
-            mLastPos(0),
-            mUseFixedUpdate(false) {
-        }
+    MX_DECLARE_RTTI;
 
-        AudioListener(const AudioListener&) = default;
+    public:
+        AudioListener() : mCore(nullptr) {}
+
+        //AudioListener(const AudioListener&) = default;
+
         ~AudioListener() = default;
 
     private:
-        const int listenerIdx = 0;
-        Audio::VelocityUpdateMode mVelocityUpdateMode;
+        const int mListenerIdx = 0; /**< only 1 listener */
+
         FMOD::System* mCore;
-        Vector3f mLastPos;
-        bool mUseFixedUpdate;
 
         void start() override;
-        void fixedUpdate() override;
         void lateUpdate() override;
-
-        void updatePosAndVel(const Vector3f& _pos, const Vector3f& _vel);
-
     };
 }
 

@@ -1,58 +1,29 @@
-﻿#include "MxAudioListener.h"
+#include "MxAudioListener.h"
 
+#include "../../Audio/MxAudioCore.h"
 #include "../../GameObject/MxGameObject.h"
 #include "../RigidBody/MxRigidBody.h"
-#include "../../Time/MxTime.h"
-#include "../../../MixEngine.h"
+
+#include <fmod/fmod.hpp>
 
 namespace Mix {
-    MX_IMPLEMENT_RTTI(AudioListener, Component);
+    MX_IMPLEMENT_RTTI(AudioListener, Behaviour);
 
     void AudioListener::start() {
-        if (mCore) return;
-        if (!mGameObject) throw IndependentComponentError(getTypeName());
-        mCore = MixEngine::Instance().getModule<Audio::Core>()->getCore();
-        mLastPos = mGameObject->transform().getPosition();
-        mUseFixedUpdate = mVelocityUpdateMode == Audio::VelocityUpdateMode::FIXED ||
-            mVelocityUpdateMode == Audio::VelocityUpdateMode::AUTO && mGameObject->getComponent<RigidBody>() != nullptr;
-    }
-
-    void AudioListener::fixedUpdate() {
-        if (!mUseFixedUpdate) return;
-
-        if (const auto& rb = mGameObject->getComponent<RigidBody>()) {
-            const auto& pos = rb->get().getCenterOfMassPosition();
-            const auto& vel = rb->get().getLinearVelocity();
-            updatePosAndVel({ pos.x(), pos.y(), pos.z() }, { vel.x(), vel.y(), vel.z() });
-        }
-        else {
-            auto pos = mGameObject->transform().getPosition();
-            auto vel = (pos - mLastPos) / Time::FixedDeltaTime();
-            updatePosAndVel(pos, vel);
-        }
+        mCore = Audio::Core::Get()->getCore();
     }
 
     void AudioListener::lateUpdate() {
-        if (mUseFixedUpdate) return;
-
-        auto pos = mGameObject->transform().getPosition();
-        auto vel = (pos - mLastPos) / Time::DeltaTime();
-        updatePosAndVel(pos, vel);
-    }
-
-    void AudioListener::updatePosAndVel(const Vector3f& _pos, const Vector3f& _vel) {
-        const auto& trans = mGameObject->transform();
-
-        auto glmVecToFmodVec = [](const Vector3f& _vec) { return FMOD_VECTOR{ _vec.x, _vec.y, _vec.z }; };
-
-        auto fvPos = glmVecToFmodVec(_pos),
-            fvVel = glmVecToFmodVec(_vel),
-            fvForward = glmVecToFmodVec(trans.forward()),
-            fvUp = glmVecToFmodVec(trans.up());
-
-        if (mCore)
-            mCore->set3DListenerAttributes(listenerIdx, &fvPos, &fvVel, &fvForward, &fvUp);
-
-        mLastPos = _pos;
+        Vector3f pos = transform()->getPosition(),
+                 vel(0),
+                 forward = transform()->forward(),
+                 up = transform()->up();
+        if(auto rb = mGameObject->getComponent<RigidBody>())
+            vel = rb->getLinearVelocity();
+        mCore->set3DListenerAttributes(mListenerIdx,
+                                       reinterpret_cast<FMOD_VECTOR*>(pos.linear),
+                                       reinterpret_cast<FMOD_VECTOR*>(vel.linear),
+                                       reinterpret_cast<FMOD_VECTOR*>(forward.linear),
+                                       reinterpret_cast<FMOD_VECTOR*>(up.linear));
     }
 }

@@ -42,7 +42,7 @@ namespace Mix {
         mEnterSignal.disconnect_all_slots();
         mExitSignal.disconnect_all_slots();
         if(mRigidBody) {
-            if(mWorld)
+            if(mWorld && mRigidBody->isInWorld())
                 mWorld->removeRigidBody(mRigidBody);
             delete mRigidBody->getMotionState();
         }
@@ -58,7 +58,7 @@ namespace Mix {
             removeCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
             mRigidBody->forceActivationState(ACTIVE_TAG);
         }
-        _forceReload();
+        forceReload();
     }
 
     void RigidBody::setStatic(const bool _flag) const {
@@ -72,7 +72,7 @@ namespace Mix {
         }
         mRigidBody->setMassProps(mass, inertia);
         mRigidBody->updateInertiaTensor();
-        _forceReload();
+        forceReload();
     }
 
     void RigidBody::setTrigger(const bool _flag) const {
@@ -135,6 +135,24 @@ namespace Mix {
         mRigidBody->applyForce(Physics::mx_bt_cast(_force), Physics::mx_bt_cast(_pos));
     }
 
+    Vector3<bool> RigidBody::getLinearRestrictions() const {
+        const auto& factor = mRigidBody->getLinearFactor();
+        return {btFuzzyZero(factor.x()), btFuzzyZero(factor.y()), btFuzzyZero(factor.z()),};
+    }
+
+    void RigidBody::setLinearRestrictions(const Vector3<bool>& _freeze) const {
+        mRigidBody->setLinearFactor({!_freeze.x, !_freeze.y, !_freeze.z});
+    }
+
+    Vector3<bool> RigidBody::getAngularRestrictions() const {
+        const auto& factor = mRigidBody->getAngularFactor();
+        return {btFuzzyZero(factor.x()), btFuzzyZero(factor.y()), btFuzzyZero(factor.z()),};
+    }
+
+    void RigidBody::setAngularRestrictions(const Vector3<bool>& _freeze) const {
+        mRigidBody->setAngularFactor({!_freeze.x, !_freeze.y, !_freeze.z});
+    }
+
     btRigidBody* RigidBody::CreateBtRb(const Physics::RigidBodyConstructionInfo& _info) {
         if(!_info.shape)
             return nullptr;
@@ -148,19 +166,40 @@ namespace Mix {
                                                       motionstate,
                                                       _info.shape,
                                                       inertia);
-        info.m_linearSleepingThreshold = .01;  // default to .8
-        info.m_angularSleepingThreshold = .01; // default to 1
+        info.m_linearSleepingThreshold = .02;  // default to .8
+        info.m_angularSleepingThreshold = .02; // default to 1
         _info.furtherSetup(info);
         return new btRigidBody(info);
     }
 
-    void RigidBody::awake() {
-        mWorld = Physics::World::Get()->getWorld();
+    void RigidBody::addCollisionFlags(const int _flag) const {
+        mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() | _flag);
+    }
+
+    void RigidBody::removeCollisionFlags(const int _flag) const {
+        mRigidBody->setCollisionFlags(mRigidBody->getCollisionFlags() & (~_flag));
+    }
+
+    void RigidBody::addRbToWorld() const {
+        if(mRigidBody->isInWorld())
+            return;
         const auto& [customFilter, group, mask] = mFilter;
         if(customFilter)
             mWorld->addRigidBody(mRigidBody, group, mask);
         else
             mWorld->addRigidBody(mRigidBody);
+    }
+
+    void RigidBody::forceReload() const {
+        if(!mRigidBody->isInWorld())
+            return;
+        mWorld->removeRigidBody(mRigidBody);
+        addRbToWorld();
+    }
+
+    void RigidBody::awake() {
+        mWorld = Physics::World::Get()->getWorld();
+        addRbToWorld();
     }
 
     void RigidBody::update() {
@@ -172,7 +211,16 @@ namespace Mix {
 
     void RigidBody::fixedUpdate() {
         //                         should be Physics::MotionState
-        Physics::bt_mx_cast(static_cast<Physics::MotionState*>(mRigidBody->getMotionState())
-                            ->getWorldTransform(), mGameObject->transform());
+        Physics::bt_mx_cast(static_cast<Physics::MotionState*>(mRigidBody->getMotionState())->getWorldTransform(),
+                            mGameObject->transform());
+    }
+
+    void RigidBody::onEnabled() {
+        addRbToWorld();
+    }
+
+    void RigidBody::onDisabled() {
+        if(mRigidBody->isInWorld())
+            mWorld->removeRigidBody(mRigidBody);
     }
 }

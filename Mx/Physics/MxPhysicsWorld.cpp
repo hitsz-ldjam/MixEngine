@@ -52,9 +52,8 @@ namespace Mix::Physics {
 #endif
 
         }
-        catch(const std::exception& e) {
-            std::cerr << e.what() << std::endl;
-            throw ThirdPartyLibInitError("Bullet");
+        catch(const std::exception&) {
+            MX_EXCEPT("Failed to initialize Bullet");
         }
     }
 
@@ -175,9 +174,9 @@ namespace Mix::Physics {
             currSet.insert(colPair);
             if(mPrevSet.find(colPair) == mPrevSet.end()) {
                 if(rb0)
-                    rb0->onTriggerEnter(rb1);
+                    rb0->onCollisionEnter(rb1);
                 if(rb1)
-                    rb1->onTriggerEnter(rb0);
+                    rb1->onCollisionEnter(rb0);
             }
         }
 
@@ -192,9 +191,9 @@ namespace Mix::Physics {
             auto rb0 = colPair.first;
             auto rb1 = colPair.second;
             if(rb0)
-                rb0->onTriggerExit(rb1);
+                rb0->onCollisionExit(rb1);
             if(rb1)
-                rb1->onTriggerExit(rb0);
+                rb1->onCollisionExit(rb0);
         }
 
         mPrevSet = std::move(currSet);
