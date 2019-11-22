@@ -7,154 +7,143 @@
 namespace Mix {
     MX_IMPLEMENT_RTTI(AudioSource, Component);
 
-    void AudioSource::dopplerLevel(const float _dopplerLevel) {
-        if (mChannel) {
-            mChannel->set3DDopplerLevel(_dopplerLevel);
-            mChannel->get3DDopplerLevel(&mDopplerLevel);
+    
+    void AudioSource::setMute(const bool _mute)  {
+            if(mChannel)
+                mChannel->setMute(_mute);
+            else
+                mChannelParam.mute = _mute;
         }
-        else {
-            mDopplerLevel = _dopplerLevel;
-        }
-    }
 
-    bool AudioSource::isPlaying() const {
-        bool is = false;
+    bool AudioSource::getMute() const {
         if (mChannel)
-            mChannel->isPlaying(&is);
-        return is;
+            mChannel->getMute(&mChannelParam.mute);
+        return mChannelParam.mute;
     }
 
-    bool AudioSource::isVirtual() const {
-        bool iv = true;
+    bool AudioSource::getPaused() const {
         if (mChannel)
-            mChannel->isVirtual(&iv);
-        return iv;
+            mChannel->getPaused(&mChannelParam.paused);
+        return mChannelParam.paused;
     }
 
-    void AudioSource::loop(const bool _loop) {
-        if (mChannel) {
-            mChannel->setMode(_loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF);
-            FMOD_MODE mode;
-            mChannel->getMode(&mode);
-            mLoop = mode & FMOD_LOOP_NORMAL;
-        }
-        else {
-            mLoop = _loop;
-        }
+    void AudioSource::setPaused(const bool _paused) {
+        if (mChannel)
+            mChannel->setPaused(_paused);
+        else
+            mChannelParam.paused = _paused;
     }
 
-    void AudioSource::mute(const bool _mute) {
-        if (mChannel) {
-            mChannel->setMute(_mute);
-            mChannel->getMute(&mMute);
-        }
-        else {
-            mMute = _mute;
-        }
+    float AudioSource::getVolume() const {
+        if (mChannel)
+            mChannel->getVolume(&mChannelParam.volume);
+        return mChannelParam.volume;
     }
 
-    void AudioSource::pan(const float _pan) {
-        if (mChannel) {
-            mChannel->setPan(_pan);
-        }
-        else {
-            mPan = _pan;
-        }
-    }
-
-    void AudioSource::pitch(const float _pitch) {
-        if (mChannel) {
-            mChannel->setPitch(_pitch);
-            mChannel->getPitch(&mPitch);
-        }
-        else {
-            mPitch = _pitch;
-        }
-    }
-
-    void AudioSource::priority(const int _priority) {
-        if (mChannel) {
-            mChannel->setPriority(_priority);
-            mChannel->getPriority(&mPriority);
-        }
-        else {
-            mPriority = _priority;
-        }
-    }
-
-    void AudioSource::volume(const float _volume) {
-        if (mChannel) {
+    void AudioSource::setVolume(const float _volume) {
+        if (mChannel)
             mChannel->setVolume(_volume);
-            mChannel->getVolume(&mVolume);
-        }
-        else {
-            mVolume = _volume;
-        }
+        else
+            mChannelParam.volume = _volume;
     }
 
-    void AudioSource::play() {
-        if (!mClip || mClip->loadState() != Audio::LoadState::LOADED)
-            return;
-        stop();
-        FMOD::System* core = nullptr;
-        mClip->mSound->getSystemObject(&core);
-        core->playSound(mClip->mSound, nullptr, false, &mChannel);
-        initChannelParameters();
+    bool AudioSource::getVolumeRamp() const {
+        if (mChannel)
+            mChannel->getVolumeRamp(&mChannelParam.volumRamp);
+        return mChannelParam.volumRamp;
     }
 
-    void AudioSource::start() {
-        if (!mGameObject)
-            throw IndependentComponentError(getTypeName());
-
-        play();
-        if (!mPlayOnAwake)
-            pause();
+    void AudioSource::setVolumeRamp(const bool _volumeRamp) {
+        if (mChannel)
+            mChannel->setVolumeRamp(_volumeRamp);
+        else
+            mChannelParam.volumRamp = _volumeRamp;
     }
 
-    void AudioSource::fixedUpdate() {
-        if (!mChannel || !mUseFixedUpdate) return;
-
-        if (const auto& rb = mGameObject->getComponent<RigidBody>()) {
-            const auto& pos = rb->get().getCenterOfMassPosition();
-            const auto& vel = rb->get().getLinearVelocity();
-            updatePosAndVel({ pos.x(), pos.y(), pos.z() }, { vel.x(), vel.y(), vel.z() });
-        }
-        else {
-            auto pos = mGameObject->transform().getPosition();
-            auto vel = (pos - mLastPos) / Time::FixedDeltaTime();
-            updatePosAndVel(pos, vel);
-        }
+    float AudioSource::getPitch() const {
+        if (mChannel)
+            mChannel->getPitch(&mChannelParam.pitch);
+        return mChannelParam.pitch;
     }
 
-    void AudioSource::lateUpdate() {
-        if (!mChannel || mUseFixedUpdate) return;
-
-        auto pos = mGameObject->transform().getPosition();
-        auto vel = (pos - mLastPos) / Time::DeltaTime();
-        updatePosAndVel(pos, vel);
+    void AudioSource::setPitch(const float _pitch) {
+        if (mChannel)
+            mChannel->setPitch(_pitch);
+        else
+            mChannelParam.pitch = _pitch;
     }
 
-    void AudioSource::initChannelParameters() {
-        if (!mChannel) return;
-
-        mLastPos = mGameObject->transform().getPosition();
-        mUseFixedUpdate = mVelocityUpdateMode == Audio::VelocityUpdateMode::FIXED ||
-            mVelocityUpdateMode == Audio::VelocityUpdateMode::AUTO && mGameObject->getComponent<RigidBody>();
-
-        dopplerLevel(mDopplerLevel);
-        loop(mLoop);
-        mute(mMute);
-        pan(mPan);
-        pitch(mPitch);
-        priority(mPriority);
-        volume(mVolume);
+    Vector2f AudioSource::get3DMinMaxDistance() const {
+        if (mChannel)
+            mChannel->get3DMinMaxDistance(&mChannelParam.distance.x, &mChannelParam.distance.y);
+        return mChannelParam.distance;
     }
 
-    void AudioSource::updatePosAndVel(const Vector3f& _pos, const Vector3f& _vel) {
-        auto glmVecToFmodVec = [](const Vector3f& _vec) { return FMOD_VECTOR{ _vec.x, _vec.y, _vec.z }; };
-        auto fvPos = glmVecToFmodVec(_pos),
-            fvVel = glmVecToFmodVec(_vel);
-        mChannel->set3DAttributes(&fvPos, &fvVel);
-        mLastPos = _pos;
+    void AudioSource::set3DMinMaxDistance(const Vector2f& _distance) {
+        if (mChannel)
+            mChannel->set3DMinMaxDistance(_distance.x, _distance.y);
+        else
+            mChannelParam.distance = _distance;
     }
+
+    float AudioSource::get3DDopplerLevel() const {
+        if (mChannel)
+            mChannel->get3DDopplerLevel(&mChannelParam.level);
+        return mChannelParam.level;
+    }
+
+    void AudioSource::set3DDopplerLevel(const float _level) {
+        if (mChannel)
+            mChannel->set3DDopplerLevel(_level);
+        else
+            mChannelParam.level = _level;
+    }
+
+    float AudioSource::getFrequency() const {
+        if (mChannel)
+            mChannel->getFrequency(&mChannelParam.Frequency);
+        return mChannelParam.Frequency;
+    }
+
+    void AudioSource::setFrequency(const float _frequency) {
+        if (mChannel)
+            mChannel->setFrequency(_frequency);
+        else
+            mChannelParam.Frequency = _frequency;
+    }
+
+    int AudioSource::getPriority() const {
+        if (mChannel)
+            mChannel->getPriority(&mChannelParam.Priority);
+        return mChannelParam.Priority;
+    }
+
+    void AudioSource::setPriority(const int _priority) {
+        if (mChannel)
+            mChannel->setPriority(_priority);
+        else
+            mChannelParam.Priority = _priority;
+    }
+	void import(FMOD::Channel* _Channel, FMODChannelParam _ChannelParam) {
+		_Channel->getMute(&_ChannelParam.mute);
+		_Channel->getPaused(&_ChannelParam.paused);
+		_Channel->getVolume(&_ChannelParam.volume);
+		_Channel->getVolumeRamp(&_ChannelParam.volumRamp);
+		_Channel->getPitch(&_ChannelParam.pitch);
+		_Channel->get3DMinMaxDistance(&_ChannelParam.distance.x, &_ChannelParam.distance.y);
+		_Channel->get3DLevel (&_ChannelParam.level);
+		_Channel->getFrequency (&_ChannelParam.Frequency);
+		_Channel->getPriority (&_ChannelParam.Priority);
+	}
+	void export(FMOD::Channel* _Channel, FMODChannelParam _ChannelParam) {
+		_Channel->setMute(_ChannelParam.mute);
+		_Channel->setPaused(_ChannelParam.paused);
+		_Channel->setVolume(_ChannelParam.volume);
+		_Channel->setVolumeRamp(_ChannelParam.volumRamp);
+		_Channel->setPitch(_ChannelParam.pitch);
+		_Channel->set3DMinMaxDistance(_ChannelParam.distance.x, _ChannelParam.distance.y);
+		_Channel->set3DLevel(_ChannelParam.level);
+		_Channel->setFrequency(_ChannelParam.Frequency);
+		_Channel->setPriority(_ChannelParam.Priority);
+	}
 }
