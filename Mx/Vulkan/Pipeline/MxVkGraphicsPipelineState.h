@@ -4,7 +4,7 @@
 #include <map>
 #include <vulkan/vulkan.hpp>
 #include "../../Utils/MxArrayProxy.h"
-#include "../../Definitions/MxCommonType.h"
+#include "../../Definitions/MxCommonEnum.h"
 #include <unordered_map>
 
 namespace Mix {

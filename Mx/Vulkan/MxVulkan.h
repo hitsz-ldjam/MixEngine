@@ -10,6 +10,7 @@
 #include "../Definitions/MxVersion.h"
 #include "Pipeline/MxVkRenderPass.h"
 #include "FrameBuffer/MxVkFramebuffer.h"
+#include "../RenderAPI/MxRenderAPI.h"
 
 namespace Mix {
     class Camera;
@@ -46,9 +47,13 @@ namespace Mix {
             vk::PhysicalDeviceFeatures enabledFeatures;
         };
 
-        class VulkanAPI {
+        class VulkanAPI :public RenderAPI {
         public:
-            void init();
+            std::string getApiName() const override;
+
+            std::shared_ptr<CommandBuffer> getMainCmdBuffer() const override;
+        
+            void init() override;
 
             static std::vector<vk::ExtensionProperties> GetAllSupportedInstanceExts();
 
@@ -116,6 +121,8 @@ namespace Mix {
 
             void createRenderPass();
             void createFrameBuffer();
+
+            void destroy() override;
 
             std::shared_ptr<VulkanSettings> mSettings;
 

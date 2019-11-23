@@ -16,7 +16,7 @@ namespace Mix {
 			createInfo.pCode = _data;
 			createInfo.codeSize = _size;
 
-			mModule = mDevice->get().createShaderModule(createInfo);
+			mModule = mDevice->getVkHandle().createShaderModule(createInfo);
 			mStage = _stage;
 		}
 
@@ -25,13 +25,13 @@ namespace Mix {
 			createInfo.pCode = _source.getSprvData();
 			createInfo.codeSize = _source.getSprvDataSize();
 			
-			mModule = mDevice->get().createShaderModule(createInfo);
+			mModule = mDevice->getVkHandle().createShaderModule(createInfo);
 			mStage = _source.getStage();
 		}
 
 		ShaderModule::~ShaderModule() {
 			if (mModule)
-				mDevice->get().destroyShaderModule(mModule);
+				mDevice->getVkHandle().destroyShaderModule(mModule);
 		}
 
 		void ShaderModule::swap(ShaderModule& _other) noexcept {

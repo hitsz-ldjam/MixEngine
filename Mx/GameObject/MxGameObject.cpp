@@ -326,11 +326,11 @@ namespace Mix {
         auto behaviours = getComponents<Behaviour>();
         if (mActiveSelf) {
             for (auto& behaviour : behaviours)
-                behaviour->onEnabledInternal();
+                behaviour->onEnableInternal();
         }
         else {
             for (auto& behaviour : behaviours)
-                behaviour->onDisabledInternal();
+                behaviour->onDisableInternal();
         }
     }
 

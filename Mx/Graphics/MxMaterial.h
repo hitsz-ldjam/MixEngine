@@ -6,7 +6,7 @@
 #include "../Math/MxMatrix4.h"
 #include <string>
 #include <optional>
-#include "../Definitions/MxCommonType.h"
+#include "../Definitions/MxCommonEnum.h"
 
 namespace Mix {
     class Texture;

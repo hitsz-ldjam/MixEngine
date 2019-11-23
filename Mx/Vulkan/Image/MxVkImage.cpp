@@ -21,7 +21,7 @@ namespace Mix {
 					 const vk::ImageCreateFlagBits& _flag)
 			: mAllocator(std::move(_allocator)) {
 
-			mImage = CreateVkImage(mAllocator->getDevice()->get(),
+			mImage = CreateVkImage(mAllocator->getDevice()->getVkHandle(),
 								   _type,
 								   _extent,
 								   _format,
@@ -45,7 +45,7 @@ namespace Mix {
 		}
 
 		Image::Image(std::shared_ptr<DeviceAllocator> _allocator, const vk::ImageCreateInfo& _createInfo, const vk::MemoryPropertyFlags& _memProperty) :mAllocator(std::move(_allocator)) {
-			mImage = mAllocator->getDevice()->get().createImage(_createInfo);
+			mImage = mAllocator->getDevice()->getVkHandle().createImage(_createInfo);
 
 			mMemory = mAllocator->allocate(mImage, _memProperty);
 			mType = _createInfo.imageType;
@@ -79,7 +79,7 @@ namespace Mix {
 
 		Image::~Image() {
 			if (mImage) {
-				mAllocator->getDevice()->get().destroyImage(mImage);
+				mAllocator->getDevice()->getVkHandle().destroyImage(mImage);
 				mAllocator->deallocate(mMemory);
 			}
 		}

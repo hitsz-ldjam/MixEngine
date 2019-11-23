@@ -215,11 +215,11 @@ namespace Mix {
                             mGameObject->transform());
     }
 
-    void RigidBody::onEnabled() {
+    void RigidBody::onEnable() {
         addRbToWorld();
     }
 
-    void RigidBody::onDisabled() {
+    void RigidBody::onDisable() {
         if(mRigidBody->isInWorld())
             mWorld->removeRigidBody(mRigidBody);
     }

@@ -12,7 +12,7 @@ namespace Mix {
 
     Window::Window(const std::string& _title, const Vector2i& _size, Flags<WindowFlag> _windowFlag) {
         if (SDL_Init(SDL_INIT_VIDEO))
-            MX_EXCEPT("Failed to initialize SDL2");
+            throw ThirdPartyLibInitError("SDL2");
 
         mWindow = SDL_CreateWindow(_title.c_str(),
                                    SDL_WINDOWPOS_CENTERED,
@@ -21,7 +21,7 @@ namespace Mix {
                                    _size.y,
                                    ToSDLWindowFlags(_windowFlag));
         if (!mWindow)
-            MX_EXCEPT("Failed to create window");
+            throw WindowCreationError();
     }
 
     Window::~Window() {

@@ -655,7 +655,7 @@ namespace Mix {
 			layoutCreateInfo.pPushConstantRanges = mPipelineStates->pushConstantRanges.data();
 			layoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(mPipelineStates->pushConstantRanges.size());
 
-			auto pipelineLayout = _renderPass->getDevice()->get().createPipelineLayout(layoutCreateInfo);
+			auto pipelineLayout = _renderPass->getDevice()->getVkHandle().createPipelineLayout(layoutCreateInfo);
 
 			vk::PipelineViewportStateCreateInfo viewportState = {};
 			viewportState.pViewports = mPipelineStates->viewports.data();
@@ -707,7 +707,7 @@ namespace Mix {
 			pipelineCreateInfo.basePipelineHandle = nullptr;	//基础管线（vulkan允许在已经存在的管线上派生新的管线）
 			pipelineCreateInfo.basePipelineIndex = -1;
 
-			auto pipeline = _renderPass->getDevice()->get().createGraphicsPipeline(nullptr, pipelineCreateInfo);
+			auto pipeline = _renderPass->getDevice()->getVkHandle().createGraphicsPipeline(nullptr, pipelineCreateInfo);
 
 			return std::shared_ptr<Pipeline>(new Pipeline(_renderPass, mPipelineStates->descriptorSetLayouts, _subpassIndex, pipeline, pipelineLayout));
 		}

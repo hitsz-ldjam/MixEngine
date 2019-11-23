@@ -143,8 +143,8 @@ namespace Mix {
         void awake() override;
         void update() override;
         void fixedUpdate() override;
-        void onEnabled() override;
-        void onDisabled() override;
+        void onEnable() override;
+        void onDisable() override;
     };
 }
 

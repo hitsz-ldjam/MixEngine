@@ -22,9 +22,9 @@ namespace Mix {
 			if (!mSwapchain)
 				return;
 
-			mDevice->get().destroySwapchainKHR(mSwapchain, nullptr, mDevice->getDynamicLoader());
+			mDevice->getVkHandle().destroySwapchainKHR(mSwapchain, nullptr, mDevice->getDynamicLoader());
 			for (auto& view : mImageViews)
-				mDevice->get().destroyImageView(view);
+				mDevice->getVkHandle().destroyImageView(view);
 		}
 
 
@@ -100,9 +100,9 @@ namespace Mix {
 			createInfo.oldSwapchain = nullptr;
 
 			// create swapchain
-			mSwapchain = mDevice->get().createSwapchainKHR(createInfo, nullptr, mDevice->getDynamicLoader());
+			mSwapchain = mDevice->getVkHandle().createSwapchainKHR(createInfo, nullptr, mDevice->getDynamicLoader());
 			//acquire image in swapchain
-			mImages = mDevice->get().getSwapchainImagesKHR(mSwapchain, mDevice->getDynamicLoader());
+			mImages = mDevice->getVkHandle().getSwapchainImagesKHR(mSwapchain, mDevice->getDynamicLoader());
 			//stroe
 			mSurfaceFormat = format;
 			mPresentMode = presentMode;
@@ -156,7 +156,7 @@ namespace Mix {
 		void  Swapchain::createSwapchainImageView() {
 			mImageViews.resize(mImages.size());
 			for (size_t i = 0; i < mImages.size(); ++i)
-				mImageViews[i] = Image::CreateVkImageView2D(mDevice->get(),
+				mImageViews[i] = Image::CreateVkImageView2D(mDevice->getVkHandle(),
 															mImages[i],
 															mSurfaceFormat.format,
 															vk::ImageAspectFlagBits::eColor,
@@ -169,7 +169,7 @@ namespace Mix {
 			// The presentation engine may not have finished reading 
 			// from the image at the time it is acquired
 			// We use mImageAvlSph[mCurrFrame] semaphore check later whether next image is ready
-			auto acquireResult = mDevice->get().acquireNextImageKHR(mSwapchain,
+			auto acquireResult = mDevice->getVkHandle().acquireNextImageKHR(mSwapchain,
 																	std::numeric_limits<uint64_t>::max(),
 																	mImageAvlSph[mCurrFrame].get(),
 																	nullptr);

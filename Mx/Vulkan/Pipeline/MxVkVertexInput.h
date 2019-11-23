@@ -5,7 +5,7 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 #include "../../Utils/MxGeneralBase.hpp"
-#include "../../Definitions/MxCommonType.h"
+#include "../../Definitions/MxCommonEnum.h"
 
 
 namespace Mix {

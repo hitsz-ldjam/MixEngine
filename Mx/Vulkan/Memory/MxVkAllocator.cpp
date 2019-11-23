@@ -15,11 +15,11 @@ namespace Mix {
             block.free = true;
             block.offset = 0;
             block.size = _size;
-            mMem = block.memory = mDevice->get().allocateMemory(allocInfo);
+            mMem = block.memory = mDevice->getVkHandle().allocateMemory(allocInfo);
 
             if ((mDevice->getPhysicalDevice()->getMemoryProperties().memoryTypes[mMemTypeIndex].propertyFlags & vk::
                 MemoryPropertyFlagBits::eHostVisible) == vk::MemoryPropertyFlagBits::eHostVisible)
-                mPtr = mDevice->get().mapMemory(mMem, 0, VK_WHOLE_SIZE);
+                mPtr = mDevice->getVkHandle().mapMemory(mMem, 0, VK_WHOLE_SIZE);
 
             mBlocks.emplace_back(block);
         }
@@ -43,7 +43,7 @@ namespace Mix {
 
         Chunk::~Chunk() {
             if (mMem)
-                mDevice->get().freeMemory(mMem);
+                mDevice->getVkHandle().freeMemory(mMem);
         }
 
         bool Chunk::allocate(const vk::DeviceSize& _size,
@@ -139,11 +139,11 @@ namespace Mix {
         MemoryBlock DeviceAllocator::allocate(const vk::Image& _image,
                                               const vk::MemoryPropertyFlags& _properties,
                                               vk::MemoryRequirements* _memReq) {
-            auto memoryReq = mDevice->get().getImageMemoryRequirements(_image);
+            auto memoryReq = mDevice->getVkHandle().getImageMemoryRequirements(_image);
             const MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment,
                                                mDevice->getPhysicalDevice()->getMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
 
-            mDevice->get().bindImageMemory(_image, block.memory, block.offset);
+            mDevice->getVkHandle().bindImageMemory(_image, block.memory, block.offset);
 
             if (_memReq)
                 *_memReq = memoryReq;
@@ -154,10 +154,10 @@ namespace Mix {
         MemoryBlock DeviceAllocator::allocate(const vk::Buffer& _buffer,
                                               const vk::MemoryPropertyFlags& _properties,
                                               vk::MemoryRequirements* _memReq) {
-            auto memoryReq = mDevice->get().getBufferMemoryRequirements(_buffer);
+            auto memoryReq = mDevice->getVkHandle().getBufferMemoryRequirements(_buffer);
             const MemoryBlock block = allocate(memoryReq.size, memoryReq.alignment,
                                                mDevice->getPhysicalDevice()->getMemoryTypeIndex(memoryReq.memoryTypeBits, _properties));
-            mDevice->get().bindBufferMemory(_buffer, block.memory, block.offset);
+            mDevice->getVkHandle().bindBufferMemory(_buffer, block.memory, block.offset);
 
             if (_memReq)
                 *_memReq = memoryReq;

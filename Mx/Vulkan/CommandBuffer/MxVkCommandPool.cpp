@@ -23,7 +23,7 @@ namespace Mix {
 			}
 
 			createInfo.flags = _flags;
-			mCommandPool = mDevice->get().createCommandPoolUnique(createInfo);
+			mCommandPool = mDevice->getVkHandle().createCommandPoolUnique(createInfo);
 		}
 
 		void CommandPool::swap(CommandPool& _other) noexcept {
@@ -34,28 +34,28 @@ namespace Mix {
 		}
 
 		vk::CommandBuffer CommandPool::allocate(const vk::CommandBufferLevel _level) {
-			return mDevice->get().allocateCommandBuffers(vk::CommandBufferAllocateInfo(*mCommandPool, _level, 1))[0];
+			return mDevice->getVkHandle().allocateCommandBuffers(vk::CommandBufferAllocateInfo(*mCommandPool, _level, 1))[0];
 		}
 
 		std::vector<vk::CommandBuffer> CommandPool::allocate(const uint32_t _count, const vk::CommandBufferLevel _level) {
-			return mDevice->get().allocateCommandBuffers(vk::CommandBufferAllocateInfo(*mCommandPool, _level, _count));
+			return mDevice->getVkHandle().allocateCommandBuffers(vk::CommandBufferAllocateInfo(*mCommandPool, _level, _count));
 		}
 
 		vk::UniqueCommandBuffer CommandPool::allocateUnique(const vk::CommandBufferLevel _level) {
-			return std::move(mDevice->get().allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo(*mCommandPool, _level, 1))[0]);
+			return std::move(mDevice->getVkHandle().allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo(*mCommandPool, _level, 1))[0]);
 		}
 
 		std::vector<vk::UniqueCommandBuffer> CommandPool::allocateUnique(const uint32_t _count,
 		                                                                       const vk::CommandBufferLevel _level) {
-			return mDevice->get().allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo(*mCommandPool, _level, _count));
+			return mDevice->getVkHandle().allocateCommandBuffersUnique(vk::CommandBufferAllocateInfo(*mCommandPool, _level, _count));
 		}
 
 		void CommandPool::free(const vk::CommandBuffer& _cmdBuffer) {
-			mDevice->get().freeCommandBuffers(*mCommandPool, _cmdBuffer);
+			mDevice->getVkHandle().freeCommandBuffers(*mCommandPool, _cmdBuffer);
 		}
 
 		void CommandPool::free(const std::vector<vk::CommandBuffer>& _cmdBuffers) {
-			mDevice->get().freeCommandBuffers(*mCommandPool, _cmdBuffers);
+			mDevice->getVkHandle().freeCommandBuffers(*mCommandPool, _cmdBuffers);
 		}
 	}
 }

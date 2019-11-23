@@ -19,7 +19,7 @@ namespace Mix {
 			if (!mRenderPass)
 				return;
 
-			mRenderPass->getDevice()->get().destroyFramebuffer(mFramebuffer);
+			mRenderPass->getDevice()->getVkHandle().destroyFramebuffer(mFramebuffer);
         }
 
         void FrameBuffer::addAttachments(const std::vector<vk::ImageView>& _attachments) {
@@ -35,7 +35,7 @@ namespace Mix {
             createInfo.height = mExtent.height;
             createInfo.layers = mLayers;
 
-            mFramebuffer = mRenderPass->getDevice()->get().createFramebuffer(createInfo);
+            mFramebuffer = mRenderPass->getDevice()->getVkHandle().createFramebuffer(createInfo);
         }
     }
 }

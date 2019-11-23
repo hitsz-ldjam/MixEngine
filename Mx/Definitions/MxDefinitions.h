@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <cassert>
+
 #ifndef MX_DEFINITIONS_H_
 #define MX_DEFINITIONS_H_
 
@@ -50,6 +52,16 @@ namespace Mix {
     class Transform;
     class Camera;
 
+    class Resource;
+    class Texture;
+    class Texture2D;
+    class TextureCube;
+
+
+    /////////////////////////////////////////////////////
+    //               Scene object handle               //
+    /////////////////////////////////////////////////////
+
     template<typename _Ty>
     class SceneObjectHandle;
 
@@ -64,6 +76,24 @@ namespace Mix {
     using HTransform = SceneObjectHandle<Transform>;
     using HCamera = SceneObjectHandle<Camera>;
 
+
+    /////////////////////////////////////////////////////
+    //                 Resource handle                 //
+    /////////////////////////////////////////////////////
+
+    template<typename _Ty, bool _IsWeakHandle>
+    class TResourceHandle;
+
+    template<typename _Ty>
+    using ResourceHandle = TResourceHandle<_Ty, false>;
+
+    template<typename _Ty>
+    using WeakResourceHandle = TResourceHandle<_Ty, true>;
+
+    using HResource = ResourceHandle<Resource>;
+    using HTexture = ResourceHandle<Texture>;
+    using HTexture2D = ResourceHandle<Texture2D>;
+    using HTextureCube = ResourceHandle<TextureCube>;
 }
 
 #endif

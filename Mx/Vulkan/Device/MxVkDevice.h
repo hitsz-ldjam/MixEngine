@@ -28,7 +28,7 @@ namespace Mix {
 
 			void swap(Device& _other) noexcept;
 
-			const vk::Device& get() const { return mDevice; }
+			const vk::Device& getVkHandle() const { return mDevice; }
 
 			std::shared_ptr<PhysicalDevice> getPhysicalDevice() const { return mPhysicalDevice; }
 

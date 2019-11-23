@@ -142,7 +142,7 @@ namespace Mix {
                 createInfo.pSetLayouts = setLayouts.data();
                 createInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
 
-                mPipelineStateData.pipelineLayout = mDevice->get().createPipelineLayout(createInfo);
+                mPipelineStateData.pipelineLayout = mDevice->getVkHandle().createPipelineLayout(createInfo);
             }
 
             mPipelineStateData.descriptorSetLayouts = _desc.descriptorSetLayouts;
@@ -167,7 +167,7 @@ namespace Mix {
 
         GraphicsPipelineState::~GraphicsPipelineState() {
             if (mPipelineStateData.pipelineLayout) {
-                mDevice->get().destroyPipelineLayout(mPipelineStateData.pipelineLayout);
+                mDevice->getVkHandle().destroyPipelineLayout(mPipelineStateData.pipelineLayout);
             }
         }
 
@@ -239,7 +239,7 @@ namespace Mix {
             mPipelineStateData.pipelineCreateInfo.subpass = _subpassIndex;
             mPipelineStateData.pipelineCreateInfo.pVertexInputState = &_vertexInput->getVertexInputStateInfo();
 
-            vk::Pipeline pipeline = mDevice->get().createGraphicsPipeline(nullptr, mPipelineStateData.pipelineCreateInfo);
+            vk::Pipeline pipeline = mDevice->getVkHandle().createGraphicsPipeline(nullptr, mPipelineStateData.pipelineCreateInfo);
 
             return std::shared_ptr<Pipeline>(new Pipeline(_renderPass, mPipelineStateData.descriptorSetLayouts, _subpassIndex, pipeline, mPipelineStateData.pipelineLayout));
         }

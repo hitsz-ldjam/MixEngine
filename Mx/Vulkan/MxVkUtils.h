@@ -3,8 +3,8 @@
 #define MX_VK_UTILS_H_
 #include "../Utils/MxGeneralBase.hpp"
 #include <vulkan/vulkan.hpp>
-#include "../Graphics/MxVertexDeclaration.h"
-#include "../Definitions/MxCommonType.h"
+#include "../RenderAPI//MxVertexDeclaration.h"
+#include "../Definitions/MxCommonEnum.h"
 
 
 namespace Mix {

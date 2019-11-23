@@ -1,6 +1,6 @@
 #pragma once
-#ifndef MX_COMMON_TYPE_H_
-#define MX_COMMON_TYPE_H_
+#ifndef MX_COMMON_ENUM_H_
+#define MX_COMMON_ENUM_H_
 #include "../Utils/MxFlags.h"
 
 namespace Mix {
@@ -119,14 +119,126 @@ namespace Mix {
      * \brief Enumeration that represents the usage of a gpu buffer and usually makes the storage location of GPU buffer different.
      */
     enum class GPUBufferUsage {
-        Static = 0x0001,
-        Dynamic = 0x0002,
-        Stream = 0x0004,
-        Transfer = 0x0008
+        Static,
+        Dynamic,
+        Stream,
+        Storage
     };
 
     const char* ToString(GPUBufferUsage e);
 
+
+    enum class GPUQueueType {
+        Graphics,
+        Compute,
+        Transfer,
+
+        Count /**< Indicates the number of the enumeration */
+    };
+
+    const char* ToString(GPUQueueType e);
+
+
+    enum class BlendFactor {
+        Zero,
+        One,
+
+        SrcColor,
+        DstColor,
+
+        OneMinusSrcColor,
+        OneMinusDstColor,
+
+        SrcAlpha,
+        DstAlpha,
+
+        OneMinusSrcAlpha,
+        OneMinusDstAlpha
+    };
+
+    const char* ToString(BlendFactor e);
+
+
+    enum class BlendOp {
+        Add,
+        Subtract,
+        ReverseSubtract,
+        Min,
+        Max
+    };
+
+    const char* ToString(BlendOp e);
+
+
+    enum class ColorComponent {
+        R = 0x0001,
+        G = 0x0002,
+        B = 0x0004,
+        A = 0x0008
+    };
+
+    const char* ToString(ColorComponent e);
+
+    MX_ALLOW_FLAGS_FOR_ENUM(ColorComponent);
+
+
+    enum class CompareOp {
+        Never,
+        Always,
+        Less,
+        Greater,
+        LessOrEqual,
+        GreaterOrEqual,
+        Equal,
+        NotEqual,
+    };
+
+    const char* ToString(CompareOp e);
+
+
+    enum class StencilOp {
+        Keep,
+        Zero,
+        Replace,
+        IncrementAndClamp,
+        DecrementAndClamp,
+        Invert,
+        IncrementAndWrap,
+        DecrementAndWrap
+    };
+
+    const char* ToString(StencilOp e);
+
+
+    enum class PolygonMode {
+        Point,
+        Line,
+        Triangle
+    };
+
+    const char* ToString(PolygonMode e);
+
+
+    enum class CullMode {
+        None = 0x0000,
+        Front = 0x0001,
+        Back = 0x0002,
+        FrontAndBack = 0x0003
+    };
+
+    const char* ToString(CullMode e);
+
+
+    enum class GPUProgramType {
+        Vertex = 0,
+        Fragment = 1,
+        Geometry = 2,
+        TessEvaluation = 3,
+        TessControl = 4,
+        Compute = 5
+    };
+
+    const char* ToString(GPUProgramType e);
 
 }
 

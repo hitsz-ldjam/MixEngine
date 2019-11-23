@@ -10,9 +10,9 @@ namespace Mix {
     Texture::~Texture() {
         auto device = mImage->getAllocator()->getDevice();
         if (mImageView)
-            device->get().destroyImageView(mImageView);
+            device->getVkHandle().destroyImageView(mImageView);
         if (mSampler)
-            device->get().destroySampler(mSampler);
+            device->getVkHandle().destroySampler(mSampler);
     }
 
     Vulkan::WriteDescriptorSet Texture::getWriteDescriptor(uint32_t _binding,
@@ -163,7 +163,7 @@ namespace Mix {
         mImage = std::make_shared<Vulkan::Image>(vulkan.getAllocator(), imageInfo, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
         viewInfo.image = mImage->get();
-        mImageView = device.get().createImageView(viewInfo);
+        mImageView = device.getVkHandle().createImageView(viewInfo);
 
         // Create vk::Sampler
         vk::SamplerCreateInfo samplerInfo;
@@ -178,7 +178,7 @@ namespace Mix {
         samplerInfo.minLod = 0;
         samplerInfo.maxLod = static_cast<float>(_mipLevel);
 
-        mSampler = vulkan.getLogicalDevice()->get().createSampler(samplerInfo);
+        mSampler = vulkan.getLogicalDevice()->getVkHandle().createSampler(samplerInfo);
 
         vk::ImageSubresourceRange subresourceRange;
         subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;

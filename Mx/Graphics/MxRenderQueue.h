@@ -2,7 +2,7 @@
 #ifndef MX_RENDER_QUEUE_H_
 #define MX_RENDER_QUEUE_H_
 #include <cstdint>
-#include "../Definitions/MxCommonType.h"
+#include "../Definitions/MxCommonEnum.h"
 #include "MxRenderInfo.h"
 
 namespace Mix {

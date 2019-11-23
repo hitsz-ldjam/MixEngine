@@ -3,7 +3,7 @@
 #ifndef MX_TRANSFORM_H_
 #define MX_TRANSFORM_H_
 
-#include "../../Definitions/MxCommonType.h"
+#include "../../Definitions/MxCommonEnum.h"
 #include "../MxComponent.h"
 
 #include "../../Math/MxMatrix4.h"

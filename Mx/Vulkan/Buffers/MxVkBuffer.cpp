@@ -19,7 +19,7 @@ namespace Mix {
 			createInfo.usage = _usage;
 			createInfo.sharingMode = _sharingMode;
 
-			mBuffer = _allocator->getDevice()->get().createBuffer(createInfo);
+			mBuffer = _allocator->getDevice()->getVkHandle().createBuffer(createInfo);
 			vk::MemoryRequirements memRequirements;
 			mMemory = _allocator->allocate(mBuffer, _memoryProperty, &memRequirements);
 
@@ -47,7 +47,7 @@ namespace Mix {
 
 		Buffer::~Buffer() {
 			if (mBuffer) {
-				mAllocator->getDevice()->get().destroyBuffer(mBuffer);
+				mAllocator->getDevice()->getVkHandle().destroyBuffer(mBuffer);
 				mAllocator->deallocate(mMemory);
 			}
 		}
@@ -144,7 +144,7 @@ namespace Mix {
 			mappedRange.memory = mMemory.memory;
 			mappedRange.offset = _offset;
 			mappedRange.size = _size;
-			mAllocator->getDevice()->get().flushMappedMemoryRanges(mappedRange);
+			mAllocator->getDevice()->getVkHandle().flushMappedMemoryRanges(mappedRange);
 		}
 
 		void Buffer::invalidate(const vk::DeviceSize _size, const vk::DeviceSize _offset) const {
@@ -152,7 +152,7 @@ namespace Mix {
 			mappedRange.memory = mMemory.memory;
 			mappedRange.offset = _offset;
 			mappedRange.size = _size;
-			mAllocator->getDevice()->get().invalidateMappedMemoryRanges(mappedRange);
+			mAllocator->getDevice()->getVkHandle().invalidateMappedMemoryRanges(mappedRange);
 		}
 	}
 }

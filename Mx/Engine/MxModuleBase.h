@@ -8,11 +8,14 @@
 namespace Mix {
     class ModuleBase : GeneralBase::NoCopyBase {
     public:
-        virtual void load() = 0 {};
+        virtual void load() {}
 
-        virtual void init() = 0 {};
+        virtual void init() {}
 
         virtual ~ModuleBase() = default;
+
+    protected:
+        ModuleBase();
     };
 }
 
