@@ -3,7 +3,7 @@
 #define MX_VERTEX_DECLARATION_H_
 #include <cstdint>
 #include "../Utils/MxArrayProxy.h"
-#include "../Definitions/MxCommonType.h"
+#include "../Definitions/MxCommonEnum.h"
 #include "../Utils/MxFlags.h"
 #include <set>
 

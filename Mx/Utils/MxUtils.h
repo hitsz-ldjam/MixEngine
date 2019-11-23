@@ -5,6 +5,8 @@
 #include <iostream>
 #include <filesystem>
 #include <boost/format.hpp>
+#include "../Definitions/MxTypes.h"
+#include "../Definitions/MxCommonEnum.h"
 
 #define MX_TO_STRING(a) (#a)
 namespace Mix {
@@ -51,6 +53,8 @@ namespace Mix {
             Hasher hasher;
             _seed ^= hasher(_v) + 0x9e3779b9 + (_seed << 6) + (_seed >> 2);
         }
+
+        uint32 GetIndexFormatSize(IndexFormat _format);
     }
 }
 #endif // !_MX_UTILS_H_

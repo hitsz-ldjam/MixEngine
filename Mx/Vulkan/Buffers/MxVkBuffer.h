@@ -6,8 +6,8 @@
 #include "../Memory/MxVkAllocator.h"
 #include "../../Utils/MxGeneralBase.hpp"
 #include "../Descriptor/MxVkDescriptor.h"
+#include "../MxVkResource.h"
 
-// #define BUFFER_MANAGER_ENABLE
 
 namespace Mix {
 	namespace Vulkan {

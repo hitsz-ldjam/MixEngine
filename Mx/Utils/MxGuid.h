@@ -2,7 +2,6 @@
 #ifndef MX_UTILS_GUID_H_
 #define MX_UTILS_GUID_H_
 #include <string>
-#include <boost/container_hash/hash_fwd.hpp>
 #include "MxUtils.h"
 
 namespace Mix {

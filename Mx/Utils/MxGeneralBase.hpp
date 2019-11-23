@@ -28,7 +28,7 @@ namespace Mix::GeneralBase {
         ~NoCopyAndMoveBase() = default;
     };
 
-#define MAKE_CLASS_STATIC(ClsName)\
+#define MX_MAKE_CLASS_STATIC(ClsName)\
     public: ClsName() = delete; ClsName(const ClsName&) = delete; private:
 
     /** @brief Base for static class */

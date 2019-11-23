@@ -4,8 +4,11 @@
 #define MX_AUDIO_SOURCE_H_
 
 #include "../Behaviour/MxBehaviour.h"
-
 #include "../../Math/MxVector3.h"
+
+namespace FMOD {
+    class Channel;
+}
 
 
 namespace Mix {
@@ -20,13 +23,13 @@ namespace Mix {
         float Frequency;
         int Priority;
 
+        void importChannel(FMOD::Channel& _Channel);
+
+        void exportChannel(FMOD::Channel& _Channel);
     };
 
-	void import(FMOD::Channel* _Channel, FMODChannelParam _ChannelParam);
 
-	void export(FMOD::Channel* _Channel, FMODChannelParam _ChannelParam);
-
-    class AudioSource:public Component {
+    class AudioSource :public Component {
         MX_DECLARE_RTTI;
 
     public:
@@ -51,8 +54,8 @@ namespace Mix {
         float getPitch() const;
 
         void setPitch(const float _pitch);
-;
-      
+        ;
+
 
         Vector2f get3DMinMaxDistance() const;
 
@@ -63,7 +66,7 @@ namespace Mix {
 
         void set3DDopplerLevel(const float _level);
 
-       
+
 
         float getFrequency() const;
 

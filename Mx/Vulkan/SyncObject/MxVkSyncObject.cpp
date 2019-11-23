@@ -4,7 +4,7 @@ namespace Mix {
 	namespace Vulkan {
 		Semaphore::Semaphore(const std::shared_ptr<Device>& _device)
 			: mDevice(_device) {
-			mSemaphore = mDevice->get().createSemaphore(vk::SemaphoreCreateInfo());
+			mSemaphore = mDevice->getVkHandle().createSemaphore(vk::SemaphoreCreateInfo());
 		}
 
 		Semaphore::Semaphore(Semaphore&& _other) noexcept {
@@ -18,7 +18,7 @@ namespace Mix {
 
 		Semaphore::~Semaphore() {
 			if (mSemaphore)
-				mDevice->get().destroySemaphore(mSemaphore);
+				mDevice->getVkHandle().destroySemaphore(mSemaphore);
 		}
 
 		void Semaphore::swap(Semaphore& _other) noexcept {
@@ -27,7 +27,7 @@ namespace Mix {
 		}
 
 		Fence::Fence(const std::shared_ptr<Device>& _device, const bool _signaled) :mDevice(_device) {
-			mFence = mDevice->get().createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
+			mFence = mDevice->getVkHandle().createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
 			if (!_signaled)
 				reset();
 		}
@@ -43,7 +43,7 @@ namespace Mix {
 
 		Fence::~Fence() {
 			if (mFence)
-				mDevice->get().destroyFence(mFence);
+				mDevice->getVkHandle().destroyFence(mFence);
 		}
 
 		void Fence::swap(Fence& _other) noexcept {

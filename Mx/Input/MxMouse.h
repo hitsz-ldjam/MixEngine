@@ -6,8 +6,10 @@
 #include "SDL2/SDL.h"
 
 namespace Mix {
+    class Input;
+
 	class Mouse :GeneralBase::NoCopyBase {
-		friend class Input;
+		friend Input;
 
 	public:
 		explicit Mouse(Input* _input);

@@ -7,7 +7,7 @@
 #include "../../Resource/MxResourceBase.h"
 #include "../../Vulkan/Descriptor/MxVkDescriptor.h"
 #include "../../Math/MxVector2.h"
-#include "../../Definitions/MxCommonType.h"
+#include "../../Definitions/MxCommonEnum.h"
 #include <memory>
 
 namespace Mix {

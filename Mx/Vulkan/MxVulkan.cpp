@@ -17,6 +17,13 @@
 
 namespace Mix {
     namespace Vulkan {
+        std::string VulkanAPI::getApiName() const {
+            return "Vulkan";
+        }
+
+        std::shared_ptr<CommandBuffer> VulkanAPI::getMainCmdBuffer() const {
+        }
+
         void VulkanAPI::init() {
             vk::ApplicationInfo appInfo;
             appInfo.apiVersion = VK_API_VERSION_1_1;
@@ -106,19 +113,19 @@ namespace Mix {
         }
 
         void VulkanAPI::waitDeviceIdle() {
-            mDevice->get().waitIdle();
+            mDevice->getVkHandle().waitIdle();
         }
 
         VulkanAPI::~VulkanAPI() {
             try {
-                mDevice->get().waitIdle();
+                mDevice->getVkHandle().waitIdle();
             }
             catch (vk::Error& e) {
                 std::cerr << e.what() << std::endl;
             }
 
-            if(mDevice && mDepthStencilView)
-                mDevice->get().destroy(mDepthStencilView);
+            if (mDevice && mDepthStencilView)
+                mDevice->getVkHandle().destroy(mDepthStencilView);
 
             mGraphicsCommandBuffers.clear();
             mGraphicsCommandPool.reset();
@@ -204,7 +211,7 @@ namespace Mix {
             mDepthStencil = Image::CreateDepthStencil(getAllocator(),
                                                       mSwapchain->extent(),
                                                       vk::SampleCountFlagBits::e1);
-            mDepthStencilView = Image::CreateVkImageView2D(mDevice->get(),
+            mDepthStencilView = Image::CreateVkImageView2D(mDevice->getVkHandle(),
                                                            mDepthStencil->get(),
                                                            mDepthStencil->format(),
                                                            vk::ImageAspectFlagBits::eDepth |
@@ -244,6 +251,9 @@ namespace Mix {
                 mFrameBuffers.back().addAttachments({ mSwapchain->getImageViews()[i], mDepthStencilView });
                 mFrameBuffers.back().create();
             }
+        }
+
+        void VulkanAPI::destroy() {
         }
     }
 }

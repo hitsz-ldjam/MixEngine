@@ -4,16 +4,18 @@
 #include "../RigidBody/MxRigidBody.h"
 #include "../../Time/MxTime.h"
 
+#include <fmod/fmod.hpp>
+
 namespace Mix {
     MX_IMPLEMENT_RTTI(AudioSource, Component);
 
-    
-    void AudioSource::setMute(const bool _mute)  {
-            if(mChannel)
-                mChannel->setMute(_mute);
-            else
-                mChannelParam.mute = _mute;
-        }
+
+    void AudioSource::setMute(const bool _mute) {
+        if (mChannel)
+            mChannel->setMute(_mute);
+        else
+            mChannelParam.mute = _mute;
+    }
 
     bool AudioSource::getMute() const {
         if (mChannel)
@@ -124,26 +126,29 @@ namespace Mix {
         else
             mChannelParam.Priority = _priority;
     }
-	void import(FMOD::Channel* _Channel, FMODChannelParam _ChannelParam) {
-		_Channel->getMute(&_ChannelParam.mute);
-		_Channel->getPaused(&_ChannelParam.paused);
-		_Channel->getVolume(&_ChannelParam.volume);
-		_Channel->getVolumeRamp(&_ChannelParam.volumRamp);
-		_Channel->getPitch(&_ChannelParam.pitch);
-		_Channel->get3DMinMaxDistance(&_ChannelParam.distance.x, &_ChannelParam.distance.y);
-		_Channel->get3DLevel (&_ChannelParam.level);
-		_Channel->getFrequency (&_ChannelParam.Frequency);
-		_Channel->getPriority (&_ChannelParam.Priority);
-	}
-	void export(FMOD::Channel* _Channel, FMODChannelParam _ChannelParam) {
-		_Channel->setMute(_ChannelParam.mute);
-		_Channel->setPaused(_ChannelParam.paused);
-		_Channel->setVolume(_ChannelParam.volume);
-		_Channel->setVolumeRamp(_ChannelParam.volumRamp);
-		_Channel->setPitch(_ChannelParam.pitch);
-		_Channel->set3DMinMaxDistance(_ChannelParam.distance.x, _ChannelParam.distance.y);
-		_Channel->set3DLevel(_ChannelParam.level);
-		_Channel->setFrequency(_ChannelParam.Frequency);
-		_Channel->setPriority(_ChannelParam.Priority);
-	}
+
+
+    void FMODChannelParam::importChannel(FMOD::Channel& _Channel) {
+        _Channel.getMute(&mute);
+        _Channel.getPaused(&paused);
+        _Channel.getVolume(&volume);
+        _Channel.getVolumeRamp(&volumRamp);
+        _Channel.getPitch(&pitch);
+        _Channel.get3DMinMaxDistance(&distance.x, &distance.y);
+        _Channel.get3DLevel(&level);
+        _Channel.getFrequency(&Frequency);
+        _Channel.getPriority(&Priority);
+    }
+
+    void FMODChannelParam::exportChannel(FMOD::Channel& _Channel) {
+        _Channel.setMute(mute);
+        _Channel.setPaused(paused);
+        _Channel.setVolume(volume);
+        _Channel.setVolumeRamp(volumRamp);
+        _Channel.setPitch(pitch);
+        _Channel.set3DMinMaxDistance(distance.x, distance.y);
+        _Channel.set3DLevel(level);
+        _Channel.setFrequency(Frequency);
+        _Channel.setPriority(Priority);
+    }
 }

@@ -32,7 +32,7 @@ namespace Mix {
 
 		DescriptorSetLayout::~DescriptorSetLayout() {
 			if (mDescriptorSetLayout)
-				mDevice->get().destroyDescriptorSetLayout(mDescriptorSetLayout);
+				mDevice->getVkHandle().destroyDescriptorSetLayout(mDescriptorSetLayout);
 		}
 
 		/*void DescriptorSetLayout::addBindings(const uint32_t _binding,
@@ -79,7 +79,7 @@ namespace Mix {
 				createInfo.pBindings = bindings.data();
 				createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 
-				mDescriptorSetLayout = mDevice->get().createDescriptorSetLayout(createInfo);
+				mDescriptorSetLayout = mDevice->getVkHandle().createDescriptorSetLayout(createInfo);
 			}
 		}
 
@@ -118,7 +118,7 @@ namespace Mix {
 			allocInfo.pSetLayouts = layouts.data();
 			allocInfo.descriptorSetCount = static_cast<uint32_t>(_layouts.size());
 
-			auto descriptorSets = mDevice->get().allocateDescriptorSets(allocInfo);
+			auto descriptorSets = mDevice->getVkHandle().allocateDescriptorSets(allocInfo);
 			auto result = std::vector<DescriptorSet>();
 			result.reserve(descriptorSets.size());
 			for (uint32_t i = 0; i < descriptorSets.size(); ++i)
@@ -135,7 +135,7 @@ namespace Mix {
 			allocInfo.pSetLayouts = layouts.data();
 			allocInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
 
-			auto descriptorSets = mDevice->get().allocateDescriptorSets(allocInfo);
+			auto descriptorSets = mDevice->getVkHandle().allocateDescriptorSets(allocInfo);
 			auto result = std::vector<DescriptorSet>();
 			result.reserve(descriptorSets.size());
 			for (uint32_t i = 0; i < descriptorSets.size(); ++i)
@@ -150,13 +150,13 @@ namespace Mix {
 			allocInfo.pSetLayouts = &_layout.get();
 			allocInfo.descriptorSetCount = 1;
 
-			auto descriptorSets = mDevice->get().allocateDescriptorSets(allocInfo);
+			auto descriptorSets = mDevice->getVkHandle().allocateDescriptorSets(allocInfo);
 			return DescriptorSet(this, descriptorSets.front());
 		}
 
 		DescriptorPool::~DescriptorPool() {
 			if (mDescriptorPool) {
-				mDevice->get().destroyDescriptorPool(mDescriptorPool);
+				mDevice->getVkHandle().destroyDescriptorPool(mDescriptorPool);
 			}
 		}
 
@@ -181,7 +181,7 @@ namespace Mix {
 			createInfo.maxSets = _maxSets;
 			createInfo.flags = _flags;
 
-			mDescriptorPool = mDevice->get().createDescriptorPool(createInfo);
+			mDescriptorPool = mDevice->getVkHandle().createDescriptorPool(createInfo);
 			if (_flags & vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
 				mIndependentFree = true;
 		}
@@ -222,7 +222,7 @@ namespace Mix {
 		}*/
 
 		void DescriptorPool::dealloc(DescriptorSet& _set) {
-			mDevice->get().freeDescriptorSets(mDescriptorPool, _set.get());
+			mDevice->getVkHandle().freeDescriptorSets(mDescriptorPool, _set.get());
 			_set.mDescriptorPool = nullptr;
 			_set.mDescriptorSet = nullptr;
 		}
@@ -230,7 +230,7 @@ namespace Mix {
 		void DescriptorPool::dealloc(ArrayProxy<DescriptorSet> _sets) {
 			auto sets = std::vector<vk::DescriptorSet>(_sets.size());
 			std::transform(_sets.begin(), _sets.end(), sets.begin(), [](const DescriptorSet& _set) {return _set.get(); });
-			mDevice->get().freeDescriptorSets(mDescriptorPool, sets);
+			mDevice->getVkHandle().freeDescriptorSets(mDescriptorPool, sets);
 			std::for_each(_sets.begin(), _sets.end(), [](DescriptorSet& _set) {_set = DescriptorSet(); });
 		}
 
@@ -262,7 +262,7 @@ namespace Mix {
 		void DescriptorSet::updateDescriptor(ArrayProxy<WriteDescriptorSet> _writes) {
 			std::vector<vk::WriteDescriptorSet> writeDescriptorSets(_writes.size());
 			std::transform(_writes.begin(), _writes.end(), writeDescriptorSets.begin(), [&](WriteDescriptorSet& _w) {_w.setDstSet(this->get()); return _w.get(); });
-			mDescriptorPool->getDevice()->get().updateDescriptorSets(writeDescriptorSets, nullptr);
+			mDescriptorPool->getDevice()->getVkHandle().updateDescriptorSets(writeDescriptorSets, nullptr);
 		}
 
 		/*DescriptorSet::DescriptorSet(std::shared_ptr<DescriptorSetLayout> _layout, std::shared_ptr<DescriptorPool> _pool) :mDescriptorSetLayout(std::move(_layout)), mDescriptorPool(std::move(_pool)) {

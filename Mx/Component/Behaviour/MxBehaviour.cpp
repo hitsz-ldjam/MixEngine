@@ -5,7 +5,7 @@ namespace Mix {
 
     void Behaviour::awakeInternal() {
         awake();
-        onEnabledInternal();
+        onEnableInternal();
     }
 
     void Behaviour::updateInternal() {
@@ -38,14 +38,14 @@ namespace Mix {
         }
     }
 
-    void Behaviour::onEnabledInternal() {
+    void Behaviour::onEnableInternal() {
         mEnabled = true;
-        onEnabled();
+        onEnable();
     }
 
-    void Behaviour::onDisabledInternal() {
+    void Behaviour::onDisableInternal() {
         mEnabled=false;
-        onDisabled();
+        onDisable();
     }
 
 

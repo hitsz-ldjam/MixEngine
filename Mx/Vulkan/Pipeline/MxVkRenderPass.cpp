@@ -234,7 +234,7 @@ namespace Mix {
 			createInfo.pDependencies = mDependencies->data();
 			createInfo.dependencyCount = static_cast<uint32_t>(mDependencies->size());
 
-			mRenderPass = mDevice->get().createRenderPass(createInfo);
+			mRenderPass = mDevice->getVkHandle().createRenderPass(createInfo);
 		}
 
 		void RenderPass::beginRenderPass(const vk::CommandBuffer& _cmdBuffer, const vk::Framebuffer& _frameBuffer,
@@ -259,7 +259,7 @@ namespace Mix {
 			if (!mDevice)
 				return;
 
-			mDevice->get().destroyRenderPass(mRenderPass);
+			mDevice->getVkHandle().destroyRenderPass(mRenderPass);
 			mDevice = nullptr;
 		}
 

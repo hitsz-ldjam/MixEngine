@@ -51,11 +51,11 @@ namespace Mix {
 
 			std::shared_ptr<Device> getDevice() const { return mDevice; }
 
-			void reset() const { mDevice->get().resetFences(mFence); }
+			void reset() const { mDevice->getVkHandle().resetFences(mFence); }
 
-			vk::Result wait(const uint64_t& _timeout = std::numeric_limits<uint64_t>::max()) const { return mDevice->get().waitForFences(mFence, true, _timeout); }
+			vk::Result wait(const uint64_t& _timeout = std::numeric_limits<uint64_t>::max()) const { return mDevice->getVkHandle().waitForFences(mFence, true, _timeout); }
 
-			bool isSignaled() const { return mDevice->get().getFenceStatus(mFence) == vk::Result::eSuccess; }
+			bool isSignaled() const { return mDevice->getVkHandle().getFenceStatus(mFence) == vk::Result::eSuccess; }
 
 			explicit operator bool() const {
 				return static_cast<bool>(mFence);

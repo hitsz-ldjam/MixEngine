@@ -6,11 +6,11 @@
 #include "../../Vulkan/Buffers/MxVkBuffer.h"
 #include "../../Resource/MxResourceBase.h"
 #include "../../Math/MxVector.h"
-#include "../../Utils/MxColor.h"
+#include "../../Math/MxColor.h"
 #include "../../Utils/MxArrayProxy.h"
 #include "../../Utils/MxFlags.h"
-#include "../../Definitions/MxCommonType.h"
-#include "../MxVertexDeclaration.h"
+#include "../../Definitions/MxCommonEnum.h"
+#include "../../RenderAPI/MxVertexDeclaration.h"
 
 namespace Mix {
 	namespace Vulkan {

@@ -6,7 +6,7 @@ namespace Mix {
 	namespace Vulkan {
 		CommandBufferHandle::CommandBufferHandle(const std::shared_ptr<CommandPool>& _commandPool)
 			: mCommandPool(_commandPool) {
-			mFence = mCommandPool->getDevice()->get().createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
+			mFence = mCommandPool->getDevice()->getVkHandle().createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
 			mCommandBuffer = mCommandPool->allocate();
 		}
 
@@ -14,7 +14,7 @@ namespace Mix {
 			if (mCommandBuffer) {
 				wait();
 				mCommandPool->free(mCommandBuffer);
-				mCommandPool->getDevice()->get().destroyFence(mFence);
+				mCommandPool->getDevice()->getVkHandle().destroyFence(mFence);
 			}
 		}
 
@@ -76,12 +76,12 @@ namespace Mix {
 			submitInfo.pCommandBuffers = &mCommandBuffer;
 			submitInfo.commandBufferCount = 1;
 			
-			mCommandPool->getDevice()->get().resetFences(mFence);
+			mCommandPool->getDevice()->getVkHandle().resetFences(mFence);
 			mCommandPool->getQueue().submit(submitInfo, mFence);
 		}
 
 		vk::Result CommandBufferHandle::wait(const uint64_t& _timeOut) const {
-			return mCommandPool->getDevice()->get().waitForFences(mFence, VK_TRUE, _timeOut);
+			return mCommandPool->getDevice()->getVkHandle().waitForFences(mFence, VK_TRUE, _timeOut);
 		}
 	}
 }

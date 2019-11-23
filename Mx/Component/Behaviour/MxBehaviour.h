@@ -25,11 +25,9 @@ namespace Mix {
 
         virtual void lateUpdate() {}
 
-        // todo: rename to onEnable
-        virtual void onEnabled() {}
+        virtual void onEnable() {}
 
-        // todo: rename to onDisable
-        virtual void onDisabled() {}
+        virtual void onDisable() {}
 
         bool isEnabled() const { return mEnabled; }
 
@@ -42,9 +40,9 @@ namespace Mix {
 
         void lateUpdateInternal();
 
-        void onEnabledInternal();
+        void onEnableInternal();
 
-        void onDisabledInternal();
+        void onDisableInternal();
 
         bool mStarted = false;
 
