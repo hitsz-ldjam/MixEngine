@@ -53,7 +53,7 @@ namespace Mix::Physics {
 
         }
         catch(const std::exception&) {
-            MX_EXCEPT("Failed to initialize Bullet");
+            throw ThirdPartyLibInitError("Bullet");
         }
     }
 

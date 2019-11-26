@@ -34,8 +34,9 @@ namespace Mix {
         RigidBody();
         /**
          *  @param _mass Mass. 0 creates a static rigid body i.e. btCollisionObject::CF_STATIC_OBJECT
-         *  @param _startTrans Start transform.
-         *  @param _shape Collision shape / Collider. DO NOT use std::make_shared on btCollisionShape in case of which align problems may occur.
+         *  @param _startTrans Start transform, usually mGameObject->transform().
+         *  @param _shape Collision shape / Collider. Reusing colliders is highly recommended.
+         *  Note that DO NOT use std::make_shared on btCollisionShape in case of which align problems may occur.
          */
         RigidBody(const btScalar _mass, const Transform& _startTrans, const std::shared_ptr<btCollisionShape>& _shape);
         RigidBody(const Physics::RigidBodyConstructionInfo& _info);
