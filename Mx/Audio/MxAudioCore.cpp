@@ -16,9 +16,11 @@ namespace Mix::Audio {
 
     void Core::load() {
         auto result = FMOD::System_Create(&mCore);
-        if(result != FMOD_OK) MX_EXCEPT("Failed to initialize FMOD")
+        if(result != FMOD_OK)
+            throw ThirdPartyLibInitError("FMOD");
         result = mCore->init(maxChannels, FMOD_INIT_NORMAL, nullptr);
-        if(result != FMOD_OK) MX_EXCEPT("Failed to initialize FMOD")
+        if(result != FMOD_OK)
+            throw ThirdPartyLibInitError("FMOD");
     }
 
     void Core::update() { mCore->update(); }

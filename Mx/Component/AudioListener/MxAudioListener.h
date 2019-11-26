@@ -17,7 +17,7 @@ namespace Mix {
      *  FMOD uses a 'closest sound to the listener' method to determine what should be heard in this case.
      */
     class AudioListener final : public Behaviour {
-    MX_DECLARE_RTTI;
+    MX_DECLARE_RTTI
 
     public:
         AudioListener() : mCore(nullptr) {}
