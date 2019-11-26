@@ -22,10 +22,7 @@ namespace Mix::Audio {
 
         void load() override;
 
-        void init() override {}
-
-        /** @note Call this in lateUpdate() */
-        void update();
+        void lateUpdate();
 
         const int maxChannels = 512; /**< range: [0, 4093] */
 

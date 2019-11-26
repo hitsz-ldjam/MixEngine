@@ -23,5 +23,5 @@ namespace Mix::Audio {
             throw ThirdPartyLibInitError("FMOD");
     }
 
-    void Core::update() { mCore->update(); }
+    void Core::lateUpdate() { mCore->update(); }
 }

@@ -2,8 +2,9 @@
 #include "Mx/Window/MxWindow.h"
 #include "Mx/Time/MxTime.h"
 #include "Mx/Input/MxInput.h"
-#include "Mx/Audio/MxAudio.hpp"
+#include "Mx/Audio/MxAudioCore.h"
 #include "Mx/Physics/MxPhysicsWorld.h"
+#include "Mx/Coroutine/MxCoroMgr.h"
 #include "Mx/Vulkan/Shader/MxVkStandardShader.h"
 #include "Mx/GUI/MxGUi.h"
 #include "Mx/Resource/MxResourceLoader.h"
@@ -125,8 +126,10 @@ namespace Mix {
     void MixEngine::update() {
         mApp->onUpdate();
         mModuleHolder.get<Physics::World>()->sync(Time::FixedDeltaTime(), Time::SmoothingFactor());
+        mModuleHolder.get<Coroutine::CoroMgr>()->update(); // todo: wrong order!
         mModuleHolder.get<SceneManager>()->sceneUpdate();
 
+        // todo: wrong update order!
         for (auto i = 0u; i < Time::sFixedClampedSteps; ++i) {
             mApp->onFixedUpdate();
             fixedUpdate();
@@ -147,7 +150,7 @@ namespace Mix {
         mApp->onLateUpdate();
         mModuleHolder.get<SceneManager>()->sceneLateUpdate();
         mModuleHolder.get<SceneObjectManager>()->lateUpdate();
-        mModuleHolder.get<Audio::Core>()->update();
+        mModuleHolder.get<Audio::Core>()->lateUpdate();
     }
 
     void MixEngine::loadModule() {
@@ -158,6 +161,7 @@ namespace Mix {
         mModuleHolder.add<Input>()->load();
         mModuleHolder.add<Audio::Core>()->load();
         mModuleHolder.add<Physics::World>()->load();
+        mModuleHolder.add<Coroutine::CoroMgr>();
         mModuleHolder.add<Graphics>()->load();
         mModuleHolder.add<GUI>()->load();
         mModuleHolder.add<ResourceLoader>()->load();
