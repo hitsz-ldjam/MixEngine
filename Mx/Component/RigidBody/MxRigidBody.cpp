@@ -141,7 +141,7 @@ namespace Mix {
     }
 
     void RigidBody::setLinearRestrictions(const Vector3<bool>& _freeze) const {
-        mRigidBody->setLinearFactor({!_freeze.x, !_freeze.y, !_freeze.z});
+        mRigidBody->setLinearFactor(btVector3(!_freeze.x, !_freeze.y, !_freeze.z));
     }
 
     Vector3<bool> RigidBody::getAngularRestrictions() const {
@@ -150,7 +150,7 @@ namespace Mix {
     }
 
     void RigidBody::setAngularRestrictions(const Vector3<bool>& _freeze) const {
-        mRigidBody->setAngularFactor({!_freeze.x, !_freeze.y, !_freeze.z});
+        mRigidBody->setAngularFactor(btVector3(!_freeze.x, !_freeze.y, !_freeze.z));
     }
 
     btRigidBody* RigidBody::CreateBtRb(const Physics::RigidBodyConstructionInfo& _info) {

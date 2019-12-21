@@ -36,7 +36,7 @@ namespace Mix {
         virtual void onModuleInitialized();
 
         /** \brief Called right after the main scene is created*/
-        virtual void onMainSceneCreated();
+        virtual void onMainSceneCreated() = 0;
 
         /** \brief Called in each main loop before any SceneObjects are updated. */
         virtual void onUpdate();

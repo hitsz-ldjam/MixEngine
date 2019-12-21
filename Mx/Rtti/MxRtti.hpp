@@ -63,22 +63,22 @@ namespace Mix {
 
 #define MX_DECLARE_RTTI \
 public:\
-    static Rtti msType;\
-    virtual Rtti& getType() const { return msType; }\
-    static Rtti& GetType();\
+    static Mix::Rtti msType;\
+    virtual Mix::Rtti& getType() const { return msType; }\
+    static Mix::Rtti& GetType();\
 private:
 
 #define MX_IMPLEMENT_RTTI(className,baseClassName)\
-Rtti className::msType(#className, &baseClassName::msType);\
-Rtti& className::GetType() {return msType;}
+Mix::Rtti className::msType(#className, &baseClassName::msType);\
+Mix::Rtti& className::GetType() {return msType;}
 
 //#define MX_IMPLEMENT_RTTI_NO_CREATE_FUNC(className, baseClassName)\
-//Rtti className::msType(#className, &baseClassName::msType, nullptr);
+//Mix::Rtti className::msType(#className, &baseClassName::msType, nullptr);
 
 #define MX_IMPLEMENT_RTTI_NOPARENT(className)\
-Rtti className::msType(#className, nullptr);
+Mix::Rtti className::msType(#className, nullptr);
 
 //#define MX_IMPLEMENT_RTTI_NO_PARENT_NO_CREATE_FUNC(className)\
-//Rtti className::msType(#className, nullptr, nullptr);
+//Mix::Rtti className::msType(#className, nullptr, nullptr);
 
 #endif

@@ -11,9 +11,6 @@ namespace Mix {
     void ApplicationBase::onModuleInitialized() {
     }
 
-    void ApplicationBase::onMainSceneCreated() {
-    }
-
     void ApplicationBase::onUpdate() {
     }
 
