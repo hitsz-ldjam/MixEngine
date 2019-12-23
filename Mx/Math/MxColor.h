@@ -31,7 +31,7 @@ namespace Mix {
 
         Color() :Color(0.0f, 0.0f, 0.0f, 1.0f) {}
 
-        Color(float _r, float _b, float _g, float _a) :r(_r), g(_g), b(_b), a(_a) {
+        Color(float _r, float _g, float _b, float _a) :r(_r), g(_g), b(_b), a(_a) {
         }
 
         Color(const Vector4f& _vec) :r(_vec.r), g(_vec.g), b(_vec.b), a(_vec.a) {
