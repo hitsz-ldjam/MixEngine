@@ -27,7 +27,7 @@ namespace Mix {
 
             ~PBRShader() override;
 
-            void render(RenderElement& _element) override;
+            void render(ArrayProxy<RenderQueueElement> _elements) override;
 
             void update(const Shader& _shader) override;
 

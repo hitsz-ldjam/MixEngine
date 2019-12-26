@@ -12,15 +12,23 @@ namespace Mix {
     class Material;
     class Renderer;
     class Camera;
+    class Animation;
 
+    struct FrameAnimInfo;
 
     /**
      * \brief Information used to collect render information from scene.
      */
-    struct SceneRenderInfo {
+    struct FrameSceneInfo {
         Camera* camera = nullptr;
 
         std::vector<Renderer*> renderers;
+        std::vector<Animation*> animations;
+    };
+
+    struct FrameRenderInfo {
+        FrameSceneInfo* sceneInfo;
+        FrameAnimInfo* animInfo;
     };
 
 

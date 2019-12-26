@@ -226,27 +226,26 @@ namespace Mix {
         mIsLoaded = false;
     }
 
-    SceneRenderInfo Scene::_getRendererInfoPerFrame() {
-        SceneRenderInfo info;
+    FrameSceneInfo Scene::_getFrameSceneInfo() {
+        FrameSceneInfo info;
 
         // Set camera
         info.camera = mMainCamera.get().get();
 
-        // Get all enabled Renderer
         for (auto& gameObject : mRootObjects) {
-            FindRendererRecur(info, gameObject.second);
+            FillFrameSceneInfo(info, gameObject.second);
         }
 
         return info;
     }
 
-    void Scene::FindRendererRecur(SceneRenderInfo& _info, const HGameObject& _object) {
+    void Scene::FillFrameSceneInfo(FrameSceneInfo& _info, const HGameObject& _object) {
         auto renderer = _object->getComponent<Renderer>();
         if (renderer != nullptr && renderer->getGameObject()->activeInHierarchy())
             _info.renderers.push_back(renderer.get().get());
 
         for (auto& child : _object->getAllChildren()) {
-            FindRendererRecur(_info, child);
+            FillFrameSceneInfo(_info, child);
         }
     }
 

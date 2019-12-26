@@ -171,7 +171,7 @@ namespace Mix {
                 VertexElement(0, 2, 2 * sizeof(Vector2f), VertexElementType::UByte4_Norm, VertexElementSemantic::Color, 0)
             };
 
-            desc.vertexDecl = std::make_shared<VertexDeclaration>(elements);
+            desc.meshVertexDecl = std::make_shared<VertexDeclaration>(elements);
 
             desc.gpuProgram.vertex = vertShader;
             desc.gpuProgram.fragment = fragShader;
@@ -187,7 +187,7 @@ namespace Mix {
 
             mPipelineState = std::make_shared<GraphicsPipelineState>(mDevice, desc);
 
-            auto vertexInput = mVulkan->getVertexInputManager().getVertexInput(*desc.vertexDecl, *desc.vertexDecl);
+            auto vertexInput = mVulkan->getVertexInputManager().getVertexInput(*desc.meshVertexDecl, *desc.meshVertexDecl);
             mPipeline = mPipelineState->getPipeline(mVulkan->getRenderPass(), 0,
                                                     vertexInput, MeshTopology::Triangles_List,
                                                     false, false);

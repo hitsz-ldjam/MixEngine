@@ -7,8 +7,9 @@
 #include "../Vulkan/MxVulkan.h"
 
 namespace Mix {
+    struct FrameRenderInfo;
     class Window;
-    struct SceneRenderInfo;
+    struct FrameSceneInfo;
 
     namespace Vulkan {
         class VulkanAPI;
@@ -29,7 +30,7 @@ namespace Mix {
 
         void update();
 
-        void render();
+        void render(FrameRenderInfo& _frameInfo);
 
         std::shared_ptr<Shader> findShader(const std::string& _name);
 

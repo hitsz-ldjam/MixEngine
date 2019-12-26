@@ -34,6 +34,8 @@ namespace Mix {
 
         const std::vector<RenderQueueElement>& getSortedElements() const;
 
+        std::vector<RenderQueueElement>& getSortedElements();
+
     private:
         std::vector<SortElement> mSortElements;
         std::vector<size_t> mSortIndex; 

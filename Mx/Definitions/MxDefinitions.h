@@ -29,6 +29,7 @@
 
 #ifndef MX_ASSERT
 #if MX_DEBUG_MODE
+#   include <cassert>
 #   define MX_ASSERT assert
 #else
 #   define MX_ASSERT(expr) ((void)0)

@@ -56,9 +56,10 @@ namespace Mix {
                       uint32_t _offset,
                       VertexElementType _type,
                       VertexElementSemantic _semantic,
-                      uint16_t _index);
+                      uint16_t _index,
+                      uint32_t _instanceRate = 0);
 
-        VertexElement(uint16_t _streamIndex, uint32_t _location, uint32_t _offset, VertexAttribute _vertexAttri);
+        VertexElement(VertexAttribute _vertexAttri, uint16_t _streamIndex, uint32_t _location, uint32_t _offset, uint32_t _instanceRate = 0);
 
         uint16_t getStreamIndex() const { return mStreamIndex; }
 
@@ -73,6 +74,8 @@ namespace Mix {
         uint16_t getSemanticIndex() const { return mIndex; }
 
         uint16_t getComponentCount() const;
+
+        uint32_t getInstanceRate() const { return mInstanceRate; }
 
         uint32_t size() const;
 
@@ -102,14 +105,17 @@ namespace Mix {
         uint32_t mOffset = 0;
         VertexElementType mType;
         VertexElementSemantic mSemantic;
+        uint32_t mInstanceRate = 0;
     };
 
 
     class VertexDeclaration {
     public:
-        explicit VertexDeclaration(ArrayProxy<const VertexElement> _elements);
+        explicit VertexDeclaration(InArrayProxy<const VertexElement> _elements);
 
         explicit VertexDeclaration(Flags<VertexAttribute> _vertexAttri);
+
+        explicit VertexDeclaration(InArrayProxy<std::pair<VertexAttribute, uint32_t>> _attriWithInstanceRate);
 
         uint32_t elementCount() const { return static_cast<uint32_t>(mElements.size()); }
 

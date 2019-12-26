@@ -11,6 +11,7 @@
 #include "../Component/Camera/MxCamera.h"
 #include "../Vulkan/Shader/MxVkPBRShader.h"
 #include "../Vulkan/Shader/MxVkUIRenderer.h"
+#include "../Time/MxTime.h"
 
 
 namespace Mix {
@@ -38,13 +39,14 @@ namespace Mix {
     void Graphics::update() {
     }
 
-    void Graphics::render() {
+    void Graphics::render(FrameRenderInfo& _frameInfo) {
         for (auto& shader : mShaders)
             shader.second->update();
 
-        auto renderInfo = SceneManager::Get()->getActiveScene()->_getRendererInfoPerFrame();
+        auto& renderInfo = *_frameInfo.sceneInfo;
 
         Camera& camera = *renderInfo.camera;
+        auto frustum = camera.getFrustum();
         Vector3f cameraPos = renderInfo.camera->transform()->getPosition();
 
         std::vector<RenderElement> renderElements;
@@ -53,6 +55,9 @@ namespace Mix {
         RenderQueue opaqueQueue(RenderQueue::SortType_FrontToBack);
 
         for (auto& renderer : renderInfo.renderers) {
+            if (!frustum.contains(renderer->transform()->getPosition()))
+                continue;
+
             auto mesh = renderer->getGameObject()->getComponent<MeshFilter>()->getMesh();
             if (mesh) {
                 auto& materials = renderer->getMaterials();
@@ -70,6 +75,7 @@ namespace Mix {
             }
         }
 
+
         for (auto& element : renderElements) {
             float dist = (element.transform->getPosition() - cameraPos).length();
 
@@ -83,6 +89,7 @@ namespace Mix {
         transparentQueue.sort();
         opaqueQueue.sort();
 
+
         auto& transparentElements = transparentQueue.getSortedElements();
         auto& opaqueElements = opaqueQueue.getSortedElements();
 
@@ -90,36 +97,41 @@ namespace Mix {
 
         // Render all opaque elements
         if (!opaqueElements.empty()) {
-            uint32_t lastId = opaqueElements.front().shaderId;
+            uint32_t id;
+            auto l = opaqueElements.begin();
+            auto r = l + 1;
 
-            mShaders[lastId]->beginRender(camera);
-            for (auto& elem : opaqueElements) {
-                if (lastId != elem.shaderId) {
-                    mShaders[lastId]->endRender();
+            while (l != opaqueElements.end()) {
+                id = l->shaderId;
+                while (r != opaqueElements.end() && id == r->shaderId)
+                    ++r;
 
-                    mShaders[elem.shaderId]->beginRender(camera);
-                }
-                mShaders[elem.shaderId]->render(*elem.element);
+                mShaders[id]->beginRender(camera);
+                mShaders[l->shaderId]->render({ l, r });
+                mShaders[id]->endRender();
+
+                l = r;
             }
-            mShaders[lastId]->endRender();
         }
 
         // Render all transparent elements
         if (!transparentElements.empty()) {
-            uint32_t lastId = transparentElements.front().shaderId;
+            uint32_t id;
+            auto l = transparentElements.begin();
+            auto r = l + 1;
 
-            mShaders[lastId]->beginRender(camera);
-            for (auto& elem : transparentElements) {
-                if (lastId != elem.shaderId) {
-                    mShaders[lastId]->endRender();
+            while (l != transparentElements.end()) {
+                id = l->shaderId;
+                while (r != transparentElements.end() && id == r->shaderId)
+                    ++r;
 
-                    mShaders[elem.shaderId]->beginRender(camera);
-                }
-                mShaders[elem.shaderId]->render(*elem.element);
+                mShaders[id]->beginRender(camera);
+                mShaders[l->shaderId]->render({ l, r });
+                mShaders[id]->endRender();
+
+                l = r;
             }
-            mShaders[lastId]->endRender();
         }
-
 
         // UI
         GUI::UIRenderData renderData;

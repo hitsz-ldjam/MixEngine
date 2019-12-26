@@ -49,9 +49,9 @@ namespace Mix {
 
         void _setInstanceId(const uint64_t& _instanceId) { mInstanceData->instanceId = _instanceId; }
 
-        void _setIsDestroyed() { mIsDestroyed = true; }
+        void _setIsInDestroyQueue() { mIsDestroyed = true; }
 
-        bool _isDestroyed() const { return mIsDestroyed; }
+        bool _isInDestroyQueue() const { return mIsDestroyed; }
 
         std::shared_ptr<SceneObjectInstanceData> _getInstanceData() const { return mInstanceData; }
 

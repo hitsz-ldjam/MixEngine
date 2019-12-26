@@ -271,11 +271,9 @@ namespace Mix {
         return result;
     }
 
-#ifdef MX_QUATERNION_MORE_OPERATION
     Quaternion operator*(const float _a, const Quaternion& _q) {
         return _q.scale(_a);
     }
-#endif // MX_QUATERNION_MORE_OPERATION
 
 
     const Quaternion Quaternion::Identity = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);

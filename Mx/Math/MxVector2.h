@@ -5,11 +5,12 @@
 #include "MxGLMHeader.h"
 
 #include "../Exceptions/MxExceptions.hpp"
-#include "MxMath.h"
+#include "MxMathImpl.h"
 #include <boost/format.hpp>
 #include <glm/vec2.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <cmath>
+#include "../Log/MxLog.h"
 
 namespace Mix {
     template<typename _Ty>
@@ -36,7 +37,9 @@ namespace Mix {
         static const Vector2 Left;
         static const Vector2 Right;
 
-        explicit Vector2(_Ty const& _a = static_cast<_Ty>(0)) :x(_a), y(_a) {}
+        Vector2() :Vector2(static_cast<_Ty>(0)) {}
+
+        explicit Vector2(_Ty const& _a) :x(_a), y(_a) {}
 
         explicit Vector2(const glm::vec<2, _Ty, glm::defaultp>& _vec2) :vec(_vec2) {}
 
@@ -145,7 +148,8 @@ namespace Mix {
             auto l = length();
 
             if (l == 0) {
-                throw Exception("Can't normalize a zero length vector");
+                MX_LOG_ERROR("Can't normalize a zero length vector");
+                return Zero;
             }
 
             return this->divide(l);
@@ -333,13 +337,6 @@ namespace Mix {
     template<typename _T1, typename _T2>
     auto operator/(const Vector2<_T1>& _left, _T2 const& _right) {
         return _left.divide(_right);
-    }
-
-    // operators for output
-    template<typename _Os, typename _Ty>
-    _Os& operator<<(_Os& _os, const Vector2<_Ty>& _v) {
-        _os << _v.toString();
-        return _os;
     }
 
     // Commonly used types

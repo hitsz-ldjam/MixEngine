@@ -9,12 +9,13 @@
 #include <any>
 #include <unordered_set>
 #include "../Utils/MxArrayProxy.h"
+#include "MxRenderQueue.h"
 
 namespace Mix {
     class Camera;
     class Material;
     class Texture;
-    struct SceneRenderInfo;
+    struct FrameSceneInfo;
     struct RenderElement;
 
     namespace Vulkan {
@@ -117,7 +118,7 @@ namespace Mix {
 
         void beginRender(const Camera& _camera);
 
-        void render(RenderElement& _renderInfo);
+        void render(ArrayProxy<RenderQueueElement> _elements);
 
         void endRender();
 

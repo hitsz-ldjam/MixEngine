@@ -50,14 +50,17 @@ namespace Mix {
         PBRShader::~PBRShader() {
         }
 
-        void PBRShader::render(RenderElement& _element) {
-            beginElement(_element);
+        void PBRShader::render(ArrayProxy<RenderQueueElement> _elements) {
+            for (auto& element : _elements) {
+                beginElement(*element.element);
 
-            choosePipeline(*_element.material, *_element.mesh, _element.submesh);
-            setMaterail(*_element.material);
-            DrawMesh(*mCurrCmd, *_element.mesh, _element.submesh);
+                choosePipeline(*element.element->material, *element.element->mesh, element.element->submesh);
+                setMaterail(*element.element->material);
+                DrawMesh(*mCurrCmd, *element.element->mesh, element.element->submesh);
 
-            endElement();
+                endElement();
+            }
+
         }
 
         void PBRShader::update(const Shader& _shader) {
@@ -243,7 +246,7 @@ namespace Mix {
             std::shared_ptr<ShaderModule> vertShader = std::make_shared<ShaderModule>(mDevice, *vert);
             std::shared_ptr<ShaderModule> fragShader = std::make_shared<ShaderModule>(mDevice, *frag);
 
-            desc.vertexDecl = std::make_shared<VertexDeclaration>(VertexAttribute::Position | VertexAttribute::Normal | VertexAttribute::UV0);
+            desc.meshVertexDecl = std::make_shared<VertexDeclaration>(VertexAttribute::Position | VertexAttribute::Normal | VertexAttribute::UV0);
 
             desc.gpuProgram.vertex = vertShader;
             desc.gpuProgram.fragment = fragShader;

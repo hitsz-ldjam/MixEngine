@@ -48,11 +48,12 @@ namespace Mix {
             return;
         auto id = _object.getInstanceId();
         mDestroyQueue[id] = _object;
+        _object->_setIsInDestroyQueue();
     }
 
     void SceneObjectManager::destroyObjectsInQueue() {
         for (auto& objPair : mDestroyQueue)
-            objPair.second->destroyInternal(objPair.second, true);
+            objPair.second.mData->mPtr->object->destroyInternal(objPair.second, true);
         mDestroyQueue.clear();
     }
 

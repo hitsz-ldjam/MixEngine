@@ -152,11 +152,6 @@ namespace Mix {
 
     Matrix4 operator*(const float _left, const Matrix4& _right);
 
-    template<typename _Os>
-    _Os& operator<<(_Os& _os, const Matrix4& _q) {
-        _os << _q.toString();
-        return _os;
-    }
 }
 
 #endif

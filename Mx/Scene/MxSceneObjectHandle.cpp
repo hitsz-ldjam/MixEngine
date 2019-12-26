@@ -5,7 +5,7 @@ namespace Mix {
     MX_IMPLEMENT_RTTI(SceneObjectHandleBase, Object);
 
     bool SceneObjectHandleBase::isDestroyed() const {
-        return mData->mPtr == nullptr || mData->mPtr->object == nullptr || mData->mPtr->object->_isDestroyed();
+        return isDestroyedInternal(true);
     }
 
     std::shared_ptr<SceneObject> SceneObjectHandleBase::get() const {
@@ -16,6 +16,10 @@ namespace Mix {
 
     SceneObjectHandleBase::SceneObjectHandleBase(const std::shared_ptr<SceneObject>& _ptr) {
         mData = std::make_shared<SceneObjectHandleData>(_ptr->mInstanceData);
+    }
+
+    bool SceneObjectHandleBase::isDestroyedInternal(bool _checkQueue) const {
+        return mData->mPtr == nullptr || mData->mPtr->object == nullptr ||(_checkQueue && mData->mPtr->object->_isInDestroyQueue());
     }
 
     void SceneObjectHandleBase::throwIfDestroyed() const {

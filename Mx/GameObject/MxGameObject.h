@@ -169,7 +169,7 @@ namespace Mix {
          * \param _recursive Search the whole hierarchy using DFS
          * \return First found GameObject or empty if none foune
          */
-        HGameObject findChild(const std::string& _name, bool _recursive = true);
+        HGameObject findChild(const std::string& _name, bool _recursive = true) const;
 
         /**
          * \brief Find all child objects with the specified name
@@ -177,14 +177,12 @@ namespace Mix {
          * \param _recursive Search the whole hierarchy using DFS
          * \return All found GameObject or empty if none foune
          */
-        std::vector<HGameObject> findChildren(const std::string& _name, bool _recursive = true);
+        std::vector<HGameObject> findChildren(const std::string& _name, bool _recursive = true) const;
 
         /** @brief Activates/Deactivates the GameObject, depending on the given true or false value. */
         void setActive(bool _active);
 
-        auto getAllChildren() const noexcept {
-            return std::vector<HGameObject>(mChildren.begin(), mChildren.end());
-        }
+        std::vector<HGameObject> getAllChildren(bool _recursive = false) const noexcept;
 
         // HSceneObject clone(bool _instantiate = true);
 

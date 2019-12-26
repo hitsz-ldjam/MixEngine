@@ -1,5 +1,6 @@
 #include "MxShader.h"
 #include "../Vulkan/Shader/MxVkShaderBase.h"
+#include "MxRenderQueue.h"
 
 namespace Mix {
     MaterialPropertyBlock::MaterialPropertyBlock(const MaterialPropertySet& _set) {
@@ -66,8 +67,8 @@ namespace Mix {
         mShader->beginRender(_camera);
     }
 
-    void Shader::render(RenderElement& _element) {
-        mShader->render(_element);
+    void Shader::render(ArrayProxy<RenderQueueElement> _elementes) {
+        mShader->render(_elementes);
     }
 
     void Shader::endRender() {

@@ -48,6 +48,8 @@ namespace Mix {
 
         SceneObjectHandleBase(std::nullptr_t) :mData(nullptr) {}
 
+        bool isDestroyedInternal(bool _checkQueue) const;
+
         void throwIfDestroyed() const;
 
         void destroy();

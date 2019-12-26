@@ -33,7 +33,8 @@ namespace Mix {
             bool enableDepthTest;
             bool enableWriteDepth;
 
-            std::shared_ptr<VertexDeclaration> vertexDecl;
+            std::shared_ptr<VertexDeclaration> meshVertexDecl; /**< Vertex layout of mesh data. */
+            std::shared_ptr<VertexDeclaration> extraVertexDecl; /**< Vertex layout for extra data.  */
             std::vector<vk::PipelineColorBlendAttachmentState> blendStates;
             std::vector<vk::PushConstantRange> pushConstant;
             std::vector<std::shared_ptr<DescriptorSetLayout>> descriptorSetLayouts;

@@ -23,15 +23,18 @@ namespace Mix {
     }
 
     void RenderQueue::sort() {
+        // Sort by shader id material and distance from camera
         std::sort(mSortIndex.begin(), mSortIndex.end(),
                   [&](const size_t& _a, const size_t& _b) {
                       auto& eleA = mSortElements[_a];
                       auto& eleB = mSortElements[_b];
 
-                      uint8_t h = (eleA.shaderId > eleB.shaderId) << 1 |
+                      uint8_t h = (eleA.shaderId > eleB.shaderId) << 2 |
+                          (eleA.element->material.get() > eleB.element->material.get()) << 1 |
                           (eleA.disFromCamera > eleB.disFromCamera);
 
-                      uint8_t l = (eleA.shaderId < eleB.shaderId) << 1 |
+                      uint8_t l = (eleA.shaderId < eleB.shaderId) << 2 |
+                          (eleA.element->material.get() < eleB.element->material.get()) << 1 |
                           (eleA.disFromCamera < eleB.disFromCamera);
 
                       return l > h;
@@ -47,6 +50,10 @@ namespace Mix {
     }
 
     const std::vector<RenderQueueElement>& RenderQueue::getSortedElements() const {
+        return mSortedElements;
+    }
+
+    std::vector<RenderQueueElement>& RenderQueue::getSortedElements() {
         return mSortedElements;
     }
 }

@@ -5,6 +5,8 @@
 #include "../Math/MxVector4.h"
 
 namespace Mix {
+    class Color32;
+
     class Color {
     public:
         union {
@@ -71,10 +73,16 @@ namespace Mix {
 
     class Color32 {
     public:
-        char r;
-        char g;
-        char b;
-        char a;
+        union {
+            struct {
+                char r;
+                char g;
+                char b;
+                char a;
+            };
+
+            char linear[4];
+        };
 
         Color32() :r(0), g(0), b(0), a(0) {}
 

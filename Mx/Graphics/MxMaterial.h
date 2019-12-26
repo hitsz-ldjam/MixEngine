@@ -49,6 +49,10 @@ namespace Mix {
 
         std::shared_ptr<Shader> getShader() const { return mShader; }
 
+        void setGPUInstancing(bool _enable) { mInstancing = _enable; }
+
+        bool getGPUInstancing() const { return mInstancing; }
+
     private:
 
         uint32_t mMaterialId;
@@ -57,6 +61,7 @@ namespace Mix {
         MaterialPropertyBlock mMaterialProperties;
 
         RenderType mRenderType;
+        bool mInstancing = false;
     };
 }
 

@@ -1,151 +1,155 @@
 #pragma once
-#ifndef MX_MATH_TRANSFORM_H_
-#define MX_MATH_TRANSFORM_H_
+#ifndef MX_MATH_TRANSFORMATION_H_
+#define MX_MATH_TRANSFORMATION_H_
 
 #include "MxGLMHeader.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/constants.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
+#include "MxVector3.h"
+#include "MxQuaternion.h"
+#include "MxMatrix4.h"
 
 namespace Mix {
-	namespace Math {
-		class Transform {
-		public:
-			explicit Transform(const glm::vec3& _position = glm::zero<glm::vec3>(),
-			                   const glm::quat& _rotation = glm::identity<glm::quat>(),
-			                   const glm::vec3& _scale    = glm::one<glm::vec3>())
-				: mPosition(_position),
-				  mRotation(_rotation),
-				  mScale(_scale),
-				  mMatrix(1.0f) {
-			}
+    struct TRS {
+        Vector3f position;
+        Quaternion rotation;
+        Vector3f scale;
 
-			Transform& setPosition(const glm::vec3& _position) {
-				if (mPosition != _position) {
-					mPosition = _position;
-					mChanged  = true;
-				}
-				return *this;
-			}
+        TRS() :
+            position(Vector3f::Zero),
+            rotation(Quaternion::Identity),
+            scale(Vector3f::One) {
+        }
 
-			Transform& setRotation(const glm::quat& _rotation) {
-				if (mRotation != _rotation) {
-					mRotation = _rotation;
-					mChanged  = true;
-				}
-				return *this;
-			}
+        TRS(const Vector3f& _position,
+            const Quaternion& _rotation,
+            const Vector3f& _scale) :
+            position(_position),
+            rotation(_rotation),
+            scale(_scale) {
+        }
+    };
 
-			Transform& setScale(const glm::vec3& _scale) {
-				if (mScale != _scale) {
-					mScale   = _scale;
-					mChanged = true;
-				}
-				return *this;
-			}
+    class Transformation {
+    public:
+        Transformation() :
+            mPosition(Vector3f::Zero),
+            mRotation(Quaternion::Identity),
+            mScale(Vector3f::One) {
+        }
 
-			const glm::vec3& getPosition() const {
-				return mPosition;
-			}
+        Transformation(const Vector3f& _position,
+                       const Quaternion& _rotation,
+                       const Vector3f& _scale)
+            : mPosition(_position),
+            mRotation(_rotation),
+            mScale(_scale),
+            mMatrix(1.0f) {
+        }
 
-			const glm::quat& getRotation() const {
-				return mRotation;
-			}
+        Transformation& setPosition(const Vector3f& _position) {
+            if (mPosition != _position) {
+                mPosition = _position;
+                mChanged = true;
+            }
+            return *this;
+        }
 
-			const glm::vec3& getScale() const {
-				return mScale;
-			}
+        Transformation& setRotation(const Quaternion& _rotation) {
+            if (mRotation != _rotation) {
+                mRotation = _rotation;
+                mChanged = true;
+            }
+            return *this;
+        }
 
-			Transform& fromMat4(const glm::mat4& _mat) {
-				glm::vec3 skew;
-				glm::vec4 perspective;
-				glm::decompose(_mat, mScale, mRotation, mPosition, skew, perspective);
-				mMatrix = _mat;
-				return *this;
-			}
+        Transformation& setScale(const Vector3f& _scale) {
+            if (mScale != _scale) {
+                mScale = _scale;
+                mChanged = true;
+            }
+            return *this;
+        }
 
-			static glm::mat4 MatrixFromTRS(const glm::vec3& _translate, const glm::quat& _rotation,
-			                               const glm::vec3& _scale) {
+        const Vector3f& getPosition() const {
+            return mPosition;
+        }
 
-				glm::mat4 result(1.0f);
+        const Quaternion& getRotation() const {
+            return mRotation;
+        }
 
-				// scale
-				result[0] = result[0] * _scale[0];
-				result[1] = result[1] * _scale[1];
-				result[2] = result[2] * _scale[2];
+        const Vector3f& getScale() const {
+            return mScale;
+        }
 
-				//rotation
-				result = toMat4(_rotation) * result;
+        Transformation& fromMat4(const Matrix4& _mat) {
+            Matrix4::Decompose(_mat, mPosition, mRotation, mScale);
+            mMatrix = _mat;
+            return *this;
+        }
 
-				//translate
-				result[3] = result[0] * _translate[0] +
-				            result[1] * _translate[1] +
-				            result[2] * _translate[2] +
-				            result[3];
+        static Matrix4 MatrixFromTRS(const Vector3f& _translate, const Quaternion& _rotation,
+                                     const Vector3f& _scale) {
 
-				return result;
-			}
+            Matrix4 result(1.0f);
 
-			glm::mat4 parentMatrix() const {
-				if (mChanged) {
-					mMatrix  = MatrixFromTransform(mPosition, mRotation, mScale);
-					mChanged = false;
-				}
-				return mMatrix;
-			}
+            // scale
+            result[0] = result[0] * _scale[0];
+            result[1] = result[1] * _scale[1];
+            result[2] = result[2] * _scale[2];
 
-			Transform multiply(const Transform& _other) const {
-				return Transform(glm::vec3(parentMatrix() * glm::vec4(_other.getPosition(), 1.0f)),
-				                 mRotation * _other.mRotation,
-				                 mScale * _other.mScale);
-			}
+            //rotation
+            result = Quaternion(_rotation).toMatrix() * result;
 
-			bool operator==(const Transform& _other) const {
-				return mPosition == _other.mPosition &&
-				       mRotation == _other.mRotation &&
-				       mScale == _other.mScale;
-			}
+            //translate
+            result[3] = result[0] * _translate[0] +
+                result[1] * _translate[1] +
+                result[2] * _translate[2] +
+                result[3];
 
-			bool operator!=(const Transform& _other) const {
-				return !(*this == _other);
-			}
+            return result;
+        }
 
-			Transform& operator*=(const Transform& _other) {
-				return *this = multiply(_other);
-			}
+        Matrix4 parentMatrix() const {
+            if (mChanged) {
+                mMatrix = Matrix4::TRS(mPosition, mRotation, mScale);
+                mChanged = false;
+            }
+            return mMatrix;
+        }
 
-			friend Transform operator*(const Transform& _left, const Transform& _right) {
-				return _left.multiply(_right);
-			}
+        Transformation multiply(const Transformation& _other) const {
+            return Transformation(parentMatrix().multiplyPoint(_other.getPosition()),
+                                  mRotation * _other.mRotation,
+                                  mScale * _other.mScale);
+        }
 
-		private:
-			glm::vec3 mPosition;
-			glm::quat mRotation;
-			glm::vec3 mScale;
+        bool operator==(const Transformation& _other) const {
+            return mPosition == _other.mPosition &&
+                mRotation == _other.mRotation &&
+                mScale == _other.mScale;
+        }
 
-			mutable glm::mat4 mMatrix;
-			mutable bool mChanged = true;
+        bool operator!=(const Transformation& _other) const {
+            return !(*this == _other);
+        }
 
-			static glm::mat4 MatrixFromTransform(const glm::vec3& _position, const glm::quat& _rotation,
-			                                     const glm::vec3& _scale) {
-				// Set rotation
-				auto result = glm::toMat4(_rotation);
+        Transformation& operator*=(const Transformation& _other) {
+            return *this = multiply(_other);
+        }
 
-				// Set translate
-				result[3].x = _position.x;
-				result[3].y = _position.y;
-				result[3].z = _position.z;
+        friend Transformation operator*(const Transformation& _left, const Transformation& _right) {
+            return _left.multiply(_right);
+        }
 
-				// Set scale
-				result[0] = result[0] * _scale[0];
-				result[1] = result[1] * _scale[1];
-				result[2] = result[2] * _scale[2];
+    private:
+        Vector3f mPosition;
+        Quaternion mRotation;
+        Vector3f mScale;
 
-				return result;
-			}
-		};
-	}
+        mutable Matrix4 mMatrix;
+        mutable bool mChanged = true;
+    };
+
 }
 #endif

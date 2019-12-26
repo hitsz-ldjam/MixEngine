@@ -5,6 +5,7 @@
 
 #include <string>
 #include <utility>
+#include <type_traits>
 
 namespace Mix {
     class Object;
@@ -69,6 +70,7 @@ public:\
 private:
 
 #define MX_IMPLEMENT_RTTI(className,baseClassName)\
+static_assert(std::is_base_of<baseClassName, className>::value, "["#baseClassName"] should be base of ["#className"]");\
 Mix::Rtti className::msType(#className, &baseClassName::msType);\
 Mix::Rtti& className::GetType() {return msType;}
 

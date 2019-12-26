@@ -120,8 +120,6 @@ namespace Mix {
         auto it = std::find(mComponents.begin(), mComponents.end(), _component);
 
         if (it != mComponents.end()) {
-            (*it)->_setIsDestroyed();
-
             if (_component->isDerived(Behaviour::GetType())) {
                 // mBehaviours.erase(std::find(mBehaviours.begin(), mBehaviours.end(), static_scene_object_cast<Behaviour>(_component)));
                 mScene->unregisterBehaviour(static_scene_object_cast<Behaviour>(_component));
@@ -130,6 +128,8 @@ namespace Mix {
             (*it)->destroyInternal(*it, _immediate);
 
             mComponents.erase(it);
+
+            return;
         }
 
         Log::Warning("Trying to remove a component that isn't attached to this GameObject");
@@ -262,7 +262,7 @@ namespace Mix {
             if (mChildren[i] == _child)
                 return i;
         }
-       
+
         return -1;
     }
 
@@ -274,7 +274,7 @@ namespace Mix {
         return nullptr;
     }
 
-    HGameObject GameObject::findChild(const std::string& _name, bool _recursive) {
+    HGameObject GameObject::findChild(const std::string& _name, bool _recursive) const {
         for (auto& child : mChildren) {
             if (child->getName() == _name)
                 return child;
@@ -290,7 +290,7 @@ namespace Mix {
         return HGameObject();
     }
 
-    std::vector<HGameObject> GameObject::findChildren(const std::string& _name, bool _recursive) {
+    std::vector<HGameObject> GameObject::findChildren(const std::string& _name, bool _recursive) const {
         std::vector<HGameObject> results;
 
         for (auto& child : mChildren) {
@@ -332,6 +332,17 @@ namespace Mix {
             for (auto& behaviour : behaviours)
                 behaviour->onDisabledInternal();
         }
+    }
+
+    std::vector<HGameObject> GameObject::getAllChildren(bool _recursive) const noexcept {
+        std::vector<HGameObject> results = mChildren;
+        if (_recursive) {
+            for (auto& child : mChildren) {
+                auto found = child->getAllChildren(_recursive);
+                results.insert(results.end(), found.begin(), found.end());
+            }
+        }
+        return results;
     }
 
     /*GameObject* GameObject::Find(const std::string& _name) {

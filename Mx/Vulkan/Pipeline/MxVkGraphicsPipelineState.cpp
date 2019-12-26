@@ -47,7 +47,7 @@ namespace Mix {
                 ++usedStageCount;
             }
 
-            mVertexDecl = _desc.vertexDecl;
+            mVertexDecl = _desc.meshVertexDecl;
             mShaderModules = std::move(usedShaderModules);
 
             // Prepare input assebly state

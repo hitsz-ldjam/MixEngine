@@ -23,21 +23,24 @@ namespace Mix {
                                  uint32_t _offset,
                                  VertexElementType _type,
                                  VertexElementSemantic _semantic,
-                                 uint16_t _index)
+                                 uint16_t _index,
+                                 uint32_t _instanceRate)
         : mStreamIndex(_streamIndex),
         mIndex(_index),
         mLocation(_location),
         mOffset(_offset),
         mType(_type),
-        mSemantic(_semantic) {
+        mSemantic(_semantic),
+        mInstanceRate(_instanceRate) {
         mHash = Hash(*this);
     }
 
-    VertexElement::VertexElement(uint16_t _streamIndex, uint32_t _location, uint32_t _offset, VertexAttribute _vertexAttri)
+    VertexElement::VertexElement(VertexAttribute _vertexAttri, uint16_t _streamIndex, uint32_t _location, uint32_t _offset, uint32_t _instanceRate)
         :mStreamIndex(_streamIndex),
+        mIndex(0),
         mLocation(_location),
         mOffset(_offset),
-        mIndex(0) {
+        mInstanceRate(_instanceRate) {
         switch (_vertexAttri) {
         case VertexAttribute::Position:	mSemantic = VertexElementSemantic::Position; break;
         case VertexAttribute::Normal:	mSemantic = VertexElementSemantic::Normal; break;
@@ -101,31 +104,45 @@ namespace Mix {
         Utils::HashCombine(result, _ve.mOffset);
         Utils::HashCombine(result, _ve.mType);
         Utils::HashCombine(result, _ve.mSemantic);
+        Utils::HashCombine(result, _ve.mInstanceRate);
         return result;
     }
 
-    VertexDeclaration::VertexDeclaration(ArrayProxy<const VertexElement> _elements) {
-        mElements.insert(_elements.begin(), _elements.end());
-        mHash = Hash(*this);
-    }
-
-    VertexDeclaration::VertexDeclaration(Flags<VertexAttribute> _vertexAttri) {
-        static std::array<VertexAttribute, 6> allAttributes = {
+    static std::array<VertexAttribute, 6> AllAttributes = {
             VertexAttribute::Position,
             VertexAttribute::Normal,
             VertexAttribute::Tangent,
             VertexAttribute::UV0,
             VertexAttribute::UV1,
             VertexAttribute::Color
-        };
+    };
 
+    VertexDeclaration::VertexDeclaration(InArrayProxy<const VertexElement> _elements) {
+        mElements.insert(_elements.begin(), _elements.end());
+        mHash = Hash(*this);
+    }
+
+    VertexDeclaration::VertexDeclaration(Flags<VertexAttribute> _vertexAttri) {
         uint32_t location = 0;
         uint32_t offset = 0;
-        for (auto& attribute : allAttributes) {
+        for (auto& attribute : AllAttributes) {
             if (!_vertexAttri.isSet(attribute))
                 continue;
 
-            VertexElement ve(0, location, offset, attribute);
+            VertexElement ve(attribute, 0, location, offset, 0);
+            ++location;
+            offset += VertexElement::GetElementTypeSize(ve.getType());
+            mElements.insert(ve);
+        }
+
+        mHash = Hash(*this);
+    }
+
+    VertexDeclaration::VertexDeclaration(InArrayProxy<std::pair<VertexAttribute, uint32_t>> _attriWithInstanceRate) {
+        uint32_t location = 0;
+        uint32_t offset = 0;
+        for (auto& pair : _attriWithInstanceRate) {
+            VertexElement ve(pair.first, 0, location, offset, pair.second);
             ++location;
             offset += VertexElement::GetElementTypeSize(ve.getType());
             mElements.insert(ve);

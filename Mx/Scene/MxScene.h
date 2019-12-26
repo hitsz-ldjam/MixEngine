@@ -57,7 +57,7 @@ namespace Mix {
         /** \brief Get all root GameObjects in the scene. */
         std::vector<HGameObject> getRootGameObjects() const;
 
-        SceneRenderInfo _getRendererInfoPerFrame();
+        FrameSceneInfo _getFrameSceneInfo();
 
         uint32_t getIndex() const { return mIndex; }
 
@@ -128,7 +128,7 @@ namespace Mix {
         void unload();
 
     private:
-        static void FindRendererRecur(SceneRenderInfo& _info, const HGameObject& _object);
+        static void FillFrameSceneInfo(FrameSceneInfo& _info, const HGameObject& _object);
 
 
         std::weak_ptr<Scene> mThisPtr;

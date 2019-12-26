@@ -5,6 +5,7 @@
 #include "../../Utils/MxGeneralBase.hpp"
 #include "../../Graphics/MxMaterial.h"
 #include "../../Utils/MxArrayProxy.h"
+#include "../../Graphics/MxRenderQueue.h"
 
 namespace Mix {
     class Camera;
@@ -21,7 +22,7 @@ namespace Mix {
 
             virtual void beginRender(const Camera& _camera) = 0;
 
-            virtual void render(RenderElement& _element) = 0;
+            virtual void render(ArrayProxy<RenderQueueElement> _elements) = 0;
 
             virtual void endRender() = 0;
 

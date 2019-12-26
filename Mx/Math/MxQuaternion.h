@@ -100,11 +100,6 @@ namespace Mix {
 
         static Quaternion LookRotation(const Vector3f& _forward, const Vector3f& _up = Vector3f::Up);
 
-#ifdef MX_QUATERNION_MORE_OPERATION
-    public:
-#else
-    private:
-#endif // MX_QUATERNION_MORE_OPERATION
         Quaternion scale(const float _other) const;
 
         Quaternion add(const Quaternion& _other) const;
@@ -123,17 +118,10 @@ namespace Mix {
 
         Quaternion& operator*=(const float _a);
 
-#ifdef MX_QUATERNION_MORE_OPERATION
         friend Quaternion operator*(const float _a, const Quaternion& _q);
-#endif // MX_QUATERNION_MORE_OPERATION
 
     };
 
-    template<typename _Os>
-    _Os& operator<<(_Os& _os, const Quaternion& _q) {
-        _os << _q.toString();
-        return _os;
-    }
 }
 
 #endif

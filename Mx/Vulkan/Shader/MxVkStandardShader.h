@@ -29,7 +29,7 @@ namespace Mix {
 
             ~StandardShader() override;
 
-            void render(RenderElement& _element) override;
+            void render(ArrayProxy<RenderQueueElement> _elements) override;
 
             void update(const Shader& _shader) override;
 
@@ -57,7 +57,8 @@ namespace Mix {
 
             std::shared_ptr<Device> mDevice;
 
-            std::shared_ptr<GraphicsPipelineState> mGraphicsPipelineState;
+            std::shared_ptr<GraphicsPipelineState> mGraphicsPipeline;
+            std::shared_ptr<GraphicsPipelineState> mInstanceGraphicsPipeline;
 
             std::shared_ptr<DescriptorSetLayout> mStaticParamDescriptorSetLayout;
             std::shared_ptr<DescriptorSetLayout> mDynamicPamramDescriptorSetLayout;

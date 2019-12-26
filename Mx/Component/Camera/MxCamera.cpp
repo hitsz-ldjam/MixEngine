@@ -27,11 +27,29 @@ namespace Mix {
         }
     }
 
+    void Camera::setNear(float _near) {
+        if (0.0f < _near && _near < mFar) {
+            mNear = _near;
+            mDirty = true;
+        }
+    }
+
+    void Camera::setFar(float _far) {
+        if (mNear < _far) {
+            mFar = _far;
+            mDirty = true;
+        }
+    }
+
     void Camera::setExtent(const Vector2i& _extent) {
         if (_extent.x > 0 && _extent.y > 0) {
             mExtent = _extent;
             mDirty = true;
         }
+    }
+
+    Frustum Camera::getFrustum() const {
+        return Frustum(getProjMat() * getViewMat());
     }
 
     Vector3f Camera::worldToScreenPoint(const Vector3f& _point) const {
@@ -46,7 +64,7 @@ namespace Mix {
 
     void Camera::updateMatrix() const {
         if (mDirty) {
-            mProjMat = Matrix4::Perspective(Math::Radians(mFov), float(mExtent.x) / mExtent.y, 0.1f, 1000.0f);
+            mProjMat = Matrix4::Perspective(Math::Radians(mFov), float(mExtent.x) / mExtent.y, mNear, mFar);
             mDirty = false;
         }
     }
