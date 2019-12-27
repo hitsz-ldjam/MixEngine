@@ -7,6 +7,8 @@
 
 #define MX_YIELD_HANDLE Mix::Coroutine::YieldHandle& yield_return
 
+#define THIS_HANDLE Mix::static_scene_object_cast<std::remove_pointer_t<decltype(this)>>(getHandle())
+
 namespace Mix::Coroutine {
     /**
      *  @brief Starts a coroutine. The first argument of a coroutine should be@code MX_YIELD_HANDLE@endcode. 
@@ -32,6 +34,7 @@ namespace Mix::Coroutine {
      *          Coroutine::startCoroutine([](MX_YIELD_HANDLE, int a) {}, int(some_val)));
      *
      *          // behaves like a member function
+     *          // todo: bug
      *          Coroutine::startCoroutine([this](MX_YIELD_HANDLE, int a) {}, int(some_val)));
      *
      *          // prefer lambdas to free functions

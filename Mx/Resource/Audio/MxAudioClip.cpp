@@ -19,7 +19,7 @@ namespace Mix {
         FMOD::Sound* sound = nullptr;
         auto core = Audio::Core::Get()->getCore();
         core->createSound(_path.c_str(),
-                          static_cast<FMOD_MODE>(_mode) | FMOD_LOOP_NORMAL | FMOD_3D | FMOD_ACCURATETIME | FMOD_LOWMEM,
+                          static_cast<FMOD_MODE>(_mode) | FMOD_LOOP_NORMAL | FMOD_2D | FMOD_ACCURATETIME | FMOD_LOWMEM,
                           nullptr,
                           &sound);
         //                                                          DO NOT use delete

@@ -204,7 +204,7 @@ namespace Mix {
     }
 
     void AudioSource::startNewChannel() {
-        mChannelParam.exportTo(mChannel.get());
+        //mChannelParam.exportTo(mChannel.get());
         setLoop(mAddiParam.loop);
         if(mAddiParam.playOnAwake)
             resume();
