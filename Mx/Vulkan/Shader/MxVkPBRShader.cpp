@@ -142,11 +142,11 @@ namespace Mix {
         bool PBRShader::choosePipeline(const Material& _material, const Mesh& _mesh, uint32_t _submesh) {
             bool depthWrite = _material.getRenderType() != RenderType::Transparent;
 
-            auto newVertexInput = mVulkan->getVertexInputManager().getVertexInput(*_mesh.getVertexDeclaration(), *mGraphicsPipelineState->getVertexDeclaration());
+            auto newVertexInput = mVulkan->getVertexInputManager().getVertexInput(*_mesh.getVertexDeclaration(), *mGraphicsPipelineState->getMeshVertexDeclaration());
             if (newVertexInput == nullptr) // This mesh is not compatiple with this pipeline
                 return false;
             if (newVertexInput != mCurrVertexInput) {
-                auto newPipeline = mGraphicsPipelineState->getPipeline(mVulkan->getRenderPass(), 0, newVertexInput, _mesh.getTopology(_submesh), true, depthWrite);
+                auto newPipeline = mGraphicsPipelineState->getPipeline(mVulkan->getRenderPass(), 0, newVertexInput, nullptr,_mesh.getTopology(_submesh), true, depthWrite);
                 if (newPipeline != mCurrPipeline) {
                     mCurrCmd->get().bindPipeline(vk::PipelineBindPoint::eGraphics, newPipeline->get());
                     mCurrPipeline = newPipeline;

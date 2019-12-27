@@ -47,7 +47,8 @@ namespace Mix {
                 ++usedStageCount;
             }
 
-            mVertexDecl = _desc.meshVertexDecl;
+            mMeshVertexDecl = _desc.meshVertexDecl;
+            mExtraVertexDecl = _desc.extraVertexDecl;
             mShaderModules = std::move(usedShaderModules);
 
             // Prepare input assebly state
@@ -177,7 +178,8 @@ namespace Mix {
 
         std::shared_ptr<Pipeline> GraphicsPipelineState::getPipeline(const std::shared_ptr<RenderPass>& _renderPass,
                                                                      uint32_t _subpassIndex,
-                                                                     const std::shared_ptr<VertexInput>& _vertexInput,
+                                                                     const std::shared_ptr<VertexInput>& _meshVertexInput,
+                                                                     const std::shared_ptr<VertexInput>& _extraVertexInput,
                                                                      MeshTopology _drawMode,
                                                                      bool _depthTest,
                                                                      bool _depthWrite,
@@ -185,7 +187,7 @@ namespace Mix {
                                // todo Find a nother way to generate the id of RenderPass
             auto renderPassKey = static_cast<uint32_t>(reinterpret_cast<intptr_t>(_renderPass.get()));
 
-            PipelineKey key{ renderPassKey,_subpassIndex,_drawMode,_vertexInput->getId(),_depthTest,_depthWrite,_stencilTest };
+            PipelineKey key{ renderPassKey,_subpassIndex,_drawMode,_meshVertexInput->getId(),_depthTest,_depthWrite,_stencilTest };
 
             // A suitable graphice pipeline exists
             auto it = mPipelineMap.find(key);
@@ -194,7 +196,7 @@ namespace Mix {
 
             // No suitable graphice pipeline
             // Create a new one
-            auto newPipeline = createPipeline(_renderPass, _subpassIndex, _drawMode, _vertexInput, _depthTest, _depthWrite, _stencilTest);
+            auto newPipeline = createPipeline(_renderPass, _subpassIndex, _drawMode, _meshVertexInput, _extraVertexInput, _depthTest, _depthWrite, _stencilTest);
             mPipelineMap[key] = newPipeline;
             return newPipeline;
         }
@@ -226,7 +228,8 @@ namespace Mix {
         std::shared_ptr<Pipeline> GraphicsPipelineState::createPipeline(const std::shared_ptr<RenderPass>& _renderPass,
                                                                         uint32_t _subpassIndex,
                                                                         MeshTopology _drawMode,
-                                                                        const std::shared_ptr<VertexInput>& _vertexInput,
+                                                                        const std::shared_ptr<VertexInput>& _meshInput,
+                                                                        const std::shared_ptr<VertexInput>& _extraInput,
                                                                         bool _depthTest,
                                                                         bool _depthWrite,
                                                                         bool _stencilTest) {
@@ -237,7 +240,25 @@ namespace Mix {
             mPipelineStateData.depthStencilInfo.stencilTestEnable = _stencilTest;
             mPipelineStateData.pipelineCreateInfo.renderPass = _renderPass->get();
             mPipelineStateData.pipelineCreateInfo.subpass = _subpassIndex;
-            mPipelineStateData.pipelineCreateInfo.pVertexInputState = &_vertexInput->getVertexInputStateInfo();
+
+            std::vector<vk::VertexInputAttributeDescription> attributes = _meshInput->getAttributeDescriptions();
+            std::vector<vk::VertexInputBindingDescription> bindings = _meshInput->getBindingDescription();
+
+            if (mExtraVertexDecl && _extraInput) {
+                auto& extraAttri = _extraInput->getAttributeDescriptions();
+                auto& extraBinding = _extraInput->getBindingDescription();
+                attributes.insert(attributes.end(), extraAttri.begin(), extraAttri.end());
+                bindings.insert(bindings.end(), extraBinding.begin(), extraBinding.end());
+            }
+
+            vk::PipelineVertexInputStateCreateInfo vertexInputCI;
+            vertexInputCI.pVertexAttributeDescriptions = attributes.data();
+            vertexInputCI.vertexAttributeDescriptionCount = uint32_t(attributes.size());
+            vertexInputCI.pVertexBindingDescriptions = bindings.data();
+            vertexInputCI.vertexBindingDescriptionCount = uint32_t(bindings.size());
+
+            mPipelineStateData.pipelineCreateInfo.pVertexInputState = &vertexInputCI;
+
 
             vk::Pipeline pipeline = mDevice->get().createGraphicsPipeline(nullptr, mPipelineStateData.pipelineCreateInfo);
 

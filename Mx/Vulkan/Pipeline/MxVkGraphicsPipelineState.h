@@ -34,7 +34,7 @@ namespace Mix {
             bool enableWriteDepth;
 
             std::shared_ptr<VertexDeclaration> meshVertexDecl; /**< Vertex layout of mesh data. */
-            std::shared_ptr<VertexDeclaration> extraVertexDecl; /**< Vertex layout for extra data.  */
+            std::shared_ptr<VertexDeclaration> extraVertexDecl; /**< Vertex layout for extra data. This will not influence the match of mesh vertex layout and pipeline vertex layout. */
             std::vector<vk::PipelineColorBlendAttachmentState> blendStates;
             std::vector<vk::PushConstantRange> pushConstant;
             std::vector<std::shared_ptr<DescriptorSetLayout>> descriptorSetLayouts;
@@ -46,13 +46,16 @@ namespace Mix {
 
             ~GraphicsPipelineState();
 
-            std::shared_ptr<VertexDeclaration> getVertexDeclaration() const { return mVertexDecl; }
+            std::shared_ptr<VertexDeclaration> getMeshVertexDeclaration() const { return mMeshVertexDecl; }
+
+            std::shared_ptr<VertexDeclaration> getExtraVertexDeclaration() const { return mExtraVertexDecl; }
 
             const vk::PipelineLayout& getPipelineLayout() const;
 
             std::shared_ptr<Pipeline> getPipeline(const std::shared_ptr<RenderPass>& _renderPass,
                                                   uint32_t _subpassIndex,
-                                                  const std::shared_ptr<VertexInput>& _vertexInput,
+                                                  const std::shared_ptr<VertexInput>& _meshVertexInput,
+                                                  const std::shared_ptr<VertexInput>& _extraVertexInput = nullptr,
                                                   MeshTopology _drawMode = MeshTopology::Triangles_List,
                                                   bool _depthTest = true,
                                                   bool _depthWrite = true,
@@ -102,7 +105,8 @@ namespace Mix {
 
             PipelineStateData mPipelineStateData;
             std::shared_ptr<Device> mDevice;
-            std::shared_ptr<VertexDeclaration> mVertexDecl;
+            std::shared_ptr<VertexDeclaration> mMeshVertexDecl;
+            std::shared_ptr<VertexDeclaration> mExtraVertexDecl;
             std::vector<std::shared_ptr<ShaderModule>> mShaderModules;
             std::unordered_map<PipelineKey, std::shared_ptr<Pipeline>, PipelineKey::Hasher> mPipelineMap;
 
@@ -110,7 +114,8 @@ namespace Mix {
             std::shared_ptr<Pipeline> createPipeline(const std::shared_ptr<RenderPass>& _renderPass,
                                                      uint32_t _subpassIndex,
                                                      MeshTopology _drawMode,
-                                                     const std::shared_ptr<VertexInput>& _vertexInput,
+                                                     const std::shared_ptr<VertexInput>& _meshInput,
+                                                     const std::shared_ptr<VertexInput>& _extraInput = nullptr,
                                                      bool _depthTest = true,
                                                      bool _depthWrite = true,
                                                      bool _stencilTest = false);

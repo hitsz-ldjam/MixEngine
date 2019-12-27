@@ -44,10 +44,28 @@ namespace Mix {
     private:
         uint32_t mFPSLimit = 0;
         uint32_t mFrameCount = 0;
-        uint32_t mFrameSampleRate = 5;
+        uint32_t mFrameSampleRate = 10;
         float mFramePerSecond = 0.0f;
         float mLastFrameTime = 0.0f;
         float mFrameStep = 0.0f;
+
+        //////////////////////////////////////////////////////////////////
+        //                         Analysis                             //
+        //////////////////////////////////////////////////////////////////
+
+    public:
+        float getUpdateTime() const { return mAnalysisTime.update; }
+        float getLateUpdateTime() const { return mAnalysisTime.lateUpdate; }
+        float getRenderTime() const { return mAnalysisTime.render; }
+        float getPostRenderTime() const { return mAnalysisTime.postRender; }
+
+    private:
+        struct {
+            float update;
+            float lateUpdate;
+            float render;
+            float postRender;
+        }mAnalysisTime;
 
         //////////////////////////////////////////////////////////////////
         //                         Setup scene                          //

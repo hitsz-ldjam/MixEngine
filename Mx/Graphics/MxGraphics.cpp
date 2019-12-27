@@ -12,6 +12,7 @@
 #include "../Vulkan/Shader/MxVkPBRShader.h"
 #include "../Vulkan/Shader/MxVkUIRenderer.h"
 #include "../Time/MxTime.h"
+#include "../Vulkan/Shader/MxVkBallShader.h"
 
 
 namespace Mix {
@@ -38,6 +39,16 @@ namespace Mix {
 
     void Graphics::update() {
     }
+
+#define TIME_BEGIN auto sxxxstart = Time::RealTime()
+
+#define TIME_VALUE (Time::RealTime() - sxxxstart)
+
+#define TIME_LOG(m) std::cout<<(m)<<" : "<<TIME_VALUE<<std::endl
+
+#define TIME_TICK sxxxstart = Time::RealTime()
+
+#define TIME_SEPR std::cout<<"------------------"<<std::endl
 
     void Graphics::render(FrameRenderInfo& _frameInfo) {
         for (auto& shader : mShaders)
@@ -75,7 +86,6 @@ namespace Mix {
             }
         }
 
-
         for (auto& element : renderElements) {
             float dist = (element.transform->getPosition() - cameraPos).length();
 
@@ -88,7 +98,6 @@ namespace Mix {
 
         transparentQueue.sort();
         opaqueQueue.sort();
-
 
         auto& transparentElements = transparentQueue.getSortedElements();
         auto& opaqueElements = opaqueQueue.getSortedElements();
@@ -138,7 +147,6 @@ namespace Mix {
         bool renderUi = GUI::Get()->getRenderData(renderData);
         if (renderUi)
             mUiRenderer->render(renderData);
-
         mVulkan->endRender();
     }
 
@@ -180,6 +188,9 @@ namespace Mix {
 
         auto pbr = std::make_shared<Vulkan::PBRShader>(mVulkan.get());
         addShader("PBR", pbr);
+
+        auto ball = std::make_shared<Vulkan::BallShader>(mVulkan.get());
+        addShader("BallShader", ball);
 
         mUiRenderer = std::make_shared<Vulkan::UIRenderer>(mVulkan.get());
     }

@@ -29,7 +29,8 @@ namespace Mix {
             auto& srcElems = _srcDecl.getElements();
             auto& dstElems = _dstDecl.getElements();
 
-            uint32_t bindingCount = 0;
+            uint32_t minBinding = std::numeric_limits<uint32_t>::max();
+            uint32_t maxBinding = 0;
             uint32_t attributeCount = 0;
 
             for (auto& src : srcElems) {
@@ -47,15 +48,17 @@ namespace Mix {
                     continue;
 
                 ++attributeCount;
-                bindingCount = std::max(bindingCount, static_cast<uint32_t>(src.getStreamIndex() + 1));
+                minBinding = std::min(minBinding, static_cast<uint32_t>(src.getStreamIndex()));
+                maxBinding = std::max(maxBinding, static_cast<uint32_t>(src.getStreamIndex()));
             }
 
+            auto bindingCount = maxBinding - minBinding + 1;
             std::vector<vk::VertexInputAttributeDescription> attributes;
             attributes.reserve(attributeCount);
             std::vector<vk::VertexInputBindingDescription> bindings;
             bindings.reserve(bindingCount);
 
-            for (uint32_t i = 0; i < bindingCount; ++i) {
+            for (uint32_t i = minBinding; i <= maxBinding; ++i) {
                 bindings.emplace_back(i, _srcDecl.getSizeOfStream(i), vk::VertexInputRate::eVertex);
             }
 
@@ -85,7 +88,7 @@ namespace Mix {
                 attribute.offset = src.getOffset();
                 attributes.push_back(attribute);
 
-                auto& binding = bindings[attribute.binding];
+                auto& binding = bindings[attribute.binding - minBinding];
                 bool perVertex = src.getInstanceRate() == 0;
                 // Check input rate
                 if (binding.binding != lastBinding)
@@ -153,7 +156,7 @@ namespace Mix {
             if (it == mVertexInputMap.end()) {
                 return addNew(_src, _dst);
             }
-            
+
             return it->second;
         }
 

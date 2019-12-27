@@ -189,7 +189,7 @@ namespace Mix {
 
             auto vertexInput = mVulkan->getVertexInputManager().getVertexInput(*desc.meshVertexDecl, *desc.meshVertexDecl);
             mPipeline = mPipelineState->getPipeline(mVulkan->getRenderPass(), 0,
-                                                    vertexInput, MeshTopology::Triangles_List,
+                                                    vertexInput, nullptr,MeshTopology::Triangles_List,
                                                     false, false);
 
             uint32_t imageCount = mVulkan->getSwapchain()->imageCount();

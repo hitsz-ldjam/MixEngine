@@ -1,6 +1,4 @@
-#pragma once
-#ifndef MX_VK_STANDARD_RENDERER_H_
-#define MX_VK_STANDARD_RENDERER_H_
+﻿#pragma once
 
 #include "MxVkShaderBase.h"
 #include "../Buffers/MxVkUniformBuffer.h"
@@ -10,24 +8,19 @@
 #include "../Pipeline/MxVkGraphicsPipelineState.h"
 
 namespace Mix {
-    class GUI;
-    class Renderer;
-
-
     namespace Vulkan {
-        class Pipeline;
-        class RenderPass;
-        class Image;
-        class Swapchain;
-        class DescriptorSetLayout;
-        class DescriptorPool;
-        class DescriptorSet;
+        struct BallShaderParameter {
+            Vector4f mainColor;
+            Vector4f rimColor;
+            float rimPower;
+            float rimIntensity;
+        };
 
-        class StandardShader final : public ShaderBase {
+        class BallShader final : public ShaderBase {
         public:
-            explicit StandardShader(VulkanAPI* _vulkan);
+            explicit BallShader(VulkanAPI* _vulkan);
 
-            ~StandardShader() override;
+            ~BallShader() override;
 
             void render(ArrayProxy<RenderQueueElement> _elements) override;
 
@@ -66,7 +59,6 @@ namespace Mix {
             uint32_t mNextInstanceBufferIdx = 0;
 
             std::shared_ptr<DescriptorSetLayout> mStaticParamDescriptorSetLayout;
-            std::shared_ptr<DescriptorSetLayout> mDynamicPamramDescriptorSetLayout;
             std::shared_ptr<DescriptorPool> mDescriptorPool;
             std::vector<DescriptorSet> mStaticDescriptorSets;
             std::vector<Buffer> mCameraUniforms;
@@ -98,5 +90,3 @@ namespace Mix {
         };
     }
 }
-
-#endif

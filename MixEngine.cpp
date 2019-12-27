@@ -12,6 +12,7 @@
 #include "Mx/Scene/MxSceneManager.h"
 #include "Mx/Engine/MxPlatform.h"
 #include "MxApplicationBase.h"
+#include "Mx/Animation/MxAnimationManager.h"
 
 namespace Mix {
     MixEngine::MixEngine(int _argc, char** _argv) {
@@ -33,6 +34,40 @@ namespace Mix {
         //mModuleHolder.get<Audio::Core>()->release();
         mModuleHolder.clear();
         Platform::ShutDown();
+    }
+
+    void MixEngine::loadModule() {
+        SDL_Rect rect;
+        SDL_GetDisplayBounds(0, &rect);
+
+        mModuleHolder.add<Window>("Mix Engine Demo", Vector2i{ rect.w * 2.f / 3, rect.h * 2.f / 3 }, WindowFlag::Vulkan | WindowFlag::Shown)->load();
+        mModuleHolder.add<Input>()->load();
+        mModuleHolder.add<Audio::Core>()->load();
+        mModuleHolder.add<Physics::World>()->load();
+        mModuleHolder.add<Coroutine::CoroMgr>();
+        mModuleHolder.add<Graphics>()->load();
+        mModuleHolder.add<GUI>()->load();
+        mModuleHolder.add<ResourceLoader>()->load();
+        mModuleHolder.add<SceneObjectManager>()->load();
+        mModuleHolder.add<SceneManager>()->load();
+        mModuleHolder.add<AnimationManager>()->load();
+
+        std::string n = mApp->getAppName();
+        Version v = mApp->getAppVersion();
+        std::string title = Utils::StringFormat("%1% V %2%.%3%.%4%",
+                                                mApp->getAppName(),
+                                                v.getMajor(), v.getMinor(), v.getPatch());
+        Window::Get()->setTitle(title);
+
+        mApp->onModuleLoaded();
+    }
+
+    void MixEngine::initModule() {
+        auto modules = mModuleHolder.getAllOrdered();
+        for (auto m : modules)
+            m->init();
+
+        mApp->onModuleInitialized();
     }
 
     int MixEngine::execute(std::shared_ptr<ApplicationBase> _app) {
@@ -83,24 +118,24 @@ namespace Mix {
                         startTp = Time::RealTime();
                         mFrameCount = 0u;
                     }
-                    //Window::Get()->setTitle(std::to_string(mFramePerSecond));
+                    Window::Get()->setTitle(std::to_string(mFramePerSecond));
 
-                    //auto start = Time::RealTime();
+                    auto start = Time::RealTime();
                     update();
-                    //Log::Info("Update %1%", Time::RealTime() - start);
+                    mAnalysisTime.update = Time::RealTime() - start;
 
-                    //start = Time::RealTime();
+                    start = Time::RealTime();
                     lateUpdate();
-                    //Log::Info("lateUpdate %1%", Time::RealTime() - start);
+                    mAnalysisTime.lateUpdate = Time::RealTime() - start;
 
-                    //start = Time::RealTime();
+                    start = Time::RealTime();
                     render();
-                    //Log::Info("render %1%", Time::RealTime() - start);
+                    mAnalysisTime.render = Time::RealTime() - start;
 
-                    //start = Time::RealTime();
+                    start = Time::RealTime();
                     postRender();
-                    //Log::Info("postRender %1%", Time::RealTime() - start);
-                    //Log::Info("");
+                    mAnalysisTime.postRender = Time::RealTime() - start;
+
                 }
             }
         }
@@ -152,46 +187,15 @@ namespace Mix {
         mModuleHolder.get<Audio::Core>()->lateUpdate();
     }
 
-    void MixEngine::loadModule() {
-        SDL_Rect rect;
-        SDL_GetDisplayBounds(0, &rect);
-
-        mModuleHolder.add<Window>("Mix Engine Demo", Vector2i{ rect.w * 2.f / 3, rect.h * 2.f / 3}, WindowFlag::Vulkan | WindowFlag::Shown)->load();
-        mModuleHolder.add<Input>()->load();
-        mModuleHolder.add<Audio::Core>()->load();
-        mModuleHolder.add<Physics::World>()->load();
-        mModuleHolder.add<Coroutine::CoroMgr>();
-        mModuleHolder.add<Graphics>()->load();
-        mModuleHolder.add<GUI>()->load();
-        mModuleHolder.add<ResourceLoader>()->load();
-        mModuleHolder.add<SceneObjectManager>()->load();
-        mModuleHolder.add<SceneManager>()->load();
-
-        std::string n = mApp->getAppName();
-        Version v = mApp->getAppVersion();
-        std::string title = Utils::StringFormat("%1% V %2%.%3%.%4%",
-                                                mApp->getAppName(),
-                                                v.getMajor(), v.getMinor(), v.getPatch());
-        Window::Get()->setTitle(title);
-
-        mApp->onModuleLoaded();
-    }
-
-    void MixEngine::initModule() {
-        auto modules = mModuleHolder.getAllOrdered();
-        for (auto m : modules)
-            m->init();
-
-        mApp->onModuleInitialized();
-    }
-
     void MixEngine::onQuitRequested() {
         if (mApp->onQuitRequested())
             quit();
     }
 
     void MixEngine::render() {
+
         mApp->onRender();
+
 
 #ifdef MX_ENABLE_PHYSICS_DEBUG_DRAW_
         mModuleHolder.get<Physics::World>()->render();
@@ -200,9 +204,17 @@ namespace Mix {
         mApp->onGUI();
         mModuleHolder.get<GUI>()->endGUI();
         mModuleHolder.get<GUI>()->update();
+
+        FrameSceneInfo frameSceneInfo = mModuleHolder.get<SceneManager>()->getActiveScene()->_getFrameSceneInfo();
+
+        FrameRenderInfo frameRenderInfo;
+        frameRenderInfo.sceneInfo = &frameSceneInfo;
+
+        frameRenderInfo.animInfo = mModuleHolder.get<AnimationManager>()->update(frameSceneInfo);
+
         mModuleHolder.get<Graphics>()->update();
-        mModuleHolder.get<Graphics>()->render();
-}
+        mModuleHolder.get<Graphics>()->render(frameRenderInfo);
+    }
 
     void MixEngine::postRender() {
         mApp->onPostRender();

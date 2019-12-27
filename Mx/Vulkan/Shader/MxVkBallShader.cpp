@@ -1,4 +1,4 @@
-#include "MxVkStandardShader.h"
+﻿#include "MxVkBallShader.h"
 #include "../Buffers/MxVkUniform.h"
 #include "../Swapchain/MxVkSwapchain.h"
 #include "../Pipeline/MxVkRenderPass.h"
@@ -19,7 +19,7 @@
 
 namespace Mix {
     namespace Vulkan {
-        StandardShader::StandardShader(VulkanAPI* _vulkan) :ShaderBase(_vulkan) {
+        BallShader::BallShader(VulkanAPI* _vulkan) :ShaderBase(_vulkan) {
             mDevice = mVulkan->getLogicalDevice();
 
             auto imageCount = mVulkan->getSwapchain()->imageCount();
@@ -41,10 +41,10 @@ namespace Mix {
             buildPropertyBlock();
         }
 
-        StandardShader::~StandardShader() {
+        BallShader::~BallShader() {
         }
 
-        void StandardShader::beginRender(const Camera& _camera) {
+        void BallShader::beginRender(const Camera& _camera) {
             mCurrFrame = mVulkan->getCurrFrame();
             mCurrCmd = &mVulkan->getCurrDrawCmd();
             mCurrVertexInput = nullptr;
@@ -56,12 +56,12 @@ namespace Mix {
             setCamera(_camera);
         }
 
-        void StandardShader::endRender() {
+        void BallShader::endRender() {
             mNextInstanceBufferIdx = 0;
             // mDynamicUniform[mCurrFrame].reset();
         }
 
-        void StandardShader::setCamera(const Camera& _camera) {
+        void BallShader::setCamera(const Camera& _camera) {
             // update Camera
             Uniform::CameraUniform ubo;
             ubo.cameraPos = _camera.transform()->getPosition();
@@ -85,7 +85,7 @@ namespace Mix {
             mCurrCmd->get().setScissor(0, scissor);
         }
 
-        void StandardShader::beginElement(const RenderElement& _element) {
+        void BallShader::beginElement(const RenderElement& _element) {
             mCurrCmd->get().pushConstants<Matrix4>(mGraphicsPipeline->getPipelineLayout(), vk::ShaderStageFlagBits::eVertex, 0, _element.transform->localToWorldMatrix());
             mCurrCmd->get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                                                mGraphicsPipeline->getPipelineLayout(),
@@ -94,10 +94,10 @@ namespace Mix {
                                                nullptr);
         }
 
-        void StandardShader::endElement() {
+        void BallShader::endElement() {
         }
 
-        bool StandardShader::choosePipeline(const Material& _material, const Mesh& _mesh, uint32_t _submesh) {
+        bool BallShader::choosePipeline(const Material& _material, const Mesh& _mesh, uint32_t _submesh) {
             bool depthWrite = _material.getRenderType() != RenderType::Transparent;
 
             auto newVertexInput = mVulkan->getVertexInputManager().getVertexInput(*_mesh.getVertexDeclaration(), *mGraphicsPipeline->getMeshVertexDeclaration());
@@ -113,7 +113,7 @@ namespace Mix {
             return true;
         }
 
-        bool StandardShader::chooseInstancePipeline(const Material& _material, const Mesh& _mesh, uint32_t _submesh) {
+        bool BallShader::chooseInstancePipeline(const Material& _material, const Mesh& _mesh, uint32_t _submesh) {
             bool depthWrite = _material.getRenderType() != RenderType::Transparent;
 
             auto newVertexInput = mVulkan->getVertexInputManager().getVertexInput(*_mesh.getVertexDeclaration(), *mInstanceGraphicsPipeline->getMeshVertexDeclaration());
@@ -129,7 +129,7 @@ namespace Mix {
             return true;
         }
 
-        std::shared_ptr<Buffer> StandardShader::getUnusedInstanceBuffer(uint32_t _size) {
+        std::shared_ptr<Buffer> BallShader::getUnusedInstanceBuffer(uint32_t _size) {
             if (mNextInstanceBufferIdx >= mInstanceBuffer[mCurrFrame].size())
                 mInstanceBuffer[mCurrFrame].emplace_back();
 
@@ -146,28 +146,25 @@ namespace Mix {
             return buffer;
         }
 
-        void StandardShader::updateMaterial(Material& _material) {
-            if (!_material._getChangedList().empty()) {
-                std::vector<WriteDescriptorSet> writes;
-                for (auto& name : _material._getChangedList()) {
-                    if (_material.getTexture(name))
-                        writes.push_back(_material.getTexture(name)->getWriteDescriptor(mMaterialNameBindingMap[name], vk::DescriptorType::eCombinedImageSampler));;
-                }
-                std::swap(mMaterialDescs[0][_material._getMaterialId()], mMaterialDescs[1][_material._getMaterialId()]);
-                mMaterialDescs[0][_material._getMaterialId()].updateDescriptor(writes);
-            }
+        void BallShader::updateMaterial(Material& _material) {
             _material._updated();
         }
 
-        void StandardShader::setMaterail(Material& _material) {
+        void BallShader::setMaterail(Material& _material) {
             updateMaterial(_material);
-            mCurrCmd->get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                               mGraphicsPipeline->getPipelineLayout(), 1,
-                                               mMaterialDescs[0][_material._getMaterialId()].get(),
-                                               nullptr);
+            BallShaderParameter para;
+            para.mainColor = _material.getVector("mainColor").value();
+            para.rimColor = _material.getVector("rimColor").value();
+            para.rimPower = _material.getFloat("rimPower").value();
+            para.rimIntensity = _material.getFloat("rimIntensity").value();
+
+            mCurrCmd->get().pushConstants<BallShaderParameter>(mCurrPipeline->pipelineLayout(),
+                                                               vk::ShaderStageFlagBits::eFragment,
+                                                               0,
+                                                               para);
         }
 
-        void StandardShader::render(ArrayProxy<RenderQueueElement> _elements) {
+        void BallShader::render(ArrayProxy<RenderQueueElement> _elements) {
 
             uint32_t matId;
             auto lower = _elements.begin();
@@ -201,11 +198,7 @@ namespace Mix {
                         ++p;
                     }
 
-                    updateMaterial(material);
-                    mCurrCmd->get().bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                                       mInstanceGraphicsPipeline->getPipelineLayout(), 1,
-                                                       mMaterialDescs[0][matId].get(),
-                                                       nullptr);
+                    setMaterail(material);
 
                             // Draw
                     mCurrCmd->get().bindVertexBuffers(0, mesh.getVertexBuffer()->get(), { 0 });
@@ -222,7 +215,7 @@ namespace Mix {
 
                     lower = upper;
                 }
-                else {
+                /*else {
                     while (lower != upper) {
                         beginElement(*lower->element);
                         setMaterail(*lower->element->material);
@@ -232,30 +225,40 @@ namespace Mix {
 
                         ++lower;
                     }
-                }
+                }*/
             }
 
         }
 
-        void StandardShader::update(const Shader& _shader) {
+        void BallShader::update(const Shader& _shader) {
         }
 
-        uint32_t StandardShader::newMaterial() {
+        uint32_t BallShader::newMaterial() {
             uint32_t result = mUnusedId.back();
             mUnusedId.pop_back();
             return result;
         }
 
-        void StandardShader::deleteMaterial(uint32_t _id) {
+        void BallShader::deleteMaterial(uint32_t _id) {
             mUnusedId.push_back(_id);
         }
 
-        void StandardShader::buildDescriptorSet() {
+        void BallShader::buildDescriptorSetLayout() {
+            mStaticParamDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(mDevice);
+            mStaticParamDescriptorSetLayout->setBindings(
+                {
+                    {0,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment}
+                }
+            );
+            mStaticParamDescriptorSetLayout->create();
+
+        }
+
+        void BallShader::buildDescriptorSet() {
             auto imageCount = mVulkan->getSwapchain()->imageCount();
 
             mDescriptorPool = std::make_shared<DescriptorPool>(mDevice);
             mDescriptorPool->addPoolSize(vk::DescriptorType::eUniformBuffer, imageCount);
-            mDescriptorPool->addPoolSize(vk::DescriptorType::eCombinedImageSampler, 1 * mDefaultMaterialCount * imageCount);
             mDescriptorPool->create((mDefaultMaterialCount + 1)*imageCount);
 
 
@@ -270,45 +273,29 @@ namespace Mix {
                 mStaticDescriptorSets[i].updateDescriptor(descriptorWrites);
             }
 
-            mMaterialDescs.resize(imageCount);
-            for (uint32_t i = 0; i < imageCount; ++i)
-                mMaterialDescs[i] = mDescriptorPool->allocDescriptorSet(*mDynamicPamramDescriptorSetLayout, mDefaultMaterialCount);
-
         }
 
-        void StandardShader::buildPropertyBlock() {
-            mMaterialNameBindingMap["diffuseTex"] = 0;
+        void BallShader::buildPropertyBlock() {
+            std::vector<MaterialPropertyInfo> properties = {
+                MaterialPropertyInfo("mainColor",               MaterialPropertyType::VECTOR,   Vector4f::One),
+                MaterialPropertyInfo("rimColor",                MaterialPropertyType::VECTOR,   Vector4f::Zero),
+                MaterialPropertyInfo("rimPower",                MaterialPropertyType::FLOAT,      1.0f),
+                MaterialPropertyInfo("rimIntensity",            MaterialPropertyType::FLOAT,    1.0f),
+            };
+            mMaterialPropertySet.insert(properties.begin(), properties.end());
 
-            mMaterialPropertySet.insert(MaterialPropertyInfo("diffuseTex", MaterialPropertyType::TEX_2D, std::shared_ptr<Texture>()));
             for (auto i = 0; i < mDefaultMaterialCount; ++i)
                 mUnusedId.push_back(i);
         }
 
-        void StandardShader::buildDescriptorSetLayout() {
-            mStaticParamDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(mDevice);
-            mStaticParamDescriptorSetLayout->setBindings(
-                {
-                    {0,vk::DescriptorType::eUniformBuffer,1,vk::ShaderStageFlagBits::eVertex}
-                }
-            );
-            mStaticParamDescriptorSetLayout->create();
 
-            mDynamicPamramDescriptorSetLayout = std::make_shared<DescriptorSetLayout>(mDevice);
-            mDynamicPamramDescriptorSetLayout->setBindings(
-                {
-                    {0,vk::DescriptorType::eCombinedImageSampler,1,vk::ShaderStageFlagBits::eFragment}
-                }
-            );
-            mDynamicPamramDescriptorSetLayout->create();
 
-        }
-
-        void StandardShader::buildPipeline() {
-            {
+        void BallShader::buildPipeline() {
+            /*{
                 GraphicsPipelineStateDesc desc;
 
-                auto vert = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/vShader.vert");
-                auto frag = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/fShader.frag");
+                auto vert = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/BallShaderInstance.vert");
+                auto frag = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/BallShader.frag");
                 std::shared_ptr<ShaderModule> vertShader = std::make_shared<ShaderModule>(mDevice, *vert);
                 std::shared_ptr<ShaderModule> fragShader = std::make_shared<ShaderModule>(mDevice, *frag);
 
@@ -324,20 +311,20 @@ namespace Mix {
                 desc.enableDepthTest = true;
                 desc.enableWriteDepth = true;
 
-                desc.descriptorSetLayouts = { mStaticParamDescriptorSetLayout,mDynamicPamramDescriptorSetLayout };
+                desc.descriptorSetLayouts = { mStaticParamDescriptorSetLayout };
                 desc.blendStates = { GraphicsPipelineState::DefaultBlendAttachment };
 
                 desc.pushConstant.emplace_back(vk::ShaderStageFlagBits::eVertex, 0, sizeof(Matrix4));
 
                 mGraphicsPipeline = std::make_shared<GraphicsPipelineState>(mDevice, desc);
-            }
+            }*/
 
             // GPU instance version
             {
                 GraphicsPipelineStateDesc desc;
 
-                auto vert = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/vShaderInstance.vert");
-                auto frag = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/fShader.frag");
+                auto vert = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/BallShaderInstance.vert");
+                auto frag = ResourceLoader::Get()->load<ShaderSource>("Resource/Shaders/BallShader.frag");
                 std::shared_ptr<ShaderModule> vertShader = std::make_shared<ShaderModule>(mDevice, *vert);
                 std::shared_ptr<ShaderModule> fragShader = std::make_shared<ShaderModule>(mDevice, *frag);
 
@@ -360,8 +347,10 @@ namespace Mix {
                 desc.enableDepthTest = true;
                 desc.enableWriteDepth = true;
 
-                desc.descriptorSetLayouts = { mStaticParamDescriptorSetLayout,mDynamicPamramDescriptorSetLayout };
+                desc.descriptorSetLayouts = { mStaticParamDescriptorSetLayout };
                 desc.blendStates = { GraphicsPipelineState::DefaultBlendAttachment };
+
+                desc.pushConstant.emplace_back(vk::ShaderStageFlagBits::eFragment, 0, sizeof(BallShaderParameter));
 
                 mInstanceGraphicsPipeline = std::make_shared<GraphicsPipelineState>(mDevice, desc);
             }
