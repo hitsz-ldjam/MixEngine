@@ -55,6 +55,8 @@ namespace Mix {
 
             std::shared_ptr<GraphicsPipelineState> mGraphicsPipeline;
             std::shared_ptr<GraphicsPipelineState> mInstanceGraphicsPipeline;
+            static constexpr uint32_t MinInstanceBufferSize = 2048 * sizeof(Matrix4);
+            static constexpr uint32_t DefaultInstanceBufferCount = 8;
             std::vector<std::vector<std::shared_ptr<Buffer>>> mInstanceBuffer;
             uint32_t mNextInstanceBufferIdx = 0;
 

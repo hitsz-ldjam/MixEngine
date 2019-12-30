@@ -13,6 +13,7 @@
 #include "../Vulkan/Shader/MxVkUIRenderer.h"
 #include "../Time/MxTime.h"
 #include "../Vulkan/Shader/MxVkBallShader.h"
+#include "../Vulkan/Shader/MxVkSkyboxRenderer.h"
 
 
 namespace Mix {
@@ -26,6 +27,7 @@ namespace Mix {
         mShaderNameMap.clear();
         mShaders.clear();
         mUiRenderer.reset();
+        mSkyboxRenderer.reset();
         mVulkan.reset();
     }
 
@@ -37,9 +39,6 @@ namespace Mix {
         loadShader();
     }
 
-    void Graphics::update() {
-    }
-
 #define TIME_BEGIN auto sxxxstart = Time::RealTime()
 
 #define TIME_VALUE (Time::RealTime() - sxxxstart)
@@ -49,6 +48,9 @@ namespace Mix {
 #define TIME_TICK sxxxstart = Time::RealTime()
 
 #define TIME_SEPR std::cout<<"------------------"<<std::endl
+
+    void Graphics::update() {
+    }
 
     void Graphics::render(FrameRenderInfo& _frameInfo) {
         for (auto& shader : mShaders)
@@ -103,6 +105,9 @@ namespace Mix {
         auto& opaqueElements = opaqueQueue.getSortedElements();
 
         mVulkan->beginRender();
+
+        mSkyboxRenderer->setCamera(camera);
+        mSkyboxRenderer->render();
 
         // Render all opaque elements
         if (!opaqueElements.empty()) {
@@ -191,6 +196,8 @@ namespace Mix {
 
         auto ball = std::make_shared<Vulkan::BallShader>(mVulkan.get());
         addShader("BallShader", ball);
+
+        mSkyboxRenderer = std::make_shared<Vulkan::SkyboxShader>(mVulkan.get());
 
         mUiRenderer = std::make_shared<Vulkan::UIRenderer>(mVulkan.get());
     }

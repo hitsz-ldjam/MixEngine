@@ -18,7 +18,9 @@ namespace Mix {
     public:
         virtual ~Component() = default;
 
-        HGameObject getGameObject() const noexcept { return mGameObject; }
+        const HGameObject& getGameObject() const noexcept { return mGameObject; }
+
+        HGameObject& getGameObject() noexcept { return mGameObject; }
 
         const HComponent& getHandle() const { return mThisHandle; }
 

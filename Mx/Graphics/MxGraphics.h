@@ -14,6 +14,7 @@ namespace Mix {
     namespace Vulkan {
         class VulkanAPI;
         class UIRenderer;
+        class SkyboxShader;
     }
 
     class Graphics :public ModuleBase {
@@ -47,6 +48,7 @@ namespace Mix {
         std::unordered_map<std::string, uint32_t> mShaderNameMap;
 
         std::shared_ptr<Vulkan::UIRenderer> mUiRenderer;
+        std::shared_ptr<Vulkan::SkyboxShader> mSkyboxRenderer;
     };
 }
 

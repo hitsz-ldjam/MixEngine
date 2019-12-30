@@ -26,6 +26,18 @@ namespace Mix {
             mCameraUniforms.reserve(imageCount);
             mInstanceBuffer.resize(imageCount);
 
+            for (auto& set : mInstanceBuffer) {
+                set.resize(DefaultInstanceBufferCount);
+                for (auto& buffer : set) {
+                    buffer = std::make_shared<Buffer>(mVulkan->getAllocator(),
+                                                      vk::BufferUsageFlagBits::eVertexBuffer,
+                                                      vk::MemoryPropertyFlagBits::eHostVisible |
+                                                      vk::MemoryPropertyFlagBits::eHostCoherent,
+                                                      MinInstanceBufferSize);
+                }
+
+            }
+
 
             for (size_t i = 0; i < imageCount; ++i) {
                 mCameraUniforms.emplace_back(mVulkan->getAllocator(),

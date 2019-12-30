@@ -9,7 +9,7 @@ namespace Mix {
     }
 
     HTransform Component::transform() const {
-        return mGameObject != nullptr ? mGameObject->transformHandle() : HTransform();
+        return mGameObject->transformHandle();
     }
 
     void Component::destroyInternal(SceneObjectHandleBase& _handle, bool _immediate) {

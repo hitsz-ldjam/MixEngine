@@ -64,7 +64,9 @@ namespace Mix {
 
         float& operator[](const uint32_t _index);
 
-        operator Vector4f() const;
+        Vector4f toVector4f() const {
+            return Vector4f(r, g, b, a);
+        }
 
         std::string toString() const {
             return (boost::format("Color(%f, %f, %f, %f)") % r % g % b % a).str();

@@ -365,6 +365,29 @@ namespace Mix {
         return nullptr;
     }
 
+    std::shared_ptr<Mesh> Mesh::Create(const void* _vertexData, uint32_t _vSize, Flags<VertexAttribute> _attributeFlags,
+                                       const void* _indexData, uint32_t _iSize, IndexFormat _format, const std::vector<SubMesh>& _subMeshes) {
+        std::shared_ptr<Vulkan::Buffer> vertexBuffer;
+        std::shared_ptr<Vulkan::Buffer> indexBuffer;
+
+        auto vertexData = reinterpret_cast<const std::byte*>(_vertexData);
+        auto indexData = reinterpret_cast<const std::byte*>(_indexData);
+
+        if (SendToGPU({ _vSize, vertexData }, { _iSize, indexData }, vertexBuffer, indexBuffer)) {
+            std::shared_ptr<Mesh> result = std::make_shared<Mesh>();
+            result->mAttributes = _attributeFlags;
+            result->mHasIndex = indexBuffer == nullptr;
+            result->mSubMeshes = _subMeshes;
+            result->mVertexBuffer = vertexBuffer;
+            result->mIndexBuffer = nullptr;
+            result->mVertexDeclaration = std::make_shared<VertexDeclaration>(result->mAttributes);
+
+            return result;
+        }
+
+        return nullptr;
+    }
+
     std::shared_ptr<Mesh> Mesh::Create(const std::vector<std::byte>& _vertexData,
                                        Flags<VertexAttribute> _attributeFlags,
                                        const std::vector<SubMesh>& _subMeshes) {

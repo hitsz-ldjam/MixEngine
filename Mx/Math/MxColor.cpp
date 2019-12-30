@@ -148,10 +148,6 @@ namespace Mix {
         return const_cast<float&>(static_cast<const Color&>(*this)[_index]);
     }
 
-    Color::operator Vector4<float>() const {
-        return Vector4f(r, g, b, a);
-    }
-
     Color32::Color32(const Color& _color) {
         r = static_cast<char>(_color.r * 255);
         g = static_cast<char>(_color.g * 255);

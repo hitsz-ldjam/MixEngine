@@ -9,6 +9,7 @@
 
 #include "../GameObject/MxGameObject.h"
 #include "../Graphics/MxRenderInfo.h"
+#include <unordered_set>
 
 namespace Mix {
     class SceneFiller;
@@ -127,6 +128,8 @@ namespace Mix {
         /** \brief Unload the scene. All objects will be destroyed. */
         void unload();
 
+        void registerRenderer(const HRenderer& _renderer);
+
     private:
         static void FillFrameSceneInfo(FrameSceneInfo& _info, const HGameObject& _object);
 
@@ -134,8 +137,12 @@ namespace Mix {
         std::weak_ptr<Scene> mThisPtr;
         std::string mName;
         std::unordered_map<uint64_t, HGameObject> mRootObjects;
+
         std::map<uint64_t, HBehaviour> mBehaviours;
         std::vector<HBehaviour> mNewBehaviours;
+
+        std::vector<HRenderer> mRenderers;
+        // std::unordered_set<HRenderer> mRemovedRenderers;
 
         std::vector<HCamera> mRegisteredCamera;
         HCamera mMainCamera;

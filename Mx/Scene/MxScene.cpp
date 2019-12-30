@@ -4,6 +4,7 @@
 #include "../Component/Renderer/MxRenderer.h"
 #include "../Component/Camera/MxCamera.h"
 #include "../Window/MxWindow.h"
+#include "../Time/MxTime.h"
 
 namespace Mix {
     Scene::Scene(const std::string& _name, uint32_t _index)
@@ -226,16 +227,41 @@ namespace Mix {
         mIsLoaded = false;
     }
 
+    void Scene::registerRenderer(const HRenderer& _renderer) {
+        mRenderers.push_back(_renderer);
+    }
+
     FrameSceneInfo Scene::_getFrameSceneInfo() {
         FrameSceneInfo info;
 
         // Set camera
         info.camera = mMainCamera.get().get();
 
-        for (auto& gameObject : mRootObjects) {
-            FillFrameSceneInfo(info, gameObject.second);
+        auto sss = Time::RealTime();
+        std::vector<HRenderer> remainRenderers;
+        remainRenderers.reserve(mRenderers.size());
+        for (auto& renderer : mRenderers) {
+            if (!renderer.isDestroyed())
+                remainRenderers.push_back(renderer);
         }
 
+        std::cout << "Scene info 1:" << Time::RealTime() - sss << std::endl;
+
+        std::vector<Renderer*> activeRenderers;
+        activeRenderers.reserve(remainRenderers.size());
+
+        for (auto& renderer : remainRenderers) {
+            if (renderer->getGameObject()->activeInHierarchy())
+                activeRenderers.push_back(renderer.get().get());
+        }
+
+        std::cout << "Scene info 2:" << Time::RealTime() - sss << std::endl;
+
+        info.renderers = std::move(activeRenderers);
+        /*for (auto& gameObject : mRootObjects) {
+            FillFrameSceneInfo(info, gameObject.second);
+        }*/
+        mRenderers = std::move(remainRenderers);
         return info;
     }
 

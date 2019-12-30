@@ -50,6 +50,7 @@ namespace Mix {
     class RigidBody;
     class Transform;
     class Camera;
+    class Renderer;
 
     template<typename _Ty>
     class SceneObjectHandle;
@@ -58,6 +59,7 @@ namespace Mix {
     using HGameObject = SceneObjectHandle<GameObject>;
     using HComponent = SceneObjectHandle<Component>;
     using HBehaviour = SceneObjectHandle<Behaviour>;
+    using HRenderer = SceneObjectHandle<Renderer>;
     using HAdudioListener = SceneObjectHandle<AudioListener>;
     using HAudioSource = SceneObjectHandle<AudioSource>;
     using HMeshFilter = SceneObjectHandle<MeshFilter>;

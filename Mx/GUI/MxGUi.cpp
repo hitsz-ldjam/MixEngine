@@ -10,6 +10,7 @@
 #include "../Graphics/MxGraphics.h"
 #include "../Vulkan/MxVulkan.h"
 #include "../Math/MxColor.h"
+#include <stb_image/stb_image_write.h>
 
 
 namespace Mix {
@@ -124,7 +125,7 @@ namespace Mix {
         io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-        io.MouseDrawCursor = true;
+        io.MouseDrawCursor = false;
 
         io.BackendPlatformName = "MixEngine ImGui";
 
@@ -203,8 +204,8 @@ namespace Mix {
         }
         else {
             // Show OS mouse cursor
-            SDL_SetCursor(mMouseCursors[cursor] ? mMouseCursors[cursor] : mMouseCursors[ImGuiMouseCursor_Arrow]);
-            SDL_ShowCursor(SDL_TRUE);
+            // SDL_SetCursor(mMouseCursors[cursor] ? mMouseCursors[cursor] : mMouseCursors[ImGuiMouseCursor_Arrow]);
+            // SDL_ShowCursor(SDL_TRUE);
         }
 
         if (io.WantSetMousePos) {

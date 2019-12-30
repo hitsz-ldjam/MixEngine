@@ -3,6 +3,7 @@
 #include "../Scene/MxSceneManager.h"
 #include "../Component/MxComponent.h"
 #include "../Log/MxLog.h"
+#include "../Component/Renderer/MxRenderer.h"
 
 namespace Mix {
     MX_IMPLEMENT_RTTI(GameObject, Object);
@@ -148,6 +149,10 @@ namespace Mix {
         if (_component->isDerived(Behaviour::GetType())) {
             // mBehaviours.push_back(static_scene_object_cast<Behaviour>(_component));
             mScene->registerBehaviour(static_scene_object_cast<Behaviour>(_component));
+        }
+
+        if (_component->isDerived(Renderer::GetType())) {
+            mScene->registerRenderer(static_scene_object_cast<Renderer>(_component));
         }
     }
 

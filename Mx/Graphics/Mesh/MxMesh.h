@@ -99,6 +99,11 @@ namespace Mix {
 
 
         // ---------- static method ----------
+        static std::shared_ptr<Mesh> Create(const void* _vertexData, uint32_t _vSize,
+                                            Flags<VertexAttribute> _attributeFlags,
+                                            const void* _indexData, uint32_t _iSize,
+                                            IndexFormat _format,
+                                            const std::vector<SubMesh>& _subMeshes);
 
         static std::shared_ptr<Mesh> Create(const std::vector<std::byte>& _vertexData,
                                             Flags<VertexAttribute> _attributeFlags,
